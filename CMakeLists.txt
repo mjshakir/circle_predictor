@@ -38,7 +38,7 @@ include_directories(
   include
 )
 #------------------------------------------------------------------------------------------
-add_executable(${PROJECT_NAME} Example/example.cpp)
+add_executable(${PROJECT_NAME} Main/main.cpp)
 #------------------------------------------------------------------------------------------
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_library "${TORCH_LIBRARIES}")
 #------------------------------------------------------------------------------------------

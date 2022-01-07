@@ -91,7 +91,7 @@ class NetworkHandling{
             //--------------------------
             std::vector<float> Loss;
             //--------------------------
-            auto _scheduler = torch::optim::StepLR(optimizer, 1, 0.01);
+            auto _scheduler = torch::optim::StepLR(optimizer, 30, 0.01);
             //--------------------------
             for (size_t i = 0; i < epoch; i++){
                 //--------------------------

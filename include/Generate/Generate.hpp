@@ -3,7 +3,6 @@
 #include <iostream>
 #include <mutex>
 #include <memory>
-#include <torch/torch.h>
 //--------------------------------------------------------------
 #include "SharedLibrary/SharedLibrary.hpp"
 //--------------------------------------------------------------

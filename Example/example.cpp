@@ -22,17 +22,16 @@ int main(){
     //--------------------------
     torch::Device device(device_type);
     //--------------------------
-    Net model;
+    Net model(device);
     model.to(device);
     //--------------------------
-    torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3).momentum(0.75).nesterov(true));
+    torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1).momentum(0.75).nesterov(true));
     // torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions(1E-3));
     //--------------------------
     // GenerateDate data = Generate::GetInstance(1.f)->get_data();
-    Generate _generator(1.f, 60);
-    GenerateDate data = _generator.get_data();
+    GenerateDate data = Generate(1.f, 600).get_data();
     //------------
-    GenerateDate test_data = Generate(1.5, 40).get_data();
+    GenerateDate test_data = Generate(1.5, 180).get_data();
     //--------------------------
     // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
     // batches into a single tensor.

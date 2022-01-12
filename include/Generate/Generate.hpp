@@ -14,9 +14,9 @@ class Generate{
         //--------------------------
         // ~Generate();
         //--------------------------
-        Generate(const double& radius = 1, const uint16_t& generated_points = 60000);
+        Generate(const double& radius = 1, const size_t& generated_points = 60000);
         //--------------------------
-        Generate(const torch::Tensor& x_value, const double& radius = 1, const uint16_t& generated_points = 60000);
+        Generate(const torch::Tensor& x_value, const double& radius = 1, const size_t& generated_points = 60000);
         //--------------------------
         torch::Tensor get_x_value(void); 
         //--------------------------
@@ -24,7 +24,9 @@ class Generate{
         //--------------------------
         GenerateDate get_data(void);
         //--------------------------
-        double get_radius();
+        GenerateDate get_test(void);
+        //--------------------------
+        double get_radius(void);
         //--------------------------------------------------------------
     
     protected:
@@ -39,15 +41,17 @@ class Generate{
         //--------------------------
         double m_radius;
         //--------------------------
-        uint16_t m_generated_points;
+        size_t m_generated_points;
         //--------------------------
         torch::Tensor m_x_value, y_value;
         //--------------------------
-        GenerateDate full_data;
+        GenerateDate full_data, test_data;
         //--------------------------
         // Functions
         //--------------------------
         const GenerateDate generate_value(const double& radius);
+        //--------------------------
+        const GenerateDate generate_test_value(const double& radius);
         //--------------------------
         const torch::Tensor generate_value(const torch::Tensor& x_value, const double& radius);
         //--------------------------------------------------------------

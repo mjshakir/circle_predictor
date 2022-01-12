@@ -18,21 +18,31 @@ link_directories(${CMAKE_SOURCE_DIR}/libtorch/lib)
 #------------------------------------------------------------------------------------------
 find_package(Torch REQUIRED)
 find_package(OpenMP)
-# find_package(TBB REQUIRED)
+find_package(TBB REQUIRED)
 LINK_DIRECTORIES( ${LIBRARYPATH} )
 #------------------------------------------------------------------------------------------
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+if (OPENMP_FOUND)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 #------------------------------------------------------------------------------------------
-add_library(${PROJECT_NAME}_library SHARED
-  src/Generate/Generate.cpp
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+#------------------------------------------------------------------------------------------
+add_library(${PROJECT_NAME}_network SHARED
   src/Network/NetworkHandling.cpp
   src/Network/DataLoader.cpp
+)
+#------------------------------------------------------------------------------------------
+add_library(${PROJECT_NAME}_data SHARED
+  src/Generate/Generate.cpp
+)
+#------------------------------------------------------------------------------------------
+add_library(${PROJECT_NAME}_timing SHARED
   src/Timing/Timing.cpp
   src/Timing/TimingFunction.cpp
 )
 #------------------------------------------------------------------------------------------
-add_dependencies(${PROJECT_NAME}_library "${TORCH_LIBRARIES}")
-target_link_libraries(${PROJECT_NAME}_library "${TORCH_LIBRARIES}")
+target_link_libraries(${PROJECT_NAME}_network "${TORCH_LIBRARIES}" tbb)
+target_link_libraries(${PROJECT_NAME}_data "${TORCH_LIBRARIES}" tbb)
 #------------------------------------------------------------------------------------------
 include_directories(
   include
@@ -40,7 +50,7 @@ include_directories(
 #------------------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} Main/main.cpp)
 #------------------------------------------------------------------------------------------
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_library "${TORCH_LIBRARIES}")
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_network ${PROJECT_NAME}_data ${PROJECT_NAME}_timing "${TORCH_LIBRARIES}")
 #------------------------------------------------------------------------------------------
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 #------------------------------------------------------------------------------------------

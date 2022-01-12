@@ -162,14 +162,7 @@ class NetworkHandling{
                     //--------------------------
                 }// end if (!_test_loss.empty())
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&Loss, &_test_loss, &_element_sum](){   auto _max_element = std::max_element(std::execution::par_unseq, _test_loss.begin(), _test_loss.end());
-                                                                                                                printf("\n-----------------size of loss [%ld]---------Sum[%f]---------Max [%ld] loss [%f]-----------------\n", 
-                                                                                                                        Loss.size(), 
-                                                                                                                        _element_sum,  
-                                                                                                                        std::distance(_test_loss.begin(), _max_element), 
-                                                                                                                        *_max_element);
-                                                                                                                return true;
-                                                                                                            });
+                auto printing_threads = std::async(std::launch::async, loss_disply, _test_loss, _element_sum);
                 //--------------------------
             } while(_element_sum >= precision);
             //--------------------------
@@ -191,6 +184,8 @@ class NetworkHandling{
             return test_loss;
             //--------------------------
         }// end std::vector<double> NetworkHandling::network_test(DataLoader& data_loader)
+        //--------------------------------------------------------------
+        static void loss_disply(const std::vector<float>& loss, const double& elements_sum);
         //--------------------------------------------------------------
 };
 //--------------------------------------------------------------

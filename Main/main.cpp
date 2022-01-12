@@ -27,7 +27,8 @@ int main(){
     model.to(device);
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1).momentum(0.95).nesterov(true));
-    // torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions(1E-3));
+    // torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions(1E-1));
+    // torch::optim::Adam optimizer(model.parameters(), torch::optim::AdamOptions(1E-1));
     //--------------------------
     NetworkHandling handler(model, device);
     //--------------------------
@@ -68,7 +69,7 @@ int main(){
             // {
                 //--------------------------
                 Timing _timer(__FUNCTION__);
-                auto loss = handler.train(data_loader, test_data_loader, optimizer, 100);
+                auto loss = handler.train(data_loader, test_data_loader, optimizer, 95);
                 //--------------------------
             // }// end #pragma omp critical 
             //--------------------------

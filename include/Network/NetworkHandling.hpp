@@ -4,6 +4,9 @@
 #include <torch/torch.h>
 #include <future>
 #include <thread>
+#include <iterator>
+#include <algorithm>
+#include <execution>
 //--------------------------------------------------------------
 #include "Network/Network.hpp"
 //--------------------------------------------------------------
@@ -53,6 +56,8 @@ class NetworkHandling{
             //--------------------------
             auto output = m_model.forward(data);
             //--------------------------
+            // std::cout << "output: " << output.sizes() << std::endl;
+            //--------------------------
             // std::cout << __FUNCTION__ << std::endl;
             //--------------------------
             // torch::Tensor loss = torch::nll_loss(output, targets);
@@ -76,10 +81,10 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
-            auto printing_threads = std::async(std::launch::async, [&targets, &output](){
-                                                                                            std::cout << "targets: [" << targets << "] " <<  "output: [" << output << "]" << std::endl;
-                                                                                            return true;
-                                                                                        });
+            // auto printing_threads = std::async(std::launch::async, [&targets, &output](){
+            //                                                                                 std::cout << "targets: [" << targets << "] " <<  "output: [" << output << "]" << std::endl;
+            //                                                                                 return true;
+            //                                                                             });
             //--------------------------
             // return torch::nll_loss(output, targets,/*weight=*/{}, torch::Reduction::Sum).template item<double>();
             return torch::mse_loss(output, targets, torch::Reduction::Sum).template item<double>();
@@ -120,20 +125,26 @@ class NetworkHandling{
         template <typename Dataloader, typename Test_Dataloader>
         std::vector<float> network_train(Dataloader& data_loader, Test_Dataloader& data_loader_test, torch::optim::Optimizer& optimizer, const float& precision){
             //--------------------------
+            std::mutex mutex;
+            //--------------------------
             double _element_sum{100};
             std::vector<float> Loss;
             //--------------------------
-            auto _scheduler = torch::optim::StepLR(optimizer, 30, 0.01);
+            auto _scheduler = torch::optim::StepLR(optimizer, 30, 1E-2);
             //--------------------------
             do{
                 //--------------------------
                 Timing _timer_loop("While loop");
                 //--------------------------
-                for (const auto& batch : *data_loader){
-                    //--------------------------
-                    Loss.emplace_back(network_train_batch(batch, optimizer));
-                    //--------------------------
-                }// end for (const auto& batch : *data_loader)
+                // for (const auto& batch : *data_loader){
+                //     //--------------------------
+                //     Loss.push_back(network_train_batch(batch, optimizer));
+                //     //--------------------------
+                // }// end for (const auto& batch : *data_loader)
+                //--------------------------
+                std::for_each(std::execution::par, std::begin(*data_loader), std::end(*data_loader), [&](const auto& batch){    std::lock_guard<std::mutex> lock(mutex);
+                                                                                                                                Loss.push_back(network_train_batch(batch, optimizer));});
+                // std::ranges::for_each(std::begin(*data_loader), std::end(*data_loader), [&](const auto& batch){Loss.push_back(network_train_batch(batch, optimizer));});
                 //--------------------------
                 _scheduler.step();
                 //--------------------------        
@@ -151,14 +162,14 @@ class NetworkHandling{
                     //--------------------------
                 }// end if (!_test_loss.empty())
                 //--------------------------
-                std::cout << "_element_sum: " << _element_sum << std::endl;
-                //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&Loss, &_element_sum](){    //for (const auto& loss : Loss){
-                                                                                                    //     printf("Loss: [\x1b[31m%0.2f\x1b[0m] ",loss);
-                                                                                                    // }// end for (const auto& loss : Loss) 
-                                                                                                    printf("\n-----------------size of loss [%ld]---------Sum[%f]-------------\n", Loss.size(), _element_sum);
-                                                                                                    return true;
-                                                                                                });
+                auto printing_threads = std::async(std::launch::async, [&Loss, &_test_loss, &_element_sum](){   auto _max_element = std::max_element(std::execution::par_unseq, _test_loss.begin(), _test_loss.end());
+                                                                                                                printf("\n-----------------size of loss [%ld]---------Sum[%f]---------Max [%ld] loss [%f]-----------------\n", 
+                                                                                                                        Loss.size(), 
+                                                                                                                        _element_sum,  
+                                                                                                                        std::distance(_test_loss.begin(), _max_element), 
+                                                                                                                        *_max_element);
+                                                                                                                return true;
+                                                                                                            });
                 //--------------------------
             } while(_element_sum >= precision);
             //--------------------------

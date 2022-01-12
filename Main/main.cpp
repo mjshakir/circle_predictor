@@ -3,6 +3,7 @@
 #include "SharedLibrary/SharedLibrary.hpp"
 #include "Timing/TimingFunction.hpp"
 #include "Network/DataLoader.hpp"
+#include <omp.h>
 
 int main(){
     //--------------------------
@@ -25,37 +26,55 @@ int main(){
     Net model(device);
     model.to(device);
     //--------------------------
-    torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1).momentum(0.75).nesterov(true));
+    torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1).momentum(0.95).nesterov(true));
     // torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions(1E-3));
     //--------------------------
-    // GenerateDate data = Generate::GetInstance(1.f)->get_data();
-    GenerateDate data = Generate(1.f, 600).get_data();
-    //------------
-    GenerateDate test_data = Generate(1.5, 180).get_data();
-    //--------------------------
-    // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
-    // batches into a single tensor.
-    auto data_set = DataLoader(data.data, data.target).map(torch::data::transforms::Stack<>());
-    //--------------------------
-    // Generate a data loader.
-    auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>(std::move(data_set), 20);
-    //--------------------------
-    // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
-    // batches into a single tensor.
-    auto test_data_set = DataLoader(test_data.data, test_data.target).map(torch::data::transforms::Stack<>());
-    //--------------------------
-    // Generate a data loader.
-    auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(test_data_set), 20);
-    //--------------------------
-    // NetworkHandling handler(model, device);
-    // Timing _timer(__FUNCTION__);
-    // // auto loss = TimingFunction(handler.train(10, data_loader, optimizer), "train").get_result();
-    // auto loss = handler.train(10, data_loader, optimizer);
-    // // std::cout << "Loss size: " << loss.size() << std::endl;
-    //--------------------------
     NetworkHandling handler(model, device);
-    Timing _timer(__FUNCTION__);
-    auto loss = handler.train(data_loader, test_data_loader, optimizer, 10);
+    //--------------------------
+    // #pragma omp parallel shared(handler, optimizer)
+    // {
+        //--------------------------
+        // #pragma omp for nowait schedule(dynamic)
+        //--------------------------
+        for (int i = 0; i < 5; i++){
+            //--------------------------
+            Generate _generate((std::rand() % 10) + 1, 5000); 
+            GenerateDate data = _generate.get_data();
+            GenerateDate test_data = _generate.get_test();
+            //------------
+            std::cout   << "Training data radius: " << _generate.get_radius()  << std::endl;
+            //--------------------------
+            // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
+            // batches into a single tensor.
+            auto data_set = DataLoader(data.data.normal_(0.5 ,0.25), data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
+            //--------------------------
+            // Generate a data loader.
+            auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>(std::move(data_set), 20);
+            //--------------------------
+            // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
+            // batches into a single tensor.
+            auto test_data_set = DataLoader(test_data.data.normal_(0.5 ,0.25), test_data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
+            //--------------------------
+            // Generate a data loader.
+            auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(test_data_set), 20);
+            //--------------------------
+            // NetworkHandling handler(model, device);
+            // Timing _timer(__FUNCTION__);
+            // // auto loss = TimingFunction(handler.train(10, data_loader, optimizer), "train").get_result();
+            // auto loss = handler.train(10, data_loader, optimizer);
+            // // std::cout << "Loss size: " << loss.size() << std::endl;
+            //--------------------------
+            // #pragma omp critical
+            // {
+                //--------------------------
+                Timing _timer(__FUNCTION__);
+                auto loss = handler.train(data_loader, test_data_loader, optimizer, 100);
+                //--------------------------
+            // }// end #pragma omp critical 
+            //--------------------------
+        }// end 
+        //--------------------------
+    // }// end #pragma omp parallel shared(data)
     //--------------------------
     // for (const auto& i : loss){
     //     std::cout << "Current loss: " << i << std::endl;

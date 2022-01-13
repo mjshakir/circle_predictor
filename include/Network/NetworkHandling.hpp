@@ -130,7 +130,7 @@ class NetworkHandling{
             double _element_sum{100};
             std::vector<float> Loss;
             //--------------------------
-            auto _scheduler = torch::optim::StepLR(optimizer, 30, 1E-2);
+            torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
             do{
                 //--------------------------
@@ -142,12 +142,12 @@ class NetworkHandling{
                 //     //--------------------------
                 // }// end for (const auto& batch : *data_loader)
                 //--------------------------
-                std::for_each(std::execution::par, data_loader->begin(), data_loader->end(), [&](auto&& batch){ std::lock_guard<std::mutex> lock(mutex);
-                                                                                                                Loss.push_back(network_train_batch(batch, optimizer));});
+                std::for_each(std::execution::par, data_loader->begin(), data_loader->end(), [&](const auto& batch){    std::lock_guard<std::mutex> lock(mutex);
+                                                                                                                        Loss.push_back(network_train_batch(batch, optimizer));});
                 // std::ranges::for_each(std::begin(*data_loader), std::end(*data_loader), [&](const auto& batch){Loss.push_back(network_train_batch(batch, optimizer));});
                 //--------------------------
                 _scheduler.step();
-                //--------------------------        
+                //--------------------------
                 auto _test_loss = network_test(data_loader_test);
                 //--------------------------
                 if (!_test_loss.empty()){
@@ -173,13 +173,18 @@ class NetworkHandling{
         template <typename Dataset>
         std::vector<float> network_test(Dataset& data_loader){
             //--------------------------
+            std::mutex mutex;
+            //--------------------------
             std::vector<float> test_loss;
             //--------------------------
-            for (const auto& batch : *data_loader){
-                //--------------------------
-                test_loss.emplace_back(network_test_batch(batch));
-                //--------------------------
-            }// end for (const auto& batch : data_loader)
+            // for (const auto& batch : *data_loader){
+            //     //--------------------------
+            //     test_loss.emplace_back(network_test_batch(batch));
+            //     //--------------------------
+            // }// end for (const auto& batch : data_loader)
+            //--------------------------
+            std::for_each(std::execution::par_unseq, data_loader->begin(), data_loader->end(), [&](const auto& batch){  std::lock_guard<std::mutex> lock(mutex);
+                                                                                                                        test_loss.emplace_back(network_test_batch(batch));});
             //--------------------------
             return test_loss;
             //--------------------------

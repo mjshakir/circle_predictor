@@ -38,12 +38,12 @@ int main(){
     //--------------------------
     NetworkHandling handler(model, device);
     //--------------------------
-    // #pragma omp parallel shared(handler, optimizer)
-    // {
+    #pragma omp parallel shared(handler, optimizer)
+    {
         //--------------------------
-        // #pragma omp for nowait schedule(dynamic)
+        #pragma omp for nowait schedule(dynamic)
         //--------------------------
-        for (int i = 0; i < 5; i++){
+        for (int i = 0; i < omp_get_thread_num()/2; i++){
             //--------------------------
             Generate _generate(random_radius(rng), 25000); 
             GenerateDate data = _generate.get_data();
@@ -71,17 +71,17 @@ int main(){
             // auto loss = handler.train(10, data_loader, optimizer);
             // // std::cout << "Loss size: " << loss.size() << std::endl;
             //--------------------------
-            // #pragma omp critical
-            // {
+            #pragma omp critical
+            {
                 //--------------------------
                 Timing _timer(__FUNCTION__);
                 auto loss = handler.train(data_loader, test_data_loader, optimizer, 95);
                 //--------------------------
-            // }// end #pragma omp critical 
+            }// end #pragma omp critical 
             //--------------------------
         }// end 
         //--------------------------
-    // }// end #pragma omp parallel shared(data)
+    }// end #pragma omp parallel shared(data)
     //--------------------------
     // for (const auto& i : loss){
     //     std::cout << "Current loss: " << i << std::endl;

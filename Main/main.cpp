@@ -3,9 +3,15 @@
 #include "SharedLibrary/SharedLibrary.hpp"
 #include "Timing/TimingFunction.hpp"
 #include "Network/DataLoader.hpp"
+#include <random>
 #include <omp.h>
 
+
 int main(){
+    //--------------------------
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_real_distribution<double> random_radius(1,10);
     //--------------------------
     torch::manual_seed(17);
     //--------------------------
@@ -39,7 +45,7 @@ int main(){
         //--------------------------
         for (int i = 0; i < 5; i++){
             //--------------------------
-            Generate _generate((std::rand() % 10) + 1, 5000); 
+            Generate _generate(random_radius(rng), 600); 
             GenerateDate data = _generate.get_data();
             GenerateDate test_data = _generate.get_test();
             //------------

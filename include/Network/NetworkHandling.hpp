@@ -142,8 +142,8 @@ class NetworkHandling{
                 //     //--------------------------
                 // }// end for (const auto& batch : *data_loader)
                 //--------------------------
-                std::for_each(std::execution::par, std::begin(*data_loader), std::end(*data_loader), [&](const auto& batch){    std::lock_guard<std::mutex> lock(mutex);
-                                                                                                                                Loss.push_back(network_train_batch(batch, optimizer));});
+                std::for_each(std::execution::par, data_loader->begin(), data_loader->end(), [&](auto&& batch){ std::lock_guard<std::mutex> lock(mutex);
+                                                                                                                Loss.push_back(network_train_batch(batch, optimizer));});
                 // std::ranges::for_each(std::begin(*data_loader), std::end(*data_loader), [&](const auto& batch){Loss.push_back(network_train_batch(batch, optimizer));});
                 //--------------------------
                 _scheduler.step();

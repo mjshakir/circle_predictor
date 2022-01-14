@@ -1,8 +1,5 @@
 #include "Generate/Generate.hpp"
 #include <random>
-#include <thread>
-#include <mutex>
-#include <future>
 #include "Timing/Timing.hpp"
 //--------------------------------------------------------------
 Generate::Generate(const torch::Tensor& x_value, const double& radius, const size_t& generated_points) :    m_radius(radius), 
@@ -20,17 +17,17 @@ Generate::Generate(const double& radius, const size_t& generated_points) : m_rad
     //--------------------------
 }// end Generate::Generate(const double& radius, const size_t& generated_points)
 //--------------------------------------------------------------
-torch::Tensor Generate::get_x_value(void){
+torch::Tensor Generate::get_input(void){
     //--------------------------
     return m_x_value;
     //--------------------------
-}// end const double Generate::get_x_value()
+}// end const double Generate::get_input()
 //--------------------------------------------------------------
-torch::Tensor Generate::get_y_value(void){
+torch::Tensor Generate::get_target(void){
     //--------------------------
     return y_value;
     //--------------------------
-}// end const double Generate::get_y_value()
+}// end const double Generate::get_target()
 //--------------------------------------------------------------
 GenerateDate Generate::get_data(void){
     //--------------------------
@@ -70,12 +67,15 @@ const GenerateDate Generate::generate_value(const double& radius){
     //--------------------------
     for (size_t i = 0; i < m_generated_points; i++){
         //--------------------------
-        angle.emplace_back(uniform_angle(re));
+        angle.push_back(uniform_angle(re));
         //--------------------------
     } // end for (size_t i = 0; i < m_generated_points; i++)
     //--------------------------
     data.data = torch::tensor(angle);
     data.target = generate_value(data.data, radius);
+    //--------------------------
+    m_x_value = data.data;
+    y_value = data.target;
     //--------------------------
     return data;
     //--------------------------
@@ -97,7 +97,7 @@ const GenerateDate Generate::generate_test_value(const double& radius){
     //--------------------------
     for (size_t i = 0; i < _generated_point; i++){
         //--------------------------
-        angle.emplace_back(uniform_angle(re));
+        angle.push_back(uniform_angle(re));
         //--------------------------
     } // end for (size_t i = 0; i < m_generated_points; i++)
     //--------------------------

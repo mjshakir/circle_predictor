@@ -77,7 +77,7 @@ int main(){
             //--------------------------
         }// end 
         //--------------------------
-    }// end #pragma omp parallel shared(data)
+    }// end #pragma omp parallel shared(handler, optimizer)
     //--------------------------
     return 0;
     //--------------------------

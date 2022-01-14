@@ -14,7 +14,7 @@
 class NetworkHandling{
     public:
         //--------------------------------------------------------------
-        NetworkHandling(Net& model);
+        NetworkHandling(Net& model, torch::Device& device);
         //--------------------------
         template <typename Dataloader>
         std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
@@ -39,7 +39,8 @@ class NetworkHandling{
         //--------------------------------------------------------------
     private:
         //--------------------------
-        Net m_model;
+        Net m_model; 
+        torch::Device m_device;
         //--------------------------
         template <typename Batch>
         float network_train_batch(Batch&& batch, torch::optim::Optimizer& optimizer){
@@ -47,7 +48,7 @@ class NetworkHandling{
             m_model.train(true);
             //--------------------------
             // auto data = batch.data.to(m_device), targets = batch.target.to(torch::kLong).to(m_device);
-            auto data = batch.data, targets = batch.target;
+            auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
@@ -71,7 +72,7 @@ class NetworkHandling{
             // m_model.train(false);
             m_model.eval();
             //--------------------------
-            auto data = batch.data, targets = batch.target;
+            auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
             // auto printing_threads = std::async(std::launch::async, [&targets, &output](){
             //                                                                                 std::cout << "targets: [" << targets << "] " <<  "output: [" << output << "]" << std::endl;

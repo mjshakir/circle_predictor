@@ -10,8 +10,6 @@ class Generate{
         //--------------------------------------------------------------
         Generate() = delete;
         //--------------------------
-        // ~Generate();
-        //--------------------------
         Generate(const double& radius = 1, const size_t& generated_points = 60000);
         //--------------------------
         Generate(const torch::Tensor& x_value, const double& radius = 1, const size_t& generated_points = 60000);

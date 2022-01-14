@@ -14,7 +14,7 @@
 class NetworkHandling{
     public:
         //--------------------------------------------------------------
-        NetworkHandling(Net& model);
+        NetworkHandling(Net& model, torch::Device& device);
         //--------------------------
         template <typename Dataloader>
         std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
@@ -40,7 +40,7 @@ class NetworkHandling{
     private:
         //--------------------------
         Net m_model; 
-        // torch::Device m_device;
+        torch::Device m_device;
         //--------------------------
         template <typename Batch>
         float network_train_batch(Batch&& batch, torch::optim::Optimizer& optimizer){
@@ -100,7 +100,7 @@ class NetworkHandling{
                     //--------------------------
                     bar.update();
                     //------------
-                    Loss.emplace_back(network_train_batch(std::move(batch), optimizer));
+                    Loss.emplace_back(network_train_batch(std::move(batch.to(m_device)), optimizer));
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
@@ -141,7 +141,7 @@ class NetworkHandling{
                     //--------------------------
                     bar.update();
                     //------------
-                    Loss.push_back(network_train_batch(std::move(batch), optimizer));
+                    Loss.push_back(network_train_batch(std::move(batch.to(m_device)), optimizer));
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
@@ -188,7 +188,7 @@ class NetworkHandling{
                 //--------------------------
                 bar.update();
                 //------------
-                test_loss.emplace_back(network_test_batch(std::move(batch)));
+                test_loss.emplace_back(network_test_batch(std::move(batch.to(m_device))));
                 //--------------------------
             }// end for (const auto& batch : data_loader)
             //--------------------------

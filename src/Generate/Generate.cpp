@@ -59,7 +59,7 @@ const GenerateDate Generate::generate_value(const double& radius){
     //--------------------------
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
-    std::uniform_real_distribution<double> uniform_angle(-1,1);
+    std::uniform_real_distribution<double> uniform_angle(-2*M_PI,2*M_PI);
     std::default_random_engine re;
     //--------------------------
     std::vector<double> angle;
@@ -87,7 +87,7 @@ const GenerateDate Generate::generate_test_value(const double& radius){
     //--------------------------
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
-    std::uniform_real_distribution<double> uniform_angle(-1,1);
+    std::uniform_real_distribution<double> uniform_angle(-2*M_PI,2*M_PI);
     std::default_random_engine re;
     //--------------------------
     size_t _generated_point = (m_generated_points % 2 == 0) ? (m_generated_points*0.3) : ((m_generated_points+1)*0.3);

@@ -38,7 +38,7 @@ int main(){
     //--------------------------
     for (size_t i = 0; i < 5; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 600); 
+        Generate _generate(random_radius(rng), 60000); 
         GenerateDate data = _generate.get_data();
         GenerateDate test_data = _generate.get_test();
         //------------

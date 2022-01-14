@@ -4,7 +4,7 @@
 
 
 class DataLoader : public torch::data::Dataset<DataLoader>{
-
+    //--------------------------------------------------------------
     public:
         //--------------------------
         // explicit DataLoader(const std::string& loc_states, const std::string& loc_labels);
@@ -19,7 +19,7 @@ class DataLoader : public torch::data::Dataset<DataLoader>{
         //--------------------------
         torch::Tensor m_states_, m_labels_;
         //--------------------------
-        std::vector<double> m_tesnor;
+        std::vector<double> m_tensor;
         //--------------------------------------------------------------
-};
+};// end class DataLoader : public torch::data::Dataset<DataLoader>
 //--------------------------------------------------------------

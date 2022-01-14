@@ -46,7 +46,7 @@ int main(){
         //--------------------------
         // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
         // batches into a single tensor.
-        auto data_set = DataLoader(data.data.normal_(0.5 ,0.25), data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
+        auto data_set = DataLoader(std::move(data.data.normal_(0.5 ,0.25)), std::move(data.target.normal_(0.5 ,0.25))).map(torch::data::transforms::Stack<>());
         //--------------------------
         // Generate a data loader.
         auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
@@ -54,7 +54,7 @@ int main(){
         //--------------------------
         // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
         // batches into a single tensor.
-        auto test_data_set = DataLoader(test_data.data.normal_(0.5 ,0.25), test_data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
+        auto test_data_set = DataLoader(std::move(test_data.data.normal_(0.5 ,0.25)), std::move(test_data.target.normal_(0.5 ,0.25))).map(torch::data::transforms::Stack<>());
         //--------------------------
         // Generate a data loader.
         auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(test_data_set), 

@@ -9,6 +9,8 @@
 #include "SharedLibrary/SharedLibrary.hpp"
 #include "Timing/Timing.hpp"
 //--------------------------------------------------------------
+#include "progressbar/include/progressbar.hpp"
+//--------------------------------------------------------------
 class NetworkHandling{
     public:
         //--------------------------------------------------------------
@@ -124,10 +126,14 @@ class NetworkHandling{
             //--------------------------
             do{
                 //--------------------------
+                // progressbar bar(30);
+                //--------------------------
                 Timing _timer_loop("While loop");
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
+                    // bar.update();
+                    //------------
                     Loss.push_back(network_train_batch(std::move(batch), optimizer));
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
@@ -165,10 +171,14 @@ class NetworkHandling{
             //--------------------------
             // std::mutex mutex;
             //--------------------------
+            // progressbar bar(9);
+            //--------------------------
             std::vector<float> test_loss;
             //--------------------------
             for (const auto& batch : *data_loader){
                 //--------------------------
+                // bar.update();
+                //------------
                 test_loss.emplace_back(network_test_batch(std::move(batch)));
                 //--------------------------
             }// end for (const auto& batch : data_loader)

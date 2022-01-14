@@ -4,7 +4,6 @@
 #include "Timing/TimingFunction.hpp"
 #include "Network/DataLoader.hpp"
 #include <random>
-#include <omp.h>
 
 
 int main(){
@@ -38,46 +37,35 @@ int main(){
     //--------------------------
     NetworkHandling handler(model, device);
     //--------------------------
-    #pragma omp parallel shared(handler, optimizer)
-    {
+    for (size_t i = 0; i < 5; i++){
         //--------------------------
-        #pragma omp for nowait schedule(dynamic)
+        Generate _generate(random_radius(rng), 60000); 
+        GenerateDate data = _generate.get_data();
+        GenerateDate test_data = _generate.get_test();
+        //------------
+        std::cout   << "Training data radius: " << _generate.get_radius()  << std::endl;
         //--------------------------
-        for (int i = 0; i < omp_get_thread_num()/2; i++){
-            //--------------------------
-            Generate _generate(random_radius(rng), 60000); 
-            GenerateDate data = _generate.get_data();
-            GenerateDate test_data = _generate.get_test();
-            //------------
-            std::cout   << "Training data radius: " << _generate.get_radius()  << std::endl;
-            //--------------------------
-            // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
-            // batches into a single tensor.
-            auto data_set = DataLoader(data.data.normal_(0.5 ,0.25), data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
-            //--------------------------
-            // Generate a data loader.
-            auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
-                                                                                                    torch::data::DataLoaderOptions(20));
-            //--------------------------
-            // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
-            // batches into a single tensor.
-            auto test_data_set = DataLoader(test_data.data.normal_(0.5 ,0.25), test_data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
-            //--------------------------
-            // Generate a data loader.
-            auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(test_data_set), 
-                                                                                                            torch::data::DataLoaderOptions(20));
-            //--------------------------
-            #pragma omp critical
-            {
-                //--------------------------
-                Timing _timer(__FUNCTION__);
-                auto loss = handler.train(std::move(data_loader), std::move(test_data_loader), optimizer, 1000);
-                //--------------------------
-            }// end #pragma omp critical 
-            //--------------------------
-        }// end 
+        // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
+        // batches into a single tensor.
+        auto data_set = DataLoader(data.data.normal_(0.5 ,0.25), data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
         //--------------------------
-    }// end #pragma omp parallel shared(handler, optimizer)
+        // Generate a data loader.
+        auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
+                                                                                                torch::data::DataLoaderOptions(20));
+        //--------------------------
+        // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
+        // batches into a single tensor.
+        auto test_data_set = DataLoader(test_data.data.normal_(0.5 ,0.25), test_data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
+        //--------------------------
+        // Generate a data loader.
+        auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(test_data_set), 
+                                                                                                        torch::data::DataLoaderOptions(20));
+
+        //--------------------------
+        Timing _timer(__FUNCTION__);
+        auto loss = handler.train(std::move(data_loader), std::move(test_data_loader), optimizer, 1000);
+        //--------------------------
+    }// end (size_t i = 0; i < 5; i++)
     //--------------------------
     return 0;
     //--------------------------

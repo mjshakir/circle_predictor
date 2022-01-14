@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------
 DataLoader::DataLoader(torch::Tensor&& input, torch::Tensor&& target) : m_states_(std::move(input)), m_labels_(std::move(target)), 
-                                                                        m_tesnor(m_states_.data_ptr<float>(), m_states_.data_ptr<float>() + m_states_.numel()){
+                                                                        m_tensor(m_states_.data_ptr<float>(), m_states_.data_ptr<float>() + m_states_.numel()){
     //--------------------------
 }// end DataLoader::DataLoader(const torch::Tensor& input, const torch::Tensor& target)
 //--------------------------------------------------------------
@@ -16,7 +16,7 @@ torch::data::Example<> DataLoader::get(size_t index){
 //--------------------------------------------------------------
 torch::optional<size_t> DataLoader::size() const{
     //--------------------------
-    return m_tesnor.size();
+    return m_tensor.size();
     //--------------------------
 }// end torch::optional<size_t> DataLoader::size() const
 //--------------------------------------------------------------

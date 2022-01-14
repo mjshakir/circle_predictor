@@ -125,12 +125,13 @@ class NetworkHandling{
             //--------------------------
             double _element_sum{100};
             std::vector<float> Loss;
+            auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
             do{
                 //--------------------------
-                progressbar bar(std::distance(data_loader->begin(), data_loader->end()));
+                progressbar bar(data_loader_size);
                 //--------------------------
                 std::cout << "Training: ";
                 //--------------------------

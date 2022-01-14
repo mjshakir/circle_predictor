@@ -86,6 +86,8 @@ class NetworkHandling{
         template <typename Dataloader>
         std::vector<float> network_train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
             //--------------------------
+            progressbar bar(epoch);
+            //--------------------------
             std::vector<float> Loss;
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
@@ -96,6 +98,8 @@ class NetworkHandling{
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
+                    bar.update();
+                    //------------
                     Loss.emplace_back(network_train_batch(std::move(batch), optimizer));
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
@@ -126,13 +130,15 @@ class NetworkHandling{
             //--------------------------
             do{
                 //--------------------------
-                // progressbar bar(30);
+                progressbar bar(std::distance(data_loader->begin(), data_loader->end()));
+                //--------------------------
+                std::cout << "Training: ";
                 //--------------------------
                 Timing _timer_loop("While loop");
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
-                    // bar.update();
+                    bar.update();
                     //------------
                     Loss.push_back(network_train_batch(std::move(batch), optimizer));
                     //--------------------------
@@ -171,13 +177,15 @@ class NetworkHandling{
             //--------------------------
             // std::mutex mutex;
             //--------------------------
-            // progressbar bar(9);
+            progressbar bar(std::distance(data_loader->begin(), data_loader->end()));
             //--------------------------
             std::vector<float> test_loss;
             //--------------------------
+            std::cout << "\nValidation: ";
+            //--------------------------
             for (const auto& batch : *data_loader){
                 //--------------------------
-                // bar.update();
+                bar.update();
                 //------------
                 test_loss.emplace_back(network_test_batch(std::move(batch)));
                 //--------------------------

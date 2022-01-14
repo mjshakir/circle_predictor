@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(circle_predictor)
 #------------------------------------------------------------------------------------------
 # Default to C++20
-# if(NOT CMAKE_CXX_STANDARD)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_COMPILER /usr/bin/clang++)
-# endif()
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 20)
+  set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+endif()
 add_compile_options(-Wall -Wextra -Wpedantic)
 #------------------------------------------------------------------------------------------
 set(CMAKE_PREFIX_PATH ~/Documents/Projects/circle_predictor/libtorch)
@@ -46,6 +46,7 @@ target_link_libraries(${PROJECT_NAME}_data "${TORCH_LIBRARIES}" tbb)
 #------------------------------------------------------------------------------------------
 include_directories(
   include
+  external_library
 )
 #------------------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} Main/main.cpp)

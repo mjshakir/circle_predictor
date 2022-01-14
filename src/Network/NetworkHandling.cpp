@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
-NetworkHandling::NetworkHandling(Net& model, torch::Device& device) : m_model(model), m_device(device){
+NetworkHandling::NetworkHandling(Net& model) : m_model(model){
     //--------------------------
 }// end NetworkHandling::NetworkHandling(Net& model, torch::Device& device)
 //--------------------------------------------------------------

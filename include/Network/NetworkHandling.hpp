@@ -14,6 +14,8 @@
 class NetworkHandling{
     public:
         //--------------------------------------------------------------
+        NetworkHandling() = delete;
+        //--------------------------
         NetworkHandling(Net& model, torch::Device& device);
         //--------------------------
         template <typename Dataloader>
@@ -21,21 +23,21 @@ class NetworkHandling{
             //--------------------------
             return network_train(epoch, data_loader, optimizer);
             //--------------------------
-        }// end std::vector<torch::Tensor> NetworkHandling::train(const size_t& epoch, Dataloader& data_loader, torch::optim::Optimizer& optimizer)
+        }// end std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch)
         //--------------------------
         template <typename Dataloader, typename Test_Dataloader>
         std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, float precision = 10){
             //--------------------------
             return network_train(data_loader, data_loader_test, optimizer, precision);
             //--------------------------
-        }// end std::vector<torch::Tensor> NetworkHandling::train(const size_t& epoch, Dataloader& data_loader, torch::optim::Optimizer& optimizer)
+        }// end  std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, float precision = 10)
         //--------------------------
         template <typename Dataset>
         std::vector<float> test(Dataset&& data_loader){
             //--------------------------
             return network_test(data_loader);
             //--------------------------
-        }// end std::vector<double> NetworkHandling::network_test(DataLoader& data_loader)
+        }// end std::vector<float> test(Dataset&& data_loader)
         //--------------------------------------------------------------
     private:
         //--------------------------
@@ -63,7 +65,7 @@ class NetworkHandling{
             //--------------------------
             return loss.template item<float>();
             //--------------------------
-        }// end at::Tensor NetworkHandling::network_train(Batch& batch)
+        }// end float network_train_batch(Batch&& batch, torch::optim::Optimizer& optimizer)
         //--------------------------
         template <typename Batch>
         float network_test_batch(Batch&& batch){
@@ -81,7 +83,7 @@ class NetworkHandling{
             //--------------------------
             return torch::mse_loss(output, targets, torch::Reduction::Sum).template item<double>();
             //--------------------------
-        }// end double NetworkHandling::network_test(Batch& batch)
+        }// end float network_test_batch(Batch&& batch)
         //--------------------------
         template <typename Dataloader>
         std::vector<float> network_train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
@@ -116,7 +118,7 @@ class NetworkHandling{
             //--------------------------
             return Loss;
             //--------------------------
-        }// end std::vector<at::Tensor> NetworkHandling::network_train(DataLoader& data_loader, size_t& epoch)
+        }// end std::vector<float> network_train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch)
         //--------------------------
         template <typename Dataloader, typename Test_Dataloader>
         std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const float& precision){
@@ -165,7 +167,7 @@ class NetworkHandling{
                     //--------------------------
                 }// end if (!_test_loss.empty())
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, loss_disply, _test_loss, _element_sum);
+                auto printing_threads = std::async(std::launch::async, loss_display, _test_loss, _element_sum);
                 //--------------------------
             } while(_element_sum >= precision);
             //--------------------------
@@ -199,7 +201,7 @@ class NetworkHandling{
             //--------------------------
         }// end std::vector<double> NetworkHandling::network_test(DataLoader& data_loader)
         //--------------------------------------------------------------
-        static void loss_disply(const std::vector<float>& loss, const double& elements_sum);
+        static void loss_display(const std::vector<float>& loss, const double& elements_sum);
         //--------------------------------------------------------------
 };
 //--------------------------------------------------------------

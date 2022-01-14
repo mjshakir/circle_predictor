@@ -8,7 +8,7 @@ class DataLoader : public torch::data::Dataset<DataLoader>{
     public:
         //--------------------------
         // explicit DataLoader(const std::string& loc_states, const std::string& loc_labels);
-        explicit DataLoader(const torch::Tensor& input, const torch::Tensor& target);
+        explicit DataLoader(torch::Tensor&& input, torch::Tensor&& target);
         //--------------------------
         torch::data::Example<> get(size_t index) override;
         //--------------------------

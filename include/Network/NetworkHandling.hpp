@@ -48,7 +48,7 @@ class NetworkHandling{
             m_model.train(true);
             //--------------------------
             // auto data = batch.data.to(m_device), targets = batch.target.to(torch::kLong).to(m_device);
-            auto data = batch.data, targets = batch.target;
+            auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
@@ -72,7 +72,7 @@ class NetworkHandling{
             // m_model.train(false);
             m_model.eval();
             //--------------------------
-            auto data = batch.data, targets = batch.target;
+            auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
             // auto printing_threads = std::async(std::launch::async, [&targets, &output](){
             //                                                                                 std::cout << "targets: [" << targets << "] " <<  "output: [" << output << "]" << std::endl;
@@ -100,7 +100,7 @@ class NetworkHandling{
                     //--------------------------
                     bar.update();
                     //------------
-                    Loss.emplace_back(network_train_batch(std::move(batch.to(m_device)), optimizer));
+                    Loss.emplace_back(network_train_batch(std::move(batch), optimizer));
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
@@ -141,7 +141,7 @@ class NetworkHandling{
                     //--------------------------
                     bar.update();
                     //------------
-                    Loss.push_back(network_train_batch(std::move(batch.to(m_device)), optimizer));
+                    Loss.push_back(network_train_batch(std::move(batch), optimizer));
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
@@ -188,7 +188,7 @@ class NetworkHandling{
                 //--------------------------
                 bar.update();
                 //------------
-                test_loss.emplace_back(network_test_batch(std::move(batch.to(m_device))));
+                test_loss.emplace_back(network_test_batch(std::move(batch)));
                 //--------------------------
             }// end for (const auto& batch : data_loader)
             //--------------------------

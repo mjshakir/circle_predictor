@@ -34,11 +34,11 @@ int main(){
     // torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions(1E-1));
     // torch::optim::Adam optimizer(model.parameters(), torch::optim::AdamOptions(1E-1));
     //--------------------------
-    NetworkHandling handler(model);
+    NetworkHandling handler(model, device);
     //--------------------------
     for (size_t i = 0; i < 5; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 60000); 
+        Generate _generate(random_radius(rng), 600); 
         GenerateDate data = _generate.get_data();
         GenerateDate test_data = _generate.get_test();
         //------------
@@ -46,7 +46,7 @@ int main(){
         //--------------------------
         // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
         // batches into a single tensor.
-        auto data_set = DataLoader(data.data.normal_(0.5 ,0.25).to(device), data.target.normal_(0.5 ,0.25).to(device)).map(torch::data::transforms::Stack<>());
+        auto data_set = DataLoader(data.data.normal_(0.5 ,0.25), data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
         //--------------------------
         // Generate a data loader.
         auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
@@ -54,7 +54,7 @@ int main(){
         //--------------------------
         // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
         // batches into a single tensor.
-        auto test_data_set = DataLoader(test_data.data.normal_(0.5 ,0.25).to(device), test_data.target.normal_(0.5 ,0.25).to(device)).map(torch::data::transforms::Stack<>());
+        auto test_data_set = DataLoader(test_data.data.normal_(0.5 ,0.25), test_data.target.normal_(0.5 ,0.25)).map(torch::data::transforms::Stack<>());
         //--------------------------
         // Generate a data loader.
         auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(test_data_set), 

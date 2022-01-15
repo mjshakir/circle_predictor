@@ -31,14 +31,12 @@ int main(){
     model.to(device);
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1).momentum(0.95).nesterov(true));
-    // torch::optim::AdamW optimizer(model.parameters(), torch::optim::AdamWOptions(1E-1));
-    // torch::optim::Adam optimizer(model.parameters(), torch::optim::AdamOptions(1E-1));
     //--------------------------
     NetworkHandling handler(model, device);
     //--------------------------
     for (size_t i = 0; i < 5; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 60000); 
+        Generate _generate(random_radius(rng), 40000); 
         GenerateDate data = _generate.get_data();
         GenerateDate test_data = _generate.get_test();
         //------------
@@ -62,7 +60,7 @@ int main(){
 
         //--------------------------
         Timing _timer(__FUNCTION__);
-        auto loss = handler.train(std::move(data_loader), std::move(test_data_loader), optimizer, 1000);
+        auto loss = handler.train(std::move(data_loader), std::move(test_data_loader), optimizer, 900);
         //--------------------------
     }// end (size_t i = 0; i < 5; i++)
     //--------------------------

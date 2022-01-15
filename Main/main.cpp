@@ -36,7 +36,7 @@ int main(){
     //--------------------------
     for (size_t i = 0; i < 5; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 40000); 
+        Generate _generate(random_radius(rng), 30000); 
         GenerateDate data = _generate.get_data();
         GenerateDate test_data = _generate.get_test();
         //------------
@@ -60,7 +60,7 @@ int main(){
 
         //--------------------------
         Timing _timer(__FUNCTION__);
-        auto loss = handler.train(std::move(data_loader), std::move(test_data_loader), optimizer, 900);
+        auto loss = handler.train(std::move(data_loader), std::move(test_data_loader), optimizer, 1E-5L);
         //--------------------------
     }// end (size_t i = 0; i < 5; i++)
     //--------------------------

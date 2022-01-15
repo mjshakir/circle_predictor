@@ -3,6 +3,8 @@
 //--------------------------------------------------------------
 #include <torch/torch.h>
 #include <future>
+#include <algorithm>
+#include <execution>
 //--------------------------------------------------------------
 #include "Network/Network.hpp"
 //--------------------------------------------------------------
@@ -127,7 +129,12 @@ class NetworkHandling{
             //--------------------------
             double _element_sum{100};
             std::vector<float> Loss;
+            //--------------------------
             auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
+            //--------------------------
+            bool _learning = true;
+            std::vector<double> _learning_elements;
+            _learning_elements.reserve(5);
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
@@ -147,10 +154,6 @@ class NetworkHandling{
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
-                // std::for_each(std::execution::par, data_loader->begin(), data_loader->end(), [&](const auto& batch){    std::lock_guard<std::mutex> lock(mutex);
-                //                                                                                                         Loss.push_back(network_train_batch(batch, optimizer));});
-                // std::ranges::for_each(std::begin(*data_loader), std::end(*data_loader), [&](const auto& batch){Loss.push_back(network_train_batch(batch, optimizer));});
-                //--------------------------
                 _scheduler.step();
                 //--------------------------
                 auto _test_loss = network_test(std::move(data_loader_test));
@@ -167,9 +170,17 @@ class NetworkHandling{
                     //--------------------------
                 }// end if (!_test_loss.empty())
                 //--------------------------
+                _learning_elements.push_back(_element_sum);
+                //--------------------------
                 auto printing_threads = std::async(std::launch::async, loss_display, _test_loss, _element_sum);
                 //--------------------------
-            } while(_element_sum >= precision);
+                if (_learning_elements.size() > 4){
+                    _learning = check_learning(_learning_elements, 1E-4L);
+                    _learning_elements.clear();
+                    printf("Learning:[%s]\n", (_learning) ? "True" : "False");
+                }// end if (_learning_elements.size > 4)
+                //--------------------------
+            } while(_element_sum >= precision and _learning);
             //--------------------------
             return Loss;
             //--------------------------
@@ -200,6 +211,18 @@ class NetworkHandling{
             return test_loss;
             //--------------------------
         }// end std::vector<double> NetworkHandling::network_test(DataLoader& data_loader)
+        //--------------------------------------------------------------
+        template <typename T>
+        bool check_learning(const std::vector<T>& elements, const long double tolerance = 1E-2L){
+            //--------------------------
+            long double average = std::reduce(std::execution::par_unseq, elements.begin(), elements.end(), 0.L) / elements.size();
+            //--------------------------
+            if (std::abs(average - elements.front()) <= tolerance){
+                return false;
+            }// end std::abs(average - elements.front()) <= tolerance)
+            //--------------------------
+            return true;
+        }// end bool NetworkHandling::check_learning(const std::vector<double>& elements, const double tolerance)
         //--------------------------------------------------------------
         static void loss_display(const std::vector<float>& loss, const double& elements_sum);
         //--------------------------------------------------------------

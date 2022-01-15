@@ -1,6 +1,4 @@
 #include "Network/NetworkHandling.hpp"
-#include <algorithm>
-#include <execution>
 //--------------------------------------------------------------
 NetworkHandling::NetworkHandling(Net& model, torch::Device& device) : m_model(model), m_device(device){
     //--------------------------

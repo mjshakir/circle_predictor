@@ -175,12 +175,12 @@ class NetworkHandling{
                 auto printing_threads = std::async(std::launch::async, loss_display, _test_loss, _element_sum);
                 //--------------------------
                 if (_learning_elements.size() > 4){
-                    _learning = check_learning(_learning_elements, 1E-4L);
+                    _learning = check_learning(_learning_elements, precision);
                     _learning_elements.clear();
-                    printf("Learning:[%s]\n", (_learning) ? "True" : "False");
+                    printf("\n-----------------Learning:[%s]-----------------\n", (_learning) ? "True" : "False");
                 }// end if (_learning_elements.size > 4)
                 //--------------------------
-            } while(_element_sum >= precision and _learning);
+            } while(_learning);
             //--------------------------
             return Loss;
             //--------------------------

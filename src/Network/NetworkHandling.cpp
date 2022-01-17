@@ -9,7 +9,7 @@ void NetworkHandling::loss_display(const std::vector<float>& loss, const double&
     auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
     auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
     //--------------------------
-    printf("\n-----------------Loss Sum[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
+    printf("\n-----------------Loss Sum:[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
             elements_sum,
             std::distance(loss.begin(), _min_element), 
             *_min_element,  

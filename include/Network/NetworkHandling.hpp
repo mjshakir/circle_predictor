@@ -35,11 +35,18 @@ class NetworkHandling{
         }// end  std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, float precision = 10)
         //--------------------------
         template <typename Dataset>
-        std::vector<float> test(Dataset&& data_loader){
+        std::vector<float> validation(Dataset&& data_loader){
+            //--------------------------
+            return network_validation(data_loader);
+            //--------------------------
+        }// end std::vector<float> validation(Dataset&& data_loader)
+        //--------------------------------------------------------------
+        template <typename Dataset>
+        std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> test(Dataset&& data_loader){
             //--------------------------
             return network_test(data_loader);
             //--------------------------
-        }// end std::vector<float> test(Dataset&& data_loader)
+        }// end std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> test(Dataset&& data_loader)
         //--------------------------------------------------------------
     private:
         //--------------------------
@@ -70,7 +77,7 @@ class NetworkHandling{
         }// end float network_train_batch(Batch&& batch, torch::optim::Optimizer& optimizer)
         //--------------------------
         template <typename Batch>
-        float network_test_batch(Batch&& batch){
+        float network_validation_batch(Batch&& batch){
             //--------------------------
             torch::NoGradGuard no_grad;
             // m_model.train(false);
@@ -78,14 +85,24 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
-            // auto printing_threads = std::async(std::launch::async, [&targets, &output](){
-            //                                                                                 std::cout << "targets: [" << targets << "] " <<  "output: [" << output << "]" << std::endl;
-            //                                                                                 return true;
-            //                                                                             });
             //--------------------------
             return torch::mse_loss(output, targets, torch::Reduction::Sum).template item<double>();
             //--------------------------
-        }// end float network_test_batch(Batch&& batch)
+        }// end float network_validation_batch(Batch&& batch)
+        //--------------------------
+        template <typename Batch>
+        std::tuple<torch::Tensor, torch::Tensor, float> network_test_batch(Batch&& batch){
+            //--------------------------
+            torch::NoGradGuard no_grad;
+            // m_model.train(false);
+            m_model.eval();
+            //--------------------------
+            auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
+            auto output = m_model.forward(data);
+            //--------------------------
+            return targets, output, torch::mse_loss(output, targets, torch::Reduction::Sum).template item<float>();
+            //--------------------------
+        }// end std::tuple<torch::Tensor, torch::Tensor, float> network_test_batch(Batch&& batch)
         //--------------------------
         template <typename Dataloader>
         std::vector<float> network_train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
@@ -156,7 +173,7 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto _test_loss = network_test(std::move(data_loader_test));
+                auto _test_loss = network_validation(std::move(data_loader_test));
                 //--------------------------
                 if (!_test_loss.empty()){
                     //--------------------------
@@ -177,7 +194,8 @@ class NetworkHandling{
                 if (_learning_elements.size() > 4){
                     _learning = check_learning(_learning_elements, precision);
                     _learning_elements.clear();
-                    printf("\n-----------------Learning:[%s]-----------------\n", (_learning) ? "True" : "False");
+                    printing_threads = std::async(std::launch::async, [&_learning](){
+                                        printf("\n-----------------Learning:[%s]-----------------\n", (_learning) ? "True" : "False");});
                 }// end if (_learning_elements.size > 4)
                 //--------------------------
             } while(_learning);
@@ -187,9 +205,7 @@ class NetworkHandling{
         }// end std::vector<at::Tensor> NetworkHandling::network_train(DataLoader& data_loader, size_t& epoch)
         //--------------------------
         template <typename Dataset>
-        std::vector<float> network_test(Dataset&& data_loader){
-            //--------------------------
-            // std::mutex mutex;
+        std::vector<float> network_validation(Dataset&& data_loader){
             //--------------------------
             progressbar bar(std::distance(data_loader->begin(), data_loader->end()));
             //--------------------------
@@ -201,16 +217,34 @@ class NetworkHandling{
                 //--------------------------
                 bar.update();
                 //------------
-                test_loss.emplace_back(network_test_batch(std::move(batch)));
+                test_loss.emplace_back(network_validation_batch(std::move(batch)));
                 //--------------------------
             }// end for (const auto& batch : data_loader)
             //--------------------------
-            // std::for_each(std::execution::par_unseq, data_loader->begin(), data_loader->end(), [&](const auto& batch){  std::lock_guard<std::mutex> lock(mutex);
-            //                                                                                                             test_loss.emplace_back(network_test_batch(batch));});
-            //--------------------------
             return test_loss;
             //--------------------------
-        }// end std::vector<double> NetworkHandling::network_test(DataLoader& data_loader)
+        }// end std::vector<double> NetworkHandling::network_validation(DataLoader& data_loader)
+        //--------------------------------------------------------------
+        template <typename Dataset>
+        std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> network_test(Dataset&& data_loader){
+            //--------------------------
+            progressbar bar(std::distance(data_loader->begin(), data_loader->end()));
+            //--------------------------
+            std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> results;
+            //--------------------------
+            std::cout << "\nValidation: ";
+            //--------------------------
+            for (const auto& batch : *data_loader){
+                //--------------------------
+                bar.update();
+                //------------
+                results.emplace_back(network_test_batch(std::move(batch)));
+                //--------------------------
+            }// end for (const auto& batch : data_loader)
+            //--------------------------
+            return results;
+            //--------------------------
+        }// end std::tuple<std::vector<torch::Tensor>, std::vector<torch::Tensor>, std::vector<float>> network_test(Dataset&& data_loader)
         //--------------------------------------------------------------
         template <typename T>
         bool check_learning(const std::vector<T>& elements, const long double tolerance = 1E-2L){

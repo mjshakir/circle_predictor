@@ -17,7 +17,7 @@ link_directories(${CMAKE_SOURCE_DIR}/libtorch/lib)
 # add_library(Torch SHARED) # or STATIC instead of SHARED
 #------------------------------------------------------------------------------------------
 find_package(Torch REQUIRED)
-find_package(OpenMP)
+find_package(OpenMP 5.0)
 find_package(TBB REQUIRED)
 LINK_DIRECTORIES( ${LIBRARYPATH} )
 #------------------------------------------------------------------------------------------

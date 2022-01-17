@@ -34,7 +34,7 @@ int main(){
     //--------------------------
     NetworkHandling handler(model, device);
     //--------------------------
-    for (size_t i = 0; i < 5; i++){
+    for (size_t i = 0; i < 10; i++){
         //--------------------------
         Generate _generate(random_radius(rng), 30000); 
         GenerateDate data = _generate.get_data();
@@ -61,6 +61,8 @@ int main(){
         //--------------------------
         Timing _timer(__FUNCTION__);
         auto loss = handler.train(std::move(data_loader), std::move(test_data_loader), optimizer, 1E-5L);
+        //--------------------------
+        printf("\n-----------------Done:[%zu]-----------------\n",i);
         //--------------------------
     }// end (size_t i = 0; i < 5; i++)
     //--------------------------

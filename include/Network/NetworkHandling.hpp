@@ -8,7 +8,6 @@
 //--------------------------------------------------------------
 #include "Network/Network.hpp"
 //--------------------------------------------------------------
-#include "SharedLibrary/SharedLibrary.hpp"
 #include "Timing/Timing.hpp"
 //--------------------------------------------------------------
 #include "progressbar/include/progressbar.hpp"
@@ -100,7 +99,7 @@ class NetworkHandling{
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
             //--------------------------
-            return targets, output, torch::mse_loss(output, targets, torch::Reduction::Sum).template item<float>();
+            return {targets, output, torch::mse_loss(output, targets, torch::Reduction::Sum).template item<float>()};
             //--------------------------
         }// end std::tuple<torch::Tensor, torch::Tensor, float> network_test_batch(Batch&& batch)
         //--------------------------

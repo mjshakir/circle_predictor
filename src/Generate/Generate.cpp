@@ -13,7 +13,7 @@ Generate::Generate(const torch::Tensor& x_value, const double& radius, const siz
 Generate::Generate(const double& radius, const size_t& generated_points) : m_radius(radius), m_generated_points((generated_points < 20) ? 20 : generated_points){
     //--------------------------
     full_data = generate_value(radius);
-    test_data = generate_test_value(radius);
+    validation_data = generate_validation_value(radius);
     //--------------------------
 }// end Generate::Generate(const double& radius, const size_t& generated_points)
 //--------------------------------------------------------------
@@ -21,25 +21,25 @@ torch::Tensor Generate::get_input(void){
     //--------------------------
     return m_x_value;
     //--------------------------
-}// end const double Generate::get_input()
+}// end const torch::Tensor Generate::get_input()
 //--------------------------------------------------------------
 torch::Tensor Generate::get_target(void){
     //--------------------------
     return y_value;
     //--------------------------
-}// end const double Generate::get_target()
+}// end const torch::Tensor Generate::get_target()
 //--------------------------------------------------------------
-GenerateDate Generate::get_data(void){
+std::tuple<torch::Tensor, torch::Tensor> Generate::get_data(void){
     //--------------------------
     return full_data;
     //--------------------------
-}// end const GenerateDate Generate::get_data(void)
+}// end const std::tuple<torch::Tensor, torch::Tensor> Generate::get_data(void)
 //--------------------------------------------------------------
-GenerateDate Generate::get_test(void){
+std::tuple<torch::Tensor, torch::Tensor> Generate::get_validation(void){
     //--------------------------
-    return test_data;
+    return validation_data;
     //--------------------------
-}// end const GenerateDate Generate::get_test(void)
+}// end const std::tuple<torch::Tensor, torch::Tensor> Generate::get_validation(void)
 //--------------------------------------------------------------
 double Generate::get_radius(void){
     //--------------------------
@@ -51,11 +51,9 @@ const torch::Tensor Generate::generate_value(const torch::Tensor& x_value, const
     //--------------------------
     return (std::abs(radius)*sin(x_value) + std::abs(radius)*cos(x_value));
     //--------------------------
-}// end const double Generate::generate_value(const double& x_value, const double& radius)
+}// end const torch::Tensor Generate::generate_value(const double& x_value, const double& radius)
 //--------------------------------------------------------------
-const GenerateDate Generate::generate_value(const double& radius){
-    //--------------------------
-    GenerateDate data;
+const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_value(const double& radius){
     //--------------------------
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
@@ -71,19 +69,14 @@ const GenerateDate Generate::generate_value(const double& radius){
         //--------------------------
     } // end for (size_t i = 0; i < m_generated_points; i++)
     //--------------------------
-    data.data = torch::tensor(angle);
-    data.target = generate_value(data.data, radius);
+    m_x_value = torch::tensor(angle);
+    y_value = generate_value(m_x_value, radius);
     //--------------------------
-    m_x_value = data.data;
-    y_value = data.target;
+    return {m_x_value, y_value};
     //--------------------------
-    return data;
-    //--------------------------
-}// end const double Generate::generate_value(const double& x_value, const double& radius)
+}// end const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_value(const double& x_value, const double& radius)
 //--------------------------------------------------------------
-const GenerateDate Generate::generate_test_value(const double& radius){
-    //--------------------------
-    GenerateDate data;
+const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_validation_value(const double& radius){
     //--------------------------
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
@@ -101,10 +94,9 @@ const GenerateDate Generate::generate_test_value(const double& radius){
         //--------------------------
     } // end for (size_t i = 0; i < m_generated_points; i++)
     //--------------------------
-    data.data = torch::tensor(angle);
-    data.target = generate_value(data.data, radius);
+    auto _test_input = torch::tensor(angle);
     //--------------------------
-    return data;
+    return {_test_input, generate_value(_test_input, radius)};
     //--------------------------
-}// end const double Generate::generate_value(const double& x_value, const double& radius)
-//--------------------------------------------------------------4
+}// end const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_value(const double& x_value, const double& radius)
+//--------------------------------------------------------------

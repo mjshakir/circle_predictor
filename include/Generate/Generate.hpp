@@ -1,8 +1,6 @@
 #pragma once
-
-#include <iostream>
 //--------------------------------------------------------------
-#include "SharedLibrary/SharedLibrary.hpp"
+#include <torch/torch.h>
 //--------------------------------------------------------------
 class Generate{
     //--------------------------------------------------------------
@@ -18,9 +16,9 @@ class Generate{
         //--------------------------
         torch::Tensor get_target(void);
         //--------------------------
-        GenerateDate get_data(void);
+        std::tuple<torch::Tensor, torch::Tensor> get_data(void);
         //--------------------------
-        GenerateDate get_test(void);
+        std::tuple<torch::Tensor, torch::Tensor> get_validation(void);
         //--------------------------
         double get_radius(void);
         //--------------------------------------------------------------
@@ -29,9 +27,9 @@ class Generate{
         //--------------------------------------------------------------
         // Functions
         //--------------------------
-        const GenerateDate generate_value(const double& radius);
+        const std::tuple<torch::Tensor, torch::Tensor> generate_value(const double& radius);
         //--------------------------
-        const GenerateDate generate_test_value(const double& radius);
+        const std::tuple<torch::Tensor, torch::Tensor> generate_validation_value(const double& radius);
         //--------------------------
         const torch::Tensor generate_value(const torch::Tensor& x_value, const double& radius);
         //--------------------------------------------------------------
@@ -45,6 +43,6 @@ class Generate{
         //--------------------------
         torch::Tensor m_x_value, y_value;
         //--------------------------
-        GenerateDate full_data, test_data;
+        std::tuple<torch::Tensor, torch::Tensor> full_data, validation_data;
         //--------------------------------------------------------------
 };

@@ -10,8 +10,8 @@ struct Net : torch::nn::Module {
                                   fc1(torch::nn::LinearOptions(20, 15).bias(true)), 
                                   fc2(torch::nn::LinearOptions(15, 10).bias(true)), 
                                   middel(torch::nn::LSTMOptions(5, 15).num_layers(20).batch_first(true).bidirectional(true)),
-                                  fc3(torch::nn::LinearOptions(60, 25).bias(true)), 
-                                  fc4(torch::nn::LinearOptions(25, 20).bias(true)){
+                                  fc3(torch::nn::LinearOptions(60, 40).bias(true)), 
+                                  fc4(torch::nn::LinearOptions(40, 20).bias(true)){
       //--------------------------
       register_module("fc1", fc1);
       register_module("fc2", fc2);

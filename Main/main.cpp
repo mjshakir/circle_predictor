@@ -2,6 +2,7 @@
 #include "Generate/Generate.hpp"
 #include "Timing/TimingFunction.hpp"
 #include "Network/DataLoader.hpp"
+#include "Network/Normalize.hpp"
 #include <random>
 
 int main(){
@@ -33,18 +34,21 @@ int main(){
     //--------------------------
     NetworkHandling handler(model, device);
     //--------------------------
-    for (size_t i = 0; i < 5; i++){
+    for (size_t i = 0; i < 3; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 600); 
+        Generate _generate(random_radius(rng), 10000); 
         auto data = _generate.get_data();
         auto validation_data = _generate.get_validation();
         //------------
         std::cout   << "Training data radius: " << _generate.get_radius()  << std::endl;
         //--------------------------
+        // Normalize data_input_normal(std::get<0>(data));
+        //--------------------------
         // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
         // batches into a single tensor.
         // auto data_set = DataLoader(std::move(std::get<0>(data)), std::move(std::get<1>(data))).map(torch::data::transforms::Normalize<>(0.5, 0.25)).map(torch::data::transforms::Stack<>());
-        auto data_set = DataLoader(std::move(std::get<0>(data).normal_(0.5,0.25)), std::move(std::get<1>(data).normal_(0.5,0.25))).map(torch::data::transforms::Stack<>());
+        auto data_set = DataLoader( Normalize(std::get<0>(data)).normalization(), 
+                                    Normalize(std::get<1>(data)).normalization()).map(torch::data::transforms::Stack<>());
         //--------------------------
         // Generate a data loader.
         auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
@@ -52,8 +56,9 @@ int main(){
         //--------------------------
         // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
         // batches into a single tensor.
-        auto validation_data_set = DataLoader(std::move(std::get<0>(validation_data).normal_(0.5,0.25)), std::move(std::get<1>(validation_data).normal_(0.5,0.25)))
-                                            .map(torch::data::transforms::Stack<>());
+        auto validation_data_set = DataLoader(  Normalize(std::get<0>(validation_data)).normalization(), 
+                                                Normalize(std::get<1>(validation_data)).normalization())
+                                                    .map(torch::data::transforms::Stack<>());
         //--------------------------
         // Generate a data loader.
         auto validation_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(validation_data_set), 
@@ -69,9 +74,13 @@ int main(){
     //--------------------------
     auto test_data = Generate(1, 60).get_data();
     //--------------------------
+    Normalize test_input_normal(std::get<0>(test_data));
+    Normalize test_target_normal(std::get<1>(test_data));
+    //--------------------------
     // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
     // batches into a single tensor.
-    auto test_data_set = DataLoader(std::move(std::get<0>(test_data)), std::move(std::get<1>(test_data))).map(torch::data::transforms::Stack<>());
+    auto test_data_set = DataLoader(test_input_normal.normalization(), 
+                                    test_target_normal.normalization()).map(torch::data::transforms::Stack<>());
     //--------------------------
     // Generate a data loader.
     auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(test_data_set), 
@@ -79,7 +88,9 @@ int main(){
     //--------------------------
     auto test = handler.test(std::move(test_data_loader));
     for (const auto& _test : test){
-        std::cout << "target: " << std::get<0>(_test) << " output: " << std::get<1>(_test) << " loss " << std::get<2>(_test) << std::endl;
+        std::cout   << "\ntarget: \n" << test_target_normal.unnormalization(std::get<0>(_test)) 
+                    << " \noutput: \n" << test_target_normal.unnormalization(std::get<1>(_test)) 
+                    << " \nloss: \n" << std::get<2>(_test) << std::endl;
     }
     //--------------------------
     return 0;

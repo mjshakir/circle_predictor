@@ -47,8 +47,8 @@ int main(){
         // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
         // batches into a single tensor.
         // auto data_set = DataLoader(std::move(std::get<0>(data)), std::move(std::get<1>(data))).map(torch::data::transforms::Normalize<>(0.5, 0.25)).map(torch::data::transforms::Stack<>());
-        auto data_set = DataLoader( Normalize(std::get<0>(data)).normalization(), 
-                                    Normalize(std::get<1>(data)).normalization()).map(torch::data::transforms::Stack<>());
+        auto data_set = DataLoader( Normalize::normalization(std::get<0>(data)), 
+                                    Normalize::normalization(std::get<1>(data))).map(torch::data::transforms::Stack<>());
         //--------------------------
         // Generate a data loader.
         auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
@@ -56,8 +56,8 @@ int main(){
         //--------------------------
         // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
         // batches into a single tensor.
-        auto validation_data_set = DataLoader(  Normalize(std::get<0>(validation_data)).normalization(), 
-                                                Normalize(std::get<1>(validation_data)).normalization())
+        auto validation_data_set = DataLoader(  Normalize::normalization(std::get<0>(validation_data)), 
+                                                Normalize::normalization(std::get<1>(validation_data)))
                                                     .map(torch::data::transforms::Stack<>());
         //--------------------------
         // Generate a data loader.

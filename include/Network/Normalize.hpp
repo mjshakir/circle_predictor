@@ -10,7 +10,7 @@ class Normalize{
         //--------------------------
         torch::Tensor normalization(void);
         //--------------------------
-        torch::Tensor normalization(const torch::Tensor& input);
+        static torch::Tensor normalization(const torch::Tensor& input);
         //--------------------------
         torch::Tensor unnormalization(const torch::Tensor& input);
         //--------------------------------------------------------------
@@ -18,7 +18,7 @@ class Normalize{
         //--------------------------------------------------------------
         torch::Tensor normalization_data(void);
         //--------------------------
-        torch::Tensor normalization_data(const torch::Tensor& input);
+        static torch::Tensor normalization_data(const torch::Tensor& input);
         //--------------------------
         torch::Tensor unnormalization_data(const torch::Tensor& input);
         //--------------------------------------------------------------

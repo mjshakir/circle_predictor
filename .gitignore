@@ -1,4 +1,3 @@
 libtorch/
 build/
-cmake_build/
 .ninja*

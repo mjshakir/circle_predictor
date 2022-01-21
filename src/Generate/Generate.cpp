@@ -92,7 +92,7 @@ const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_validation_val
         //--------------------------
         angle.push_back(uniform_angle(re));
         //--------------------------
-    } // end for (size_t i = 0; i < m_generated_points; i++)
+    } // end for (size_t i = 0; i < _generated_point; i++)
     //--------------------------
     auto _test_input = torch::tensor(angle);
     //--------------------------

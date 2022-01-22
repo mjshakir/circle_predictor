@@ -4,6 +4,7 @@
 #include "Network/DataLoader.hpp"
 #include "Network/Normalize.hpp"
 #include <random>
+#include <fstream>
 
 int main(){
     //--------------------------
@@ -36,7 +37,7 @@ int main(){
     //--------------------------
     for (size_t i = 0; i < 3; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 10000); 
+        Generate _generate(random_radius(rng), 25000); 
         auto data = _generate.get_data();
         auto validation_data = _generate.get_validation();
         //------------
@@ -66,13 +67,13 @@ int main(){
 
         //--------------------------
         Timing _timer(__FUNCTION__);
-        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 1E-5L);
+        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 1E-1L);
         //--------------------------
-        printf("\n-----------------Done:[%zu]-----------------\n", i);
+        // printf("\n-----------------Done:[%zu]-----------------\n", i);
         //--------------------------
-    }// end (size_t i = 0; i < 10; i++)
+    }// end (size_t i = 0; i < 3; i++)
     //--------------------------
-    auto test_data = Generate(1, 60).get_data();
+    auto test_data = Generate(1, 6000).get_data();
     //--------------------------
     Normalize test_input_normal(std::get<0>(test_data));
     Normalize test_target_normal(std::get<1>(test_data));
@@ -83,16 +84,43 @@ int main(){
                                     test_target_normal.normalization()).map(torch::data::transforms::Stack<>());
     //--------------------------
     // Generate a data loader.
-    auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(test_data_set), 
+    auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>( std::move(test_data_set), 
                                                                                             torch::data::DataLoaderOptions(20));
     //--------------------------
     auto test = handler.test(std::move(test_data_loader));
-    for (const auto& _test : test){
-        std::cout   << "\ntarget: \n" << test_target_normal.unnormalization(std::get<0>(_test)) 
-                    << " \noutput: \n" << test_target_normal.unnormalization(std::get<1>(_test)) 
-                    << " \nloss: \n" << std::get<2>(_test) << std::endl;
-    }
     //--------------------------
+    // for (const auto& _test : test){
+    //     std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(std::get<0>(_test)) 
+    //                 << " \noutput: \n" << test_target_normal.unnormalization(std::get<1>(_test)) 
+    //                 << "\ntarget origial: \n" << std::get<0>(_test) 
+    //                 << " \noutput origial: \n" << std::get<1>(_test)
+    //                 << " \nloss: " << std::get<2>(_test) << std::endl;
+    // }
+    //--------------------------------------------------------------
+    // file pointer
+    std::fstream fout;
+    //--------------------------
+    // opens an existing csv file or creates a new file.
+    fout.open("test_data.csv", std::ios::out | std::ios::app);
+    //--------------------------
+    fout    << "target" << ", " 
+            << "output" << ", "  
+            << "target original" << ", " 
+            << " output original" << ", " 
+            << "loss" << "\n";
+    //--------------------------
+    for (const auto& _test : test){
+        //--------------------------
+        fout    << test_target_normal.unnormalization(std::get<0>(_test)) << ", "
+                << test_target_normal.unnormalization(std::get<1>(_test)) << ", "
+                << std::get<0>(_test) << ", "
+                << std::get<1>(_test) << ", "
+                << std::get<2>(_test) << "\n";
+        //--------------------------
+    }// end for (const auto& _test : test)
+    //--------------------------
+    fout.close();
+    //--------------------------------------------------------------
     return 0;
     //--------------------------
 }// end int main(int argc, char const *argv[])

@@ -35,7 +35,7 @@ struct Net : torch::nn::Module {
     //--------------------------------------------------------------
   protected:
     //--------------------------------------------------------------
-    static torch::Tensor linear_layers(torch::Tensor& x){
+    torch::Tensor linear_layers(torch::Tensor& x){
       //--------------------------
       auto _results = torch::leaky_relu(input_layer->forward(x), 5E-2);
       //--------------------------
@@ -53,7 +53,7 @@ struct Net : torch::nn::Module {
       //-------------------------
     }// end torch::Tensor linear_layers(torch::Tensor& x)
     //--------------------------------------------------------------
-    static torch::Tensor lstm_layers(torch::Tensor& x){
+    torch::Tensor lstm_layers(torch::Tensor& x){
       //--------------------------
       std::get<0>(_gates) = h0.to(m_device);
       std::get<1>(_gates) = c0.to(m_device);

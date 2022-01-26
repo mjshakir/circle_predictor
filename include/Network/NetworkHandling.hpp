@@ -179,14 +179,19 @@ class NetworkHandling{
                     //------------
                     Loss.push_back(network_train_batch(std::move(batch), optimizer, &tensorIsNan));
                     //--------------------------
+                    if(tensorIsNan){
+                    std::cout << "\x1b[33m\nTensor is [nan]\x1b[0m" << std::endl;
+                    break;
+                }// end if(tensorIsNan)
+                //--------------------------
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                if(tensorIsNan){
-                    std::cout << "\x1b[33m\ntensor is nan\x1b[0m" << std::endl;
-                    break;
-                }// end if(tensorIsNan)
+                // if(tensorIsNan){
+                //     std::cout << "\x1b[33m\nTensor is [nan]\x1b[0m" << std::endl;
+                //     break;
+                // }// end if(tensorIsNan)
                 //--------------------------
                 auto _test_loss = network_validation(std::move(data_loader_test));
                 //--------------------------

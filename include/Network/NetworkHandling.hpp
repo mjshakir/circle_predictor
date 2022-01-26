@@ -53,19 +53,21 @@ class NetworkHandling{
         torch::Device m_device;
         //--------------------------
         template <typename Batch>
-        float network_train_batch(Batch&& batch, torch::optim::Optimizer& optimizer){
+        float network_train_batch(Batch&& batch, torch::optim::Optimizer& optimizer, bool *tensorIsNan){
             //--------------------------
             m_model.train(true);
             //--------------------------
-            // auto data = batch.data.to(m_device), targets = batch.target.to(torch::kLong).to(m_device);
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
             auto output = m_model.forward(data);
+            output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             torch::Tensor loss = torch::mse_loss(output, targets);
             // AT_ASSERT(!std::isnan(loss.template item<float>()));
+            //--------------------------
+            *tensorIsNan = at::isnan(loss).any().item<bool>(); // will be of type bool
             //--------------------------
             // loss.backward(torch::nullopt, /*keep_graph=*/ true, /*create_graph=*/ false);
             loss.backward({},c10::optional<bool>(true), false);
@@ -84,6 +86,7 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
+            output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             return torch::mse_loss(output, targets, torch::Reduction::Sum).template item<double>();
             //--------------------------
@@ -98,6 +101,7 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
+            output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             return {targets, output, torch::mse_loss(output, targets, torch::Reduction::Sum).template item<float>()};
             //--------------------------
@@ -107,6 +111,8 @@ class NetworkHandling{
         std::vector<float> network_train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
             //--------------------------
             progressbar bar(epoch);
+            //--------------------------
+            bool tensorIsNan = false;
             //--------------------------
             std::vector<float> Loss;
             //--------------------------
@@ -120,9 +126,14 @@ class NetworkHandling{
                     //--------------------------
                     bar.update();
                     //------------
-                    Loss.emplace_back(network_train_batch(std::move(batch), optimizer));
+                    Loss.push_back(network_train_batch(std::move(batch), optimizer, &tensorIsNan));
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
+                //--------------------------
+                if(tensorIsNan){
+                    std::cout << "\x1b[33m\ntensor is nan\x1b[0m" << std::endl;
+                    break;
+                }// end if(tensorIsNan)
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
@@ -148,7 +159,7 @@ class NetworkHandling{
             //--------------------------
             auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
             //--------------------------
-            bool _learning = true;
+            bool _learning = true, tensorIsNan = false;
             std::vector<double> _learning_elements;
             _learning_elements.reserve(5);
             //--------------------------
@@ -166,11 +177,16 @@ class NetworkHandling{
                     //--------------------------
                     bar.update();
                     //------------
-                    Loss.push_back(network_train_batch(std::move(batch), optimizer));
+                    Loss.push_back(network_train_batch(std::move(batch), optimizer, &tensorIsNan));
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
                 _scheduler.step();
+                //--------------------------
+                if(tensorIsNan){
+                    std::cout << "\x1b[33m\ntensor is nan\x1b[0m" << std::endl;
+                    break;
+                }// end if(tensorIsNan)
                 //--------------------------
                 auto _test_loss = network_validation(std::move(data_loader_test));
                 //--------------------------
@@ -197,7 +213,7 @@ class NetworkHandling{
                                         printf("\n-----------------Learning:[%s]-----------------\n", (_learning) ? "True" : "False");});
                 }// end if (_learning_elements.size > 4)
                 //--------------------------
-            } while(_learning);
+            } while(_learning and !tensorIsNan);
             //--------------------------
             return Loss;
             //--------------------------

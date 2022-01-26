@@ -55,7 +55,7 @@ include_directories(
   external_library
 )
 #------------------------------------------------------------------------------------------
-add_executable(${PROJECT_NAME} Main/main.cpp)
+add_executable(${PROJECT_NAME} main/main.cpp)
 #------------------------------------------------------------------------------------------
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_network ${PROJECT_NAME}_data ${PROJECT_NAME}_timing "${TORCH_LIBRARIES}")
 #------------------------------------------------------------------------------------------

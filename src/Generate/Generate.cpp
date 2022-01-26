@@ -1,8 +1,6 @@
 #include "Generate/Generate.hpp"
 #include "Timing/Timing.hpp"
 #include <random>
-#include <algorithm>
-#include <execution>
 //--------------------------------------------------------------
 Generate::Generate(const torch::Tensor& x_value, const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) :    m_radius(radius), 
                                                                                                                                                         m_generated_points((generated_points < 20) ? 20 : generated_points), 

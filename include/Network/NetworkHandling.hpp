@@ -206,7 +206,7 @@ class NetworkHandling{
                 //--------------------------
                 auto printing_threads = std::async(std::launch::async, loss_display, _test_loss, _element_sum);
                 //--------------------------
-                if (_learning_elements.size() > 4){
+                if (_learning_elements.size() > 2){
                     _learning = check_learning(_learning_elements, precision);
                     _learning_elements.clear();
                     printing_threads = std::async(std::launch::async, [&_learning](){

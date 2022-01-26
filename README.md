@@ -1,5 +1,5 @@
 # Circle Predictor
-This use the ```libtorch``` to create a simple circle predictor just as an example. This is not a perfect network, but feel free to imptove it.
+This use the ```libtorch``` to create a simple circle predictor just as an example.**This is not a perfect network, but feel free to imptove it.**
 
 # How to build
 - Clone the repo: ```git clone https://github.com/Majedshakir/circle_predictor.git```

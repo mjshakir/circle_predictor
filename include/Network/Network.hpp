@@ -27,13 +27,10 @@ struct Net : torch::nn::Module {
       auto x_linear = linear_layers(x);
       auto x_lstm =  lstm_layers(x);
       //--------------------------
-      torch::Tensor out_results;
       if(at::isnan(x_lstm).any().item<bool>()){
-        out_results = x_linear;
-      }
-      else{
-        out_results = torch::cat({x_linear, x_lstm});
-      }// end else
+        std::cout << "\x1b[33m\nx_lstm Tensor is [nan]\x1b[0m" << std::endl;
+      }// end if(at::isnan(x_lstm).any().item<bool>())
+      auto out_results = torch::cat({x_linear, x_lstm.nan_to_num(0)});
       //--------------------------
       return output_layer->forward(out_results);
       //--------------------------

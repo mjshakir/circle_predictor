@@ -7,15 +7,13 @@ struct Net : torch::nn::Module {
   public:
     //--------------------------
     Net(torch::Device& device):   m_device(device),
-                                  fc1(torch::nn::LinearOptions(20, 15).bias(true)), 
-                                  fc2(torch::nn::LinearOptions(15, 10).bias(true)), 
-                                  middel(torch::nn::LSTMOptions(5, 15).num_layers(20).batch_first(true).bidirectional(true)),
-                                  fc3(torch::nn::LinearOptions(180, 100).bias(true)), 
-                                  fc4(torch::nn::LinearOptions(100, 20).bias(true)){
+                                  fc1(torch::nn::LinearOptions(20, 128).bias(true)), 
+                                  fc2(torch::nn::LinearOptions(128, 512).bias(true)), 
+                                  fc3(torch::nn::LinearOptions(512, 1024).bias(true)), // 640
+                                  fc4(torch::nn::LinearOptions(1024, 40).bias(true)){
       //--------------------------
       register_module("fc1", fc1);
       register_module("fc2", fc2);
-      register_module("middel", middel);
       register_module("fc3", fc3);
       register_module("fc4", fc4);
       //--------------------------
@@ -23,23 +21,13 @@ struct Net : torch::nn::Module {
     //--------------------------------------------------------------
     torch::Tensor forward(torch::Tensor& x){
       //--------------------------
-      auto _results = torch::leaky_relu(fc1->forward(x));
+      auto _results = torch::leaky_relu(fc1->forward(x), 5E-2);
+      //--------------------------
+      // auto _results = torch::relu(fc1->forward(x));
       //--------------------------
       _results = torch::relu(fc2->forward(_results));
       //--------------------------
-      std::get<0>(_gates) = h0.to(m_device);
-      std::get<1>(_gates) = c0.to(m_device);
-      //--------------------------
-      auto _lstm_cat = torch::cat({_results, x});
-      //--------------------------
-      auto _input_lstm = _lstm_cat.view({-1, 2, 5}).to(m_device);
-      //--------------------------
-      auto x_lstm = middel->forward(_input_lstm, _gates);
-      //--------------------------
-      h0 = std::get<0>(std::get<1>(x_lstm));
-      c0 = std::get<1>(std::get<1>(x_lstm));
-      //-------------------------
-      _results = torch::relu(fc3->forward(std::get<0>(x_lstm).reshape(-1)));
+      _results = torch::relu(fc3->forward(_results));
       //-------------------------
       _results = torch::dropout(_results, /*p=*/0.5, /*training=*/is_training());
       //--------------------------
@@ -53,14 +41,7 @@ struct Net : torch::nn::Module {
     //--------------------------
     torch::nn::Linear fc1;
     torch::nn::Linear fc2;
-    torch::nn::LSTM middel;
     torch::nn::Linear fc3;
     torch::nn::Linear fc4;
-    //--------------------------
-    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*20*2, 0.0).data(), {40, 3, 15});
-    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*20*2, 0.0).data(), {40, 3, 15});
-    //--------------------------
-    std::tuple<torch::Tensor, torch::Tensor> _gates;
-    std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>> _input;
     //--------------------------------------------------------------
 };

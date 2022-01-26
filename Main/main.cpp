@@ -9,8 +9,9 @@
 int main(){
     //--------------------------
     std::random_device dev;
-    std::mt19937 rng(dev());
+    std::mt19937 rng(dev()), center_rng(dev());
     std::uniform_real_distribution<double> random_radius(1,10);
+    std::uniform_int_distribution<> random_centers(-10,10);
     //--------------------------
     torch::manual_seed(17);
     //--------------------------
@@ -31,17 +32,20 @@ int main(){
     Net model(device);
     model.to(device);
     //--------------------------
-    torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1).momentum(0.95).nesterov(true));
+    torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1L).momentum(0.95).nesterov(true));
     //--------------------------
     NetworkHandling handler(model, device);
     //--------------------------
-    for (size_t i = 0; i < 3; i++){
+    // for (size_t i = 0; i < 5; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 25000); 
+        Generate _generate(random_radius(rng), 35000, {random_centers(center_rng), random_centers(center_rng)}); 
+        // Generate _generate(5, 600, {-10, -10}); 
         auto data = _generate.get_data();
         auto validation_data = _generate.get_validation();
         //------------
-        std::cout   << "Training data radius: " << _generate.get_radius()  << std::endl;
+        std::cout   << "Training data radius: " << _generate.get_radius() 
+                    << " at center: (" << std::get<0>(_generate.get_center()) << "," 
+                    << std::get<1>(_generate.get_center()) << ")" << std::endl;
         //--------------------------
         // Normalize data_input_normal(std::get<0>(data));
         //--------------------------
@@ -67,13 +71,18 @@ int main(){
 
         //--------------------------
         Timing _timer(__FUNCTION__);
-        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 1E-1L);
+        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 5E-1L);
         //--------------------------
         // printf("\n-----------------Done:[%zu]-----------------\n", i);
         //--------------------------
-    }// end (size_t i = 0; i < 3; i++)
+    // }// end (size_t i = 0; i < 5; i++)
     //--------------------------
-    auto test_data = Generate(1, 6000).get_data();
+    Generate test_generate(random_radius(rng), 60, {random_centers(center_rng), random_centers(center_rng)}); 
+    auto test_data = test_generate.get_data();
+    //--------------------------
+    std::cout   << "test data radius: " << test_generate.get_radius() 
+                << " at center: (" << std::get<0>(test_generate.get_center()) << "," 
+                << std::get<1>(test_generate.get_center()) << ")" << std::endl;
     //--------------------------
     Normalize test_input_normal(std::get<0>(test_data));
     Normalize test_target_normal(std::get<1>(test_data));
@@ -89,13 +98,15 @@ int main(){
     //--------------------------
     auto test = handler.test(std::move(test_data_loader));
     //--------------------------
-    // for (const auto& _test : test){
-    //     std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(std::get<0>(_test)) 
-    //                 << " \noutput: \n" << test_target_normal.unnormalization(std::get<1>(_test)) 
-    //                 << "\ntarget origial: \n" << std::get<0>(_test) 
-    //                 << " \noutput origial: \n" << std::get<1>(_test)
-    //                 << " \nloss: " << std::get<2>(_test) << std::endl;
-    // }
+    for (const auto& _test : test){
+        std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(std::get<0>(_test)) 
+                    << " \noutput: \n" << test_target_normal.unnormalization(std::get<1>(_test)) 
+                    << "\ntarget origial: \n" << std::get<0>(_test) 
+                    << " \noutput origial: \n" << std::get<1>(_test)
+                    << " \nloss: " << std::get<2>(_test) << std::endl;
+    }
+    //--------------------------------------------------------------
+    std::cout << "\nSaving test data" << std::endl;
     //--------------------------------------------------------------
     // file pointer
     std::fstream fout;
@@ -106,8 +117,10 @@ int main(){
     fout    << "target" << ", " 
             << "output" << ", "  
             << "target original" << ", " 
-            << " output original" << ", " 
+            << "output original" << ", " 
             << "loss" << "\n";
+    //--------------------------
+    fout.flush();
     //--------------------------
     for (const auto& _test : test){
         //--------------------------
@@ -116,6 +129,8 @@ int main(){
                 << std::get<0>(_test) << ", "
                 << std::get<1>(_test) << ", "
                 << std::get<2>(_test) << "\n";
+        //--------------------------
+        fout.flush();
         //--------------------------
     }// end for (const auto& _test : test)
     //--------------------------

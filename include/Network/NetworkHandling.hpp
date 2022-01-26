@@ -131,7 +131,7 @@ class NetworkHandling{
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
                 if(tensorIsNan){
-                    std::cout << "\x1b[33m\ntensor is nan\x1b[0m" << std::endl;
+                    std::cout << "\x1b[33m\nTensor is [nan]\x1b[0m" << std::endl;
                     break;
                 }// end if(tensorIsNan)
                 //--------------------------

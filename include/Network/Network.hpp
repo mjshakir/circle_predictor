@@ -27,7 +27,13 @@ struct Net : torch::nn::Module {
       auto x_linear = linear_layers(x);
       auto x_lstm =  lstm_layers(x);
       //--------------------------
-      auto out_results = torch::cat({x_linear, x_lstm});
+      torch::Tensor out_results;
+      if(at::isnan(loss).any().item<bool>()){
+        out_results = x_linear;
+      }
+      else{
+        out_results = torch::cat({x_linear, x_lstm});
+      }// end else
       //--------------------------
       return output_layer->forward(out_results);
       //--------------------------

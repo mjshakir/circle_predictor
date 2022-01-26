@@ -1,6 +1,5 @@
 #include "Network/NetworkHandling.hpp"
 #include "Generate/Generate.hpp"
-#include "Timing/TimingFunction.hpp"
 #include "Network/DataLoader.hpp"
 #include "Network/Normalize.hpp"
 #include <random>
@@ -38,7 +37,7 @@ int main(){
     //--------------------------
     // for (size_t i = 0; i < 5; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 5000, {random_centers(center_rng), random_centers(center_rng)}); 
+        Generate _generate(random_radius(rng), 10000, {random_centers(center_rng), random_centers(center_rng)}); 
         // Generate _generate(5, 600, {-10, -10}); 
         auto data = _generate.get_data();
         auto validation_data = _generate.get_validation();
@@ -71,7 +70,7 @@ int main(){
 
         //--------------------------
         Timing _timer(__FUNCTION__);
-        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 5E-1L);
+        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 1E-1L);
         //--------------------------
         // printf("\n-----------------Done:[%zu]-----------------\n", i);
         //--------------------------

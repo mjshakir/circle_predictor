@@ -47,7 +47,7 @@ ninja
 ```
 
 # Run the program
-- Run: (*Reminder: be in ~/path/to/circle_predictor/build/*) 
+- Run: (*Reminder: be in ```~/path/to/circle_predictor/build/```*) 
 ```
 ./bin/circle_predictor
 ```

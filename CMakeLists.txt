@@ -5,8 +5,14 @@ project(circle_predictor)
 # Default to C++20
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
-  set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 endif()
+#------------------------------------------------------------------------------------------
+option(USE_CLANG "build application with clang" OFF) # OFF is the default
+#------------------------------------------------------------------------------------------
+if(USE_CLANG)
+  set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+endif(USE_CLANG)
+#------------------------------------------------------------------------------------------
 add_compile_options(-Wall -Wextra -Wpedantic)
 #------------------------------------------------------------------------------------------
 # Set the output folder where your program will be created
@@ -22,7 +28,7 @@ link_directories(${CMAKE_SOURCE_DIR}/libtorch/lib)
 # add_library(Torch SHARED) # or STATIC instead of SHARED
 #------------------------------------------------------------------------------------------
 find_package(Torch REQUIRED)
-find_package(OpenMP 5.0)
+#find_package(OpenMP 5.0)
 find_package(TBB REQUIRED)
 LINK_DIRECTORIES( ${LIBRARYPATH} )
 #------------------------------------------------------------------------------------------
@@ -44,7 +50,6 @@ add_library(${PROJECT_NAME}_data SHARED
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_timing SHARED
   src/Timing/Timing.cpp
-  src/Timing/TimingFunction.cpp
 )
 #------------------------------------------------------------------------------------------
 target_link_libraries(${PROJECT_NAME}_network "${TORCH_LIBRARIES}" tbb)

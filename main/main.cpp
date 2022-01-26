@@ -38,7 +38,7 @@ int main(){
     //--------------------------
     // for (size_t i = 0; i < 5; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 35000, {random_centers(center_rng), random_centers(center_rng)}); 
+        Generate _generate(random_radius(rng), 10000, {random_centers(center_rng), random_centers(center_rng)}); 
         // Generate _generate(5, 600, {-10, -10}); 
         auto data = _generate.get_data();
         auto validation_data = _generate.get_validation();
@@ -106,9 +106,8 @@ int main(){
                     << " \nloss: " << std::get<2>(_test) << std::endl;
     }
     //--------------------------------------------------------------
-    std::cout << "\nSaving test data" << std::endl;
-    //--------------------------------------------------------------
     // file pointer
+    //--------------------------------------------------------------
     std::fstream fout;
     //--------------------------
     // opens an existing csv file or creates a new file.
@@ -128,13 +127,15 @@ int main(){
                 << test_target_normal.unnormalization(std::get<1>(_test)) << ", "
                 << std::get<0>(_test) << ", "
                 << std::get<1>(_test) << ", "
-                << std::get<2>(_test) << "\n";
+                << std::get<2>(_test) << "\n" ;
         //--------------------------
         fout.flush();
         //--------------------------
     }// end for (const auto& _test : test)
     //--------------------------
     fout.close();
+    //--------------------------------------------------------------
+    std::cout << "\nSaving test data" << std::endl;
     //--------------------------------------------------------------
     return 0;
     //--------------------------

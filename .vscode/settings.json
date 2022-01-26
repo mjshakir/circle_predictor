@@ -70,7 +70,8 @@
         "variant": "cpp",
         "*.ipp": "cpp",
         "future": "cpp",
-        "execution": "cpp"
+        "execution": "cpp",
+        "regex": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

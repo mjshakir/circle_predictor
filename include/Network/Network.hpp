@@ -60,7 +60,7 @@ struct Net : torch::nn::Module {
       std::get<0>(_gates) = h0.to(m_device);
       std::get<1>(_gates) = c0.to(m_device);
       //--------------------------
-      auto _input_lstm = x.view({-1, 2, 80}).to(m_device);
+      auto _input_lstm = x.view({-1, 2, 10}).to(m_device);
       //--------------------------
       auto x_lstm = recurrent_layer->forward(_input_lstm, _gates);
       //--------------------------

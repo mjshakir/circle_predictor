@@ -9,7 +9,7 @@ struct Net : torch::nn::Module {
     Net(torch::Device& device):   m_device(device),
                                   input_layer(torch::nn::LinearOptions(20, 128).bias(true)), 
                                   features(torch::nn::LinearOptions(128, 512).bias(true)), 
-                                  features2(torch::nn::LinearOptions(532, 544).bias(true)), //1024
+                                  features2(torch::nn::LinearOptions(532, 704).bias(true)), //1024
                                   output_layer(torch::nn::LinearOptions(1024, 40).bias(true)), //1536
                                   recurrent_layer(torch::nn::LSTMOptions(10, 80).num_layers(64).batch_first(true).bidirectional(true)){ // 128
       //--------------------------

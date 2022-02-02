@@ -1,6 +1,7 @@
 #pragma once
 
 #include <torch/torch.h>
+#include <future>
 
 struct Net : torch::nn::Module {
   //--------------------------------------------------------------
@@ -8,10 +9,10 @@ struct Net : torch::nn::Module {
     //--------------------------
     Net(torch::Device& device):   m_device(device),
                                   input_layer(torch::nn::LinearOptions(20, 128).bias(true)), 
-                                  features(torch::nn::LinearOptions(128, 512).bias(true)), 
-                                  features2(torch::nn::LinearOptions(532, 704).bias(true)), //1024
+                                  features(torch::nn::LinearOptions(128, 256).bias(true)), 
+                                  features2(torch::nn::LinearOptions(276, 512).bias(true)), //1024
                                   output_layer(torch::nn::LinearOptions(1024, 40).bias(true)), //1536
-                                  recurrent_layer(torch::nn::LSTMOptions(10, 80).num_layers(64).batch_first(true).bidirectional(true)){ // 128
+                                  recurrent_layer(torch::nn::LSTMOptions(10, 128).num_layers(64).batch_first(true).bidirectional(true)){ // 128
       //--------------------------
       register_module("input_layer", input_layer);
       register_module("features", features);
@@ -23,11 +24,11 @@ struct Net : torch::nn::Module {
     //--------------------------------------------------------------
     torch::Tensor forward(torch::Tensor& x){
       //--------------------------
-      // auto x_linear = std::async(std::launch::async, [&](){return linear_layers(x);});
+      auto x_lstm = std::async(std::launch::async, [&](){return lstm_layers(x);});
       auto x_linear = linear_layers(x);
-      auto x_lstm = lstm_layers(x);
+      // auto x_lstm = lstm_layers(x);
       //--------------------------
-      auto out_results = torch::cat({x_linear, x_lstm});
+      auto out_results = torch::cat({x_linear, x_lstm.get()});
       //--------------------------
       torch::dropout(out_results, /*p=*/0.5, /*training=*/is_training());
       //--------------------------
@@ -81,8 +82,8 @@ struct Net : torch::nn::Module {
     //--------------------------
     torch::nn::LSTM recurrent_layer;
     //--------------------------
-    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 80});
-    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 80});
+    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 128});
+    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 128});
     //--------------------------
     std::tuple<torch::Tensor, torch::Tensor> _gates;
     std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>> _input;

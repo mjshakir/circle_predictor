@@ -37,7 +37,7 @@ int main(){
     //--------------------------
     for (size_t i = 0; i < 3; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 600, {random_centers(center_rng), random_centers(center_rng)}); 
+        Generate _generate(random_radius(rng), 10000, {random_centers(center_rng), random_centers(center_rng)}); 
         // Generate _generate(random_radius(rng), 4000, {0, 0});
         auto data = _generate.get_data();
         auto validation_data = _generate.get_validation();
@@ -70,7 +70,7 @@ int main(){
 
         //--------------------------
         Timing _timer(__FUNCTION__);
-        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 9E-1L);
+        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 2.5E-1L);
         //--------------------------
         printf("\n-----------------Done:[%zu]-----------------\n", i);
         //--------------------------
@@ -98,11 +98,13 @@ int main(){
     auto test = handler.test(std::move(test_data_loader));
     //--------------------------
     for (const auto& _test : test){
+        //--------------------------
         std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(std::get<0>(_test)) 
                     << "\noutput: \n" << test_target_normal.unnormalization(std::get<1>(_test)) 
                     << "\ntarget origial: \n" << std::get<0>(_test) 
                     << "\noutput origial: \n" << std::get<1>(_test)
                     << "\nloss: " << std::get<2>(_test) << std::endl;
+        //--------------------------
     }// end for (const auto& _test : test)
     //--------------------------------------------------------------
     // file pointer
@@ -134,7 +136,7 @@ int main(){
     //--------------------------
     fout.close();
     //--------------------------------------------------------------
-    std::cout << "\nSaved test data" << std::endl;
+    std::cout << "test data Saved" << std::endl;
     //--------------------------------------------------------------
     return 0;
     //--------------------------

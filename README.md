@@ -39,11 +39,12 @@ sudo apt-get install -y ninja-build
 ```
 - Build Ninja: 
 ```
-make -DUSE_CLANG=ON -DCMAKE_BUILD_TYPE=release .. -G Ninja
+cmake -DCMAKE_BUILD_TYPE=release .. -G Ninja
 ```
   - Build Ninja using ```CLang```:
 ```
-make -DCMAKE_BUILD_TYPE=release .. -G Ninja
+cmake -DUSE_CLANG=ON -DCMAKE_BUILD_TYPE=release .. -G Ninja
+
 ```  
 - Build the project: 
 ```

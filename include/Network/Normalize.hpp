@@ -13,6 +13,13 @@ class Normalize{
         static torch::Tensor normalization(const torch::Tensor& input);
         //--------------------------
         torch::Tensor unnormalization(const torch::Tensor& input);
+        //--------------------------
+        template<typename T>
+        long double unnormalization_nonTensor(const T& input){
+            //--------------------------
+            return unnormalization_data_nonTensor(input);
+            //--------------------------
+        }// end long double unnormalization_data_nontensor(const T& input)
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -21,6 +28,13 @@ class Normalize{
         static torch::Tensor normalization_data(const torch::Tensor& input);
         //--------------------------
         torch::Tensor unnormalization_data(const torch::Tensor& input);
+        //--------------------------
+        template<typename T>
+        long double unnormalization_data_nonTensor(const T& input){
+            //--------------------------
+            return (input*(m_max.item<T>()-m_min.item<T>()))+m_min.item<T>();
+            //--------------------------
+        }// end long double unnormalization_data_nontensor(const T& input)
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------

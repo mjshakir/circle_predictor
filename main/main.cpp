@@ -35,18 +35,15 @@ int main(){
     //--------------------------
     NetworkHandling handler(model, device);
     //--------------------------
-    for (size_t i = 0; i < 3; i++){
+    for (size_t i = 0; i < 100; i++){
         //--------------------------
         Generate _generate(random_radius(rng), 10000, {random_centers(center_rng), random_centers(center_rng)}); 
-        // Generate _generate(random_radius(rng), 4000, {0, 0});
         auto data = _generate.get_data();
         auto validation_data = _generate.get_validation();
         //------------
         std::cout   << "Training data radius: " << _generate.get_radius() 
                     << " at center: (" << std::get<0>(_generate.get_center()) << "," 
                     << std::get<1>(_generate.get_center()) << ")" << std::endl;
-        //--------------------------
-        // Normalize data_input_normal(std::get<0>(data));
         //--------------------------
         // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
         // batches into a single tensor.
@@ -76,7 +73,8 @@ int main(){
         //--------------------------
     }// end (size_t i = 0; i < 3; i++)
     //--------------------------
-    Generate test_generate(random_radius(rng), 60, {random_centers(center_rng), random_centers(center_rng)}); 
+    Generate test_generate(random_radius(rng), 60, {random_centers(center_rng), random_centers(center_rng)});
+    // Generate test_generate(5, 60, {0, 0}); 
     auto test_data = test_generate.get_data();
     //--------------------------
     std::cout   << "test data radius: " << test_generate.get_radius() 
@@ -114,23 +112,51 @@ int main(){
     // opens an existing csv file or creates a new file.
     fout.open("test_data.csv", std::ios::out | std::ios::app);
     //--------------------------
-    fout    << "target" << "," 
-            << "output" << ","  
-            << "target original" << "," 
-            << "output original" << "," 
+    fout    << "Radius: " << test_generate.get_radius() 
+            << " at center: (" << std::get<0>(test_generate.get_center()) << "." 
+            << std::get<1>(test_generate.get_center()) << ")" << "\n"
+            << "target" << ","
+            << "output" << "," 
+            << "target original" << ","
+            << "output original" << ","
             << "loss" << "\n";
     //--------------------------
     fout.flush();
     //--------------------------
+    // for (const auto& _test : test){
+    //     //--------------------------
+    //     fout    << test_target_normal.unnormalization(std::get<0>(_test)) << ","
+    //             << test_target_normal.unnormalization(std::get<1>(_test)) << ","
+    //             << std::get<0>(_test) << ","
+    //             << std::get<1>(_test) << ","
+    //             << std::get<2>(_test) << "\n";
+    //     //--------------------------
+    //     fout.flush();
+    //     //--------------------------
+    // }// end for (const auto& _test : test)
+    //--------------------------
     for (const auto& _test : test){
         //--------------------------
-        fout    << test_target_normal.unnormalization(std::get<0>(_test)) << ","
-                << test_target_normal.unnormalization(std::get<1>(_test)) << ","
-                << std::get<0>(_test) << ","
-                << std::get<1>(_test) << ","
-                << std::get<2>(_test) << "\n";
+        auto num_row = std::get<0>(_test).size(0);
+        auto num_col = std::get<0>(_test).size(1);
+        auto _output = std::get<0>(_test).accessor<float, 2>();
+        auto _target = std::get<1>(_test).accessor<float, 2>();
         //--------------------------
-        fout.flush();
+        for (int64_t i = 0; i < num_row; i++){
+            //--------------------------
+            for (int64_t j = 0; j < num_col; j++){
+                //--------------------------
+                fout    << test_target_normal.unnormalization_nonTensor(_output[i][j]) << ","
+                        << test_target_normal.unnormalization_nonTensor(_target[i][j]) << "," 
+                        << _output[i][j] << ","
+                        << _target[i][j] << "," 
+                        << std::get<2>(_test) << "\n";
+                //--------------------------
+                fout.flush();
+                //--------------------------
+            }// end for (size_t i = 0; i < num_col; i++)
+            //--------------------------
+        }// end for (size_t i = 0; i < num_col; i++)
         //--------------------------
     }// end for (const auto& _test : test)
     //--------------------------

@@ -35,7 +35,7 @@ int main(){
     //--------------------------
     NetworkHandling handler(model, device);
     //--------------------------
-    for (size_t i = 0; i < 10; i++){
+    for (size_t i = 0; i < 100; i++){
         //--------------------------
         Generate _generate(random_radius(rng), 10000, {random_centers(center_rng), random_centers(center_rng)}); 
         auto data = _generate.get_data();

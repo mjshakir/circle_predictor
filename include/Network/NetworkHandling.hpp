@@ -215,7 +215,13 @@ class NetworkHandling{
                     _learning = check_learning(_learning_elements, precision);
                     _learning_elements.clear();
                     printing_threads = std::async(std::launch::async, [&_learning](){
-                                        printf("\n-----------------Learning:[%s]-----------------\n", (_learning) ? "True" : "False");});
+                                    if(_learning){
+                                        printf("\n\x1b[33m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
+                                    }// end if(_learning)
+                                    else{
+                                        printf("\n\x1b[36m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
+                                    }
+                                });
                 }// end if (_learning_elements.size > 4)
                 //--------------------------
             } while(_learning and !tensorIsNan);

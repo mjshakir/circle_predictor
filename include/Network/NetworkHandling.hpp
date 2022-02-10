@@ -12,12 +12,15 @@
 //--------------------------------------------------------------
 #include "progressbar/include/progressbar.hpp"
 //--------------------------------------------------------------
+template<typename Network>
 class NetworkHandling{
     public:
         //--------------------------------------------------------------
         NetworkHandling() = delete;
         //--------------------------
-        NetworkHandling(Net& model, torch::Device& device);
+        NetworkHandling(Network& model, torch::Device& device): m_model(model), m_device(device){
+            //--------------------------
+        }// end NetworkHandling(Network& model, torch::Device& device)
         //--------------------------
         template <typename Dataloader>
         std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
@@ -49,7 +52,7 @@ class NetworkHandling{
         //--------------------------------------------------------------
     private:
         //--------------------------
-        Net m_model; 
+        Network m_model; 
         torch::Device m_device;
         //--------------------------
         template <typename Batch>
@@ -284,7 +287,19 @@ class NetworkHandling{
             return true;
         }// end bool NetworkHandling::check_learning(const std::vector<double>& elements, const double tolerance)
         //--------------------------------------------------------------
-        static void loss_display(const std::vector<float>& loss, const double& elements_sum);
+        static void loss_display(const std::vector<float>& loss, const double& elements_sum){
+            //--------------------------
+            auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
+            auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
+            //--------------------------
+            printf("\n-----------------Loss Sum:[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
+                    elements_sum,
+                    std::distance(loss.begin(), _min_element), 
+                    *_min_element,  
+                    std::distance(loss.begin(), _max_element), 
+                    *_max_element);
+            //--------------------------
+        }// end void loss_display(std::vector<float>, double elements_sum)
         //--------------------------------------------------------------
 };
 //--------------------------------------------------------------

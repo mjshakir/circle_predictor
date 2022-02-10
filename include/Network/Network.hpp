@@ -56,11 +56,9 @@ struct LSTMNet : torch::nn::Module {
   public:
     //--------------------------
     LSTMNet(torch::Device& device): m_device(device),
-                                    input_layer(torch::nn::LinearOptions(20, 128).bias(true)), 
-                                    recurrent_layer(torch::nn::LSTMOptions(64, 128).num_layers(64).batch_first(true).bidirectional(true)),
+                                    recurrent_layer(torch::nn::LSTMOptions(10, 128).num_layers(64).batch_first(true).bidirectional(true)),
                                     output_layer(torch::nn::LinearOptions(512, 40).bias(true)){
       //--------------------------
-      register_module("input_layer", input_layer);
       register_module("recurrent_layer", recurrent_layer);
       register_module("output_layer", output_layer);
       //--------------------------
@@ -68,13 +66,11 @@ struct LSTMNet : torch::nn::Module {
     //--------------------------------------------------------------
     torch::Tensor forward(torch::Tensor& x){
       //--------------------------
-      auto _results = torch::leaky_relu(input_layer->forward(x), 5E-2);
+      x = lstm_layers(x);
       //--------------------------
-      _results = lstm_layers(x);
+      torch::dropout(x, /*p=*/0.5, /*training=*/is_training());
       //--------------------------
-      torch::dropout(_results, /*p=*/0.5, /*training=*/is_training());
-      //--------------------------
-      return output_layer->forward(_results);
+      return output_layer->forward(x);
       //--------------------------
     }// end torch::Tensor forward(torch::Tensor x)
     //--------------------------------------------------------------
@@ -99,7 +95,6 @@ struct LSTMNet : torch::nn::Module {
     //--------------------------------------------------------------
     torch::Device m_device;
     //--------------------------
-    torch::nn::Linear input_layer;
     torch::nn::LSTM recurrent_layer;
     torch::nn::Linear output_layer;
     //--------------------------

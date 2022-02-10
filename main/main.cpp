@@ -123,70 +123,31 @@ int main(){
     //--------------------------
     fout.flush();
     //--------------------------
-    // for (const auto& _test : test){
-    //     //--------------------------
-    //     fout    << test_target_normal.unnormalization(std::get<0>(_test)) << ","
-    //             << test_target_normal.unnormalization(std::get<1>(_test)) << ","
-    //             << std::get<0>(_test) << ","
-    //             << std::get<1>(_test) << ","
-    //             << std::get<2>(_test) << "\n";
-    //     //--------------------------
-    //     fout.flush();
-    //     //--------------------------
-    // }// end for (const auto& _test : test)
-    //--------------------------
     for (const auto& _test : test){
         //--------------------------
         auto num_row = std::get<0>(_test).size(0);
         auto num_col = std::get<0>(_test).size(1);
-        if (torch::cuda::is_available()){
+        //--------------------------
+        // auto _output = std::get<0>(_test).accessor<float, 2>();
+        auto _output = std::get<0>(_test).packed_accessor64<float, 2>();
+        auto _target = std::get<1>(_test).packed_accessor64<float, 2>();
+        //--------------------------
+        for (int64_t i = 0; i < num_row; i++){
             //--------------------------
-            auto _output_temp = std::get<0>(_test).cpu();
-            auto _output = _output_temp.accessor<float, 2>();
-            //--------------------------
-            auto _target_temp = std::get<1>(_test).cpu();
-            auto _target = _target_temp.accessor<float, 2>();
-            //--------------------------
-            for (int64_t i = 0; i < num_row; i++){
+            for (int64_t j = 0; j < num_col; j++){
                 //--------------------------
-                for (int64_t j = 0; j < num_col; j++){
-                    //--------------------------
-                    fout    << test_target_normal.unnormalization_nonTensor(_output[i][j]) << ","
-                            << test_target_normal.unnormalization_nonTensor(_target[i][j]) << "," 
-                            << _output[i][j] << ","
-                            << _target[i][j] << "," 
-                            << std::get<2>(_test) << "\n";
-                    //--------------------------
-                    fout.flush();
-                    //--------------------------
-                }// end for (size_t i = 0; i < num_col; i++)
+                fout    << test_target_normal.unnormalization_nonTensor(_output[i][j]) << ","
+                        << test_target_normal.unnormalization_nonTensor(_target[i][j]) << "," 
+                        << _output[i][j] << ","
+                        << _target[i][j] << "," 
+                        << std::get<2>(_test) << "\n";
+                //--------------------------
+                fout.flush();
                 //--------------------------
             }// end for (size_t i = 0; i < num_col; i++)
             //--------------------------
-        }// end if (torch::cuda::is_available())
-        else{
-            //--------------------------
-            auto _output = std::get<0>(_test).accessor<float, 2>();
-            auto _target = std::get<1>(_test).accessor<float, 2>();
-            //--------------------------
-            for (int64_t i = 0; i < num_row; i++){
-                //--------------------------
-                for (int64_t j = 0; j < num_col; j++){
-                    //--------------------------
-                    fout    << test_target_normal.unnormalization_nonTensor(_output[i][j]) << ","
-                            << test_target_normal.unnormalization_nonTensor(_target[i][j]) << "," 
-                            << _output[i][j] << ","
-                            << _target[i][j] << "," 
-                            << std::get<2>(_test) << "\n";
-                    //--------------------------
-                    fout.flush();
-                    //--------------------------
-                }// end for (size_t i = 0; i < num_col; i++)
-                //--------------------------
-            }// end for (size_t i = 0; i < num_col; i++)
-            //--------------------------
-        }// end else 
-        //-----------------------
+        }// end for (size_t i = 0; i < num_col; i++)
+        //--------------------------
     }// end for (const auto& _test : test)
     //--------------------------
     fout.close();

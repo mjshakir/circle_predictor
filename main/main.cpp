@@ -28,14 +28,16 @@ int main(){
     //--------------------------
     torch::Device device(device_type);
     //--------------------------
-    Net model;
+    // Net model;
+    // model.to(device);
+    LSTMNet model(device);
     model.to(device);
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1L).momentum(0.95).nesterov(true));
     //--------------------------
-    NetworkHandling handler(model, device);
+    NetworkHandling<LSTMNet> handler(model, device);
     //--------------------------
-    for (size_t i = 0; i < 100; i++){
+    for (size_t i = 0; i < 3; i++){
         //--------------------------
         Generate _generate(random_radius(rng), 10000, {random_centers(center_rng), random_centers(center_rng)}); 
         auto data = _generate.get_data();

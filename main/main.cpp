@@ -28,7 +28,7 @@ int main(){
     //--------------------------
     torch::Device device(device_type);
     //--------------------------
-    Net model(device);
+    Net model;
     model.to(device);
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1L).momentum(0.95).nesterov(true));
@@ -128,9 +128,10 @@ int main(){
         auto num_row = std::get<0>(_test).size(0);
         auto num_col = std::get<0>(_test).size(1);
         //--------------------------
-        // auto _output = std::get<0>(_test).accessor<float, 2>();
-        auto _output = std::get<0>(_test).packed_accessor64<float, 2>();
-        auto _target = std::get<1>(_test).packed_accessor64<float, 2>();
+        auto _output_temp = std::get<0>(_test).cpu();
+        auto _output = _output_temp.accessor<float, 2>();
+        auto _target_temp = std::get<1>(_test).cpu();
+        auto _target = _target_temp.accessor<float, 2>();
         //--------------------------
         for (int64_t i = 0; i < num_row; i++){
             //--------------------------

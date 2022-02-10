@@ -33,7 +33,7 @@ int main(){
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1L).momentum(0.95).nesterov(true));
     //--------------------------
-    NetworkHandling<LSTMNet> handler(model, device);
+    NetworkHandling<Net> handler(model, device);
     //--------------------------
     for (size_t i = 0; i < 100; i++){
         //--------------------------

@@ -52,8 +52,8 @@ add_library(${PROJECT_NAME}_timing SHARED
   src/Timing/Timing.cpp
 )
 #------------------------------------------------------------------------------------------
-target_link_libraries(${PROJECT_NAME}_network "${TORCH_LIBRARIES}" tbb)
-target_link_libraries(${PROJECT_NAME}_data "${TORCH_LIBRARIES}" tbb)
+target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} tbb)
+target_link_libraries(${PROJECT_NAME}_data ${TORCH_LIBRARIES} tbb)
 #------------------------------------------------------------------------------------------
 include_directories(
   include
@@ -62,7 +62,12 @@ include_directories(
 #------------------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} main/main.cpp)
 #------------------------------------------------------------------------------------------
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_network ${PROJECT_NAME}_data ${PROJECT_NAME}_timing "${TORCH_LIBRARIES}")
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  ${PROJECT_NAME}_network 
+  ${PROJECT_NAME}_data 
+  ${PROJECT_NAME}_timing 
+  ${TORCH_LIBRARIES}
+  )
 #------------------------------------------------------------------------------------------
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 #------------------------------------------------------------------------------------------

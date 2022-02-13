@@ -5,7 +5,46 @@
 #include <random>
 #include <fstream>
 
-int main(){
+int main(int argc, char const *argv[]){
+    //--------------------------
+    if (argc >= 4){
+        throw std::invalid_argument("More arugments then can be allocation");
+    }// end if (argc >= 4)
+    //--------------------------
+    size_t training_size = 100, generated_size = 10000;
+    //--------------------------
+    if (argc < 3 and argc > 1){
+        //--------------------------
+        if (std::atoi(argv[1]) > 0){
+            //--------------------------
+            training_size = std::stoul(argv[1]);
+            //--------------------------
+        }// end if (std::atoi(argv[1]) > 0) 
+        //--------------------------
+    }// end if (argc < 3 and argc > 1)
+    //-----------
+    if (argc < 4 and argc > 2){
+        //--------------------------
+        if (std::atoi(argv[1]) > 0){
+            //--------------------------
+            training_size = std::stoul(argv[1]);
+            //--------------------------
+        }// end if (std::atoi(argv[1]) > 0) 
+        //--------------------------
+        if (std::atoi(argv[2]) > 40){
+            //--------------------------
+            generated_size = std::stoul(argv[2]);
+            //--------------------------
+        }// end if (std::atoi(argv[1]) > 0)
+        else{
+            //--------------------------
+            throw std::out_of_range("Must be at least 40 (x > 40)");
+            //--------------------------
+        }// end else
+        //-------------------------- 
+    }// end if (argc < 3 and argc > 2)
+    //--------------------------
+    std::cout << "argc: " << argc << " training_size: " << training_size << " generated_size: " << generated_size << std::endl;
     //--------------------------
     std::random_device dev;
     std::mt19937 rng(dev()), center_rng(dev());

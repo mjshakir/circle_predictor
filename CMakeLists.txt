@@ -28,8 +28,26 @@ link_directories(${CMAKE_SOURCE_DIR}/libtorch/lib)
 # add_library(Torch SHARED) # or STATIC instead of SHARED
 #------------------------------------------------------------------------------------------
 find_package(Torch REQUIRED)
+#---------------
+if (NOT Torch_FOUND)
+  message(FATAL_ERROR "Fatal error: Torch required.")
+else()
+  message(STATUS "Setting up Torch")
+  message(STATUS " Includes - ${TORCH_INCLUDE_DIRS}")
+  message(STATUS " Library  - ${TORCH_LIBRARIES}")
+endif (NOT Torch_FOUND)
+#----------------------------------
 #find_package(OpenMP 5.0)
 find_package(TBB REQUIRED)
+#---------------
+if (NOT TBB_FOUND)
+  message(FATAL_ERROR "Fatal error: TBB required.")
+else()
+  message(STATUS "Setting up TBB")
+  message(STATUS " Includes - ${TBB_INCLUDE_DIRS}")
+  message(STATUS " Library  - ${TBB_LIBRARIES}")
+endif (NOT TBB_FOUND)
+#----------------------------------
 LINK_DIRECTORIES( ${LIBRARYPATH} )
 #------------------------------------------------------------------------------------------
 if (OPENMP_FOUND)

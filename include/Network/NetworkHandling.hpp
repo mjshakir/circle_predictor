@@ -113,7 +113,7 @@ class NetworkHandling{
         template <typename Dataloader>
         std::vector<float> network_train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
             //--------------------------
-            progressbar bar(epoch);
+            auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
             //--------------------------
             bool tensorIsNan = false;
             //--------------------------
@@ -124,6 +124,8 @@ class NetworkHandling{
             for (size_t i = 0; i < epoch; i++){
                 //--------------------------
                 // Timing _timer_loop("epoch: " + std::to_string(i));
+                //--------------------------
+                progressbar bar(data_loader_size);
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------

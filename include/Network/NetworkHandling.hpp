@@ -25,12 +25,12 @@ class NetworkHandling{
         template <typename Dataloader>
         std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
             //--------------------------
-            return network_train(epoch, data_loader, optimizer);
+            return network_train(data_loader, optimizer, epoch);
             //--------------------------
         }// end std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch)
         //--------------------------
         template <typename Dataloader, typename Test_Dataloader>
-        std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, float precision = 10){
+        std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, long double precision = 1E-2L){
             //--------------------------
             return network_train(data_loader, data_loader_test, optimizer, precision);
             //--------------------------
@@ -131,12 +131,12 @@ class NetworkHandling{
                     //------------
                     Loss.push_back(network_train_batch(std::move(batch), optimizer, &tensorIsNan));
                     //--------------------------
+                     if(tensorIsNan){
+                        std::cout << "\n\x1b[33m\033[1mTensor is [nan]\033[0m\x1b[0m" << std::endl;
+                        break;
+                    }// end if(tensorIsNan)
+                    //--------------------------
                 }// end for (const auto& batch : *data_loader)
-                //--------------------------
-                if(tensorIsNan){
-                    std::cout << "\n\x1b[33m\033[1mTensor is [nan]\033[0m\x1b[0m" << std::endl;
-                    break;
-                }// end if(tensorIsNan)
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
@@ -152,8 +152,8 @@ class NetworkHandling{
             //--------------------------
         }// end std::vector<float> network_train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch)
         //--------------------------
-        template <typename Dataloader, typename Test_Dataloader>
-        std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const float& precision){
+        template <typename Dataloader, typename Test_Dataloader, typename R>
+        std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const R& precision){
             //--------------------------
             // std::mutex mutex;
             //--------------------------
@@ -190,11 +190,6 @@ class NetworkHandling{
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
                 _scheduler.step();
-                //--------------------------
-                // if(tensorIsNan){
-                //     std::cout << "\x1b[33m\nTensor is [nan]\x1b[0m" << std::endl;
-                //     break;
-                // }// end if(tensorIsNan)
                 //--------------------------
                 auto _test_loss = network_validation(std::move(data_loader_test));
                 //--------------------------
@@ -275,8 +270,8 @@ class NetworkHandling{
             //--------------------------
         }// end std::tuple<std::vector<torch::Tensor>, std::vector<torch::Tensor>, std::vector<float>> network_test(Dataset&& data_loader)
         //--------------------------------------------------------------
-        template <typename T>
-        bool check_learning(const std::vector<T>& elements, const long double tolerance = 1E-2L){
+        template <typename T, typename R>
+        bool check_learning(const std::vector<T>& elements, const R& tolerance){
             //--------------------------
             long double average = std::reduce(std::execution::par_unseq, elements.begin(), elements.end(), 0.L) / elements.size();
             //--------------------------

@@ -123,7 +123,7 @@ class NetworkHandling{
             //--------------------------
             for (size_t i = 0; i < epoch; i++){
                 //--------------------------
-                Timing _timer_loop("epoch: " + std::to_string(i));
+                // Timing _timer_loop("epoch: " + std::to_string(i));
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------

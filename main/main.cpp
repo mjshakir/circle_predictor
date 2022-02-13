@@ -44,7 +44,7 @@ int main(int argc, char const *argv[]){
         //-------------------------- 
     }// end if (argc < 3 and argc > 2)
     //--------------------------
-    std::cout << "argc: " << argc << " training_size: " << training_size << " generated_size: " << generated_size << std::endl;
+    std::cout << " training_size: " << training_size << " generated_size: " << generated_size << std::endl;
     //--------------------------
     std::random_device dev;
     std::mt19937 rng(dev()), center_rng(dev());

@@ -40,7 +40,7 @@ int main(int argc, char const *argv[]){
         //-------------------------- 
     }// end if (argc > 2)
     //--------------------------
-    std::cout << " training_size: " << training_size << " generated_size: " << generated_size << std::endl;
+    std::cout << "training_size: " << training_size << " generated_size: " << generated_size << std::endl;
     //--------------------------------------------------------------
     // Creating a random number generator
     //--------------------------

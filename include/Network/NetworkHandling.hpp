@@ -68,6 +68,7 @@ class NetworkHandling{
             output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             torch::Tensor loss = torch::mse_loss(output, targets);
+            // torch::Tensor loss = torch::mse_loss(output, targets, torch::Reduction::Sum);
             // AT_ASSERT(!std::isnan(loss.template item<float>()));
             //--------------------------
             *tensorIsNan = at::isnan(loss).any().item<bool>(); // will be of type bool
@@ -127,6 +128,8 @@ class NetworkHandling{
                 //--------------------------
                 progressbar bar(data_loader_size);
                 //--------------------------
+                std::cout << "Training: ";
+                //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
                     bar.update();
@@ -147,6 +150,8 @@ class NetworkHandling{
                 //                                                                         }// end for (const auto& loss : Loss) 
                 //                                                                         printf("\n-----------------size of loss [%ld]----------------------\n", Loss.size());
                 //                                                                     });
+                //--------------------------
+                auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss);});
                 //--------------------------
             }// end for (size_t i = 0; i < epoch; i++)
             //--------------------------
@@ -283,6 +288,21 @@ class NetworkHandling{
             //--------------------------
             return true;
         }// end bool NetworkHandling::check_learning(const std::vector<double>& elements, const double tolerance)
+        //--------------------------------------------------------------
+        void loss_display(const std::vector<float>& loss){
+            //--------------------------
+            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L)/ loss.size();
+            auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
+            auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
+            //--------------------------
+            printf("\n-----------------Average Loss Sum:[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
+                    elements_sum,
+                    std::distance(loss.begin(), _min_element), 
+                    *_min_element,  
+                    std::distance(loss.begin(), _max_element), 
+                    *_max_element);
+            //--------------------------
+        }// end void loss_display(std::vector<float>, double elements_sum)
         //--------------------------------------------------------------
         static void loss_display(const std::vector<float>& loss, const double& elements_sum){
             //--------------------------

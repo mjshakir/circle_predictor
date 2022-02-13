@@ -15,7 +15,7 @@ class Normalize{
         torch::Tensor unnormalization(const torch::Tensor& input);
         //--------------------------
         template<typename T>
-        long double unnormalization_nonTensor(const T& input){
+        T unnormalization_nonTensor(const T& input){
             //--------------------------
             return unnormalization_data_nonTensor(input);
             //--------------------------
@@ -30,7 +30,7 @@ class Normalize{
         torch::Tensor unnormalization_data(const torch::Tensor& input);
         //--------------------------
         template<typename T>
-        long double unnormalization_data_nonTensor(const T& input){
+        T unnormalization_data_nonTensor(const T& input){
             //--------------------------
             return (input*(m_max.item<T>()-m_min.item<T>()))+m_min.item<T>();
             //--------------------------

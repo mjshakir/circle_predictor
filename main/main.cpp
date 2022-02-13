@@ -74,9 +74,9 @@ int main(int argc, char const *argv[]){
     //--------------------------
     NetworkHandling<Net> handler(model, device);
     //--------------------------
-    for (size_t i = 0; i < 100; i++){
+    for (size_t i = 0; i < training_size; i++){
         //--------------------------
-        Generate _generate(random_radius(rng), 10000, {random_centers(center_rng), random_centers(center_rng)}); 
+        Generate _generate(random_radius(rng), generated_size, {random_centers(center_rng), random_centers(center_rng)}); 
         auto data = _generate.get_data();
         auto validation_data = _generate.get_validation();
         //------------

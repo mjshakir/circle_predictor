@@ -131,20 +131,20 @@ class NetworkHandling{
                     //------------
                     Loss.push_back(network_train_batch(std::move(batch), optimizer, &tensorIsNan));
                     //--------------------------
-                     if(tensorIsNan){
-                        std::cout << "\n\x1b[33m\033[1mTensor is [nan]\033[0m\x1b[0m" << std::endl;
-                        break;
-                    }// end if(tensorIsNan)
-                    //--------------------------
                 }// end for (const auto& batch : *data_loader)
+                //--------------------------
+                if(tensorIsNan){
+                    std::cout << "\n\x1b[33m\033[1mTensor is [nan]\033[0m\x1b[0m" << std::endl;
+                    break;
+                }// end if(tensorIsNan)
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&i, &Loss](){   for (const auto& loss : Loss){
-                                                                                            printf("Loss [\x1b[36m%ld\x1b[0m]: [\x1b[31m%0.2f\x1b[0m] ", i, loss);
-                                                                                        }// end for (const auto& loss : Loss) 
-                                                                                        printf("\n-----------------size of loss [%ld]----------------------\n", Loss.size());
-                                                                                    });
+                // auto printing_threads = std::async(std::launch::async, [&i, &Loss](){   for (const auto& loss : Loss){
+                //                                                                             printf("Loss [\x1b[36m%ld\x1b[0m]: [\x1b[31m%0.2f\x1b[0m] ", i, loss);
+                //                                                                         }// end for (const auto& loss : Loss) 
+                //                                                                         printf("\n-----------------size of loss [%ld]----------------------\n", Loss.size());
+                //                                                                     });
                 //--------------------------
             }// end for (size_t i = 0; i < epoch; i++)
             //--------------------------

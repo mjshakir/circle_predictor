@@ -209,7 +209,7 @@ class NetworkHandling{
                 //--------------------------
                 _learning_elements.push_back(_element_sum);
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, loss_display, _test_loss, _element_sum);
+                auto printing_threads = std::async(std::launch::async, [&](){loss_display(_test_loss, _element_sum);});
                 //--------------------------
                 if (_learning_elements.size() > 2){
                     _learning = check_learning(_learning_elements, precision);
@@ -299,7 +299,7 @@ class NetworkHandling{
             //--------------------------
         }// end void loss_display(std::vector<float>, double elements_sum)
         //--------------------------------------------------------------
-        static void loss_display(const std::vector<float>& loss, const double& elements_sum){
+        void loss_display(const std::vector<float>& loss, const double& elements_sum){
             //--------------------------
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());

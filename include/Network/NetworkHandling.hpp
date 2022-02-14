@@ -65,11 +65,10 @@ class NetworkHandling{
             optimizer.zero_grad();
             //--------------------------
             auto output = m_model.forward(data);
-            output = torch::transpose(output.view({2,-1}), 0, 1);
-            // output = torch::transpose(output, 0, 1);
+            // output = torch::transpose(output.view({2,-1}), 0, 1);
+            // std::cout << "output: " << output.sizes() << std::endl;
             //--------------------------
             torch::Tensor loss = torch::mse_loss(output, targets);
-            // torch::Tensor loss = torch::mse_loss(output, targets, torch::Reduction::Sum);
             // AT_ASSERT(!std::isnan(loss.template item<float>()));
             //--------------------------
             *tensorIsNan = at::isnan(loss).any().item<bool>(); // will be of type bool

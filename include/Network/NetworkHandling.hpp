@@ -66,9 +66,10 @@ class NetworkHandling{
             //--------------------------
             auto output = m_model.forward(data);
             output = torch::transpose(output.view({2,-1}), 0, 1);
+            // output = torch::transpose(output, 0, 1);
             //--------------------------
-            // torch::Tensor loss = torch::mse_loss(output, targets);
-            torch::Tensor loss = torch::mse_loss(output, targets, torch::Reduction::Sum);
+            torch::Tensor loss = torch::mse_loss(output, targets);
+            // torch::Tensor loss = torch::mse_loss(output, targets, torch::Reduction::Sum);
             // AT_ASSERT(!std::isnan(loss.template item<float>()));
             //--------------------------
             *tensorIsNan = at::isnan(loss).any().item<bool>(); // will be of type bool
@@ -136,12 +137,12 @@ class NetworkHandling{
                     //------------
                     Loss.push_back(network_train_batch(std::move(batch), optimizer, &tensorIsNan));
                     //--------------------------
+                    if(tensorIsNan){
+                        std::cout << "\n\x1b[33m\033[1mTensor is [nan]\033[0m\x1b[0m" << std::endl;
+                        break;
+                    }// end if(tensorIsNan)
+                    //--------------------------
                 }// end for (const auto& batch : *data_loader)
-                //--------------------------
-                if(tensorIsNan){
-                    std::cout << "\n\x1b[33m\033[1mTensor is [nan]\033[0m\x1b[0m" << std::endl;
-                    break;
-                }// end if(tensorIsNan)
                 //--------------------------
                 _scheduler.step();
                 //--------------------------

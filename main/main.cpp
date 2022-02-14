@@ -67,14 +67,14 @@ int main(int argc, char const *argv[]){
     //--------------------------
     torch::Device device(device_type);
     //--------------------------
-    // Net model;
-    // model.to(device);
-    LSTMNet model(device);
+    Net model;
     model.to(device);
+    // LSTMNet model(device);
+    // model.to(device);
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1L).momentum(0.95).nesterov(true));
     //--------------------------
-    NetworkHandling<LSTMNet> handler(model, device);
+    NetworkHandling<Net> handler(model, device);
     //--------------------------
     for (size_t i = 0; i < training_size; i++){
         //--------------------------
@@ -112,8 +112,8 @@ int main(int argc, char const *argv[]){
 
         //--------------------------
         Timing _timer(__FUNCTION__);
-        // auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 2.5E-1L);
-        auto loss = handler.train(std::move(data_loader), optimizer, 100);
+        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 2.5E-1L);
+        // auto loss = handler.train(std::move(data_loader), optimizer, 100);
         //--------------------------
         printf("\n-----------------Done:[%zu]-----------------\n", i);
         //--------------------------

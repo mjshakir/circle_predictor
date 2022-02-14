@@ -56,7 +56,7 @@ struct LSTMNet : torch::nn::Module {
   public:
     //--------------------------
     LSTMNet(torch::Device& device): m_device(device),
-                                    recurrent_layer(torch::nn::LSTMOptions(10, 20).num_layers(64).batch_first(true).bidirectional(true).dropout(0.5)),
+                                    recurrent_layer(torch::nn::LSTMOptions(10, 20).num_layers(20).batch_first(false).bidirectional(true).dropout(0.5)),
                                     output_layer(torch::nn::LinearOptions(80, 40).bias(true)){
       //--------------------------
       register_module("recurrent_layer", recurrent_layer);
@@ -67,8 +67,6 @@ struct LSTMNet : torch::nn::Module {
     torch::Tensor forward(torch::Tensor& x){
       //--------------------------
       x = lstm_layers(x);
-      //--------------------------
-      // std::cout << "x: " << x.sizes() << std::endl;
       //--------------------------
       return output_layer->forward(x);
       //--------------------------
@@ -81,22 +79,16 @@ struct LSTMNet : torch::nn::Module {
       std::get<0>(_gates) = h0.to(m_device);
       std::get<1>(_gates) = c0.to(m_device);
       //--------------------------
-      // auto _input_lstm = x.view({-1, 2, 10}).to(m_device);
-      //--------------------------
       auto _input_lstm = x.view({-1, 1, 10}).to(m_device);
-      //--------------------------
-      // std::cout << "_input_lstm: " << _input_lstm.sizes() << std::endl;
       //--------------------------
       auto x_lstm = recurrent_layer->forward(_input_lstm, _gates);
       //--------------------------
       h0 = std::get<0>(std::get<1>(x_lstm));
       c0 = std::get<1>(std::get<1>(x_lstm));
       //-------------------------
-      // std::cout << "std::get<0>(x_lstm): " << std::get<0>(x_lstm).sizes() << std::endl;
-      //--------------------------
-      return std::get<0>(x_lstm).view(-1);
+      // return std::get<0>(x_lstm).view({-1, 40});
       //-------------------------
-      // return std::get<0>(x_lstm).view();
+      return std::get<0>(x_lstm).view(-1);
       //-------------------------
     }// end torch::Tensor lstm_layers(torch::Tensor& x)
     //--------------------------------------------------------------
@@ -107,8 +99,8 @@ struct LSTMNet : torch::nn::Module {
     torch::nn::LSTM recurrent_layer;
     torch::nn::Linear output_layer;
     //--------------------------
-    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 2, 20});
-    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 2, 20});
+    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*20*2, 0.0).data(), {20*2, 1, 20});
+    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*20*2, 0.0).data(), {20*2, 1, 20});
     //--------------------------
     std::tuple<torch::Tensor, torch::Tensor> _gates;
     std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>> _input;

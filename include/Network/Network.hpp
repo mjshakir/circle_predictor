@@ -56,22 +56,19 @@ struct LSTMNet : torch::nn::Module {
   public:
     //--------------------------
     LSTMNet(torch::Device& device): m_device(device),
-                                    recurrent_layer(torch::nn::LSTMOptions(10, 10).num_layers(64).batch_first(true).bidirectional(true).dropout(0.5))//,
-                                    //output_layer(torch::nn::LinearOptions(1024, 40).bias(true))
-                                    {
+                                    recurrent_layer(torch::nn::LSTMOptions(10, 256).num_layers(64).batch_first(true).bidirectional(true).dropout(0.5)),
+                                    output_layer(torch::nn::LinearOptions(1024, 40).bias(true)){
       //--------------------------
       register_module("recurrent_layer", recurrent_layer);
-      // register_module("output_layer", output_layer);
+      register_module("output_layer", output_layer);
       //--------------------------
     }// end Net(torch::Device& device)
     //--------------------------------------------------------------
     torch::Tensor forward(torch::Tensor& x){
       //--------------------------
-      return lstm_layers(x);
+      x = lstm_layers(x);
       //--------------------------
-      // x = lstm_layers(x);
-      //--------------------------
-      // return output_layer->forward(x);
+      return output_layer->forward(x);
       //--------------------------
     }// end torch::Tensor forward(torch::Tensor x)
     //--------------------------------------------------------------
@@ -97,10 +94,10 @@ struct LSTMNet : torch::nn::Module {
     torch::Device m_device;
     //--------------------------
     torch::nn::LSTM recurrent_layer;
-    // torch::nn::Linear output_layer;
+    torch::nn::Linear output_layer;
     //--------------------------
-    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 10});
-    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 10});
+    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 256});
+    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 256});
     //--------------------------
     std::tuple<torch::Tensor, torch::Tensor> _gates;
     std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>> _input;

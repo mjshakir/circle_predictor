@@ -96,8 +96,8 @@ struct LSTMNet : torch::nn::Module {
     torch::nn::LSTM recurrent_layer;
     torch::nn::Linear output_layer;
     //--------------------------
-    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 128});
-    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 128});
+    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 256});
+    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*64*2, 0.0).data(), {64*2, 1, 256});
     //--------------------------
     std::tuple<torch::Tensor, torch::Tensor> _gates;
     std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>> _input;

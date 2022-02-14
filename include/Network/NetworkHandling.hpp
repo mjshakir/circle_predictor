@@ -67,8 +67,8 @@ class NetworkHandling{
             auto output = m_model.forward(data);
             output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
-            torch::Tensor loss = torch::mse_loss(output, targets);
-            // torch::Tensor loss = torch::mse_loss(output, targets, torch::Reduction::Sum);
+            // torch::Tensor loss = torch::mse_loss(output, targets);
+            torch::Tensor loss = torch::mse_loss(output, targets, torch::Reduction::Sum);
             // AT_ASSERT(!std::isnan(loss.template item<float>()));
             //--------------------------
             *tensorIsNan = at::isnan(loss).any().item<bool>(); // will be of type bool
@@ -144,12 +144,6 @@ class NetworkHandling{
                 }// end if(tensorIsNan)
                 //--------------------------
                 _scheduler.step();
-                //--------------------------
-                // auto printing_threads = std::async(std::launch::async, [&i, &Loss](){   for (const auto& loss : Loss){
-                //                                                                             printf("Loss [\x1b[36m%ld\x1b[0m]: [\x1b[31m%0.2f\x1b[0m] ", i, loss);
-                //                                                                         }// end for (const auto& loss : Loss) 
-                //                                                                         printf("\n-----------------size of loss [%ld]----------------------\n", Loss.size());
-                //                                                                     });
                 //--------------------------
                 auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss);});
                 //--------------------------
@@ -295,7 +289,7 @@ class NetworkHandling{
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
             //--------------------------
-            printf("\n-----------------Average Loss Sum:[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
+            printf("\n-----------------Average Loss:[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
                     elements_sum,
                     std::distance(loss.begin(), _min_element), 
                     *_min_element,  

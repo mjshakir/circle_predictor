@@ -6,8 +6,6 @@
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
-#include "Network/Network.hpp"
-//--------------------------------------------------------------
 #include "Timing/Timing.hpp"
 //--------------------------------------------------------------
 #include "progressbar/include/progressbar.hpp"
@@ -90,7 +88,7 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
-            output = torch::transpose(output.view({2,-1}), 0, 1);
+            // output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             return torch::mse_loss(output, targets, torch::Reduction::Sum).template item<double>();
             //--------------------------
@@ -105,7 +103,7 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
-            output = torch::transpose(output.view({2,-1}), 0, 1);
+            // output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             return {targets, output, torch::mse_loss(output, targets, torch::Reduction::Sum).template item<float>()};
             //--------------------------
@@ -142,6 +140,10 @@ class NetworkHandling{
                     }// end if(tensorIsNan)
                     //--------------------------
                 }// end for (const auto& batch : *data_loader)
+                //--------------------------
+                if(tensorIsNan){
+                    break;
+                }// end if(tensorIsNan)
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
@@ -285,7 +287,7 @@ class NetworkHandling{
         //--------------------------------------------------------------
         void loss_display(const std::vector<float>& loss){
             //--------------------------
-            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L)/ loss.size();
+            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L);
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
             //--------------------------

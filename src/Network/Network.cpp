@@ -67,5 +67,3 @@ torch::Tensor LSTMNet::lstm_layers(const torch::Tensor& x){
     //-------------------------
 }// end torch::Tensor LSTMNet::lstm_layers(const torch::Tensor& x)
 //--------------------------------------------------------------
-
-//--------------------------------------------------------------

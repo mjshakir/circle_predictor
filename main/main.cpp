@@ -8,13 +8,13 @@
 
 int main(int argc, char const *argv[]){
     //--------------------------
-    if (argc >= 4){
+    if (argc >= 5){
         throw std::invalid_argument("More arugments then can be allocation");
-    }// end if (argc >= 4)
+    }// end if (argc >= 5)
     //--------------------------------------------------------------
     // Command line arugments for training size and data generation 
     //--------------------------
-    size_t training_size{100}, generated_size{10000};
+    size_t training_size{100}, generated_size{10000}, epoch{100};
     //--------------------------
      if (argc > 1){
         //--------------------------
@@ -22,7 +22,12 @@ int main(int argc, char const *argv[]){
             //--------------------------
             training_size = std::stoul(argv[1]);
             //--------------------------
-        }// end if (std::atoi(argv[1]) > 0) 
+        }// end if (std::atoi(argv[1]) > 0)
+        else{
+            //--------------------------
+            throw std::out_of_range("Must be at least postive");
+            //--------------------------
+        }// end else 
         //--------------------------
     }// end if (argc > 1)
     //-----------
@@ -32,7 +37,7 @@ int main(int argc, char const *argv[]){
             //--------------------------
             generated_size = std::stoul(argv[2]);
             //--------------------------
-        }// end if (std::atoi(argv[1]) > 0)
+        }// end if (std::atoi(argv[2]) > 0)
         else{
             //--------------------------
             throw std::out_of_range("Must be at least 200 (x > 200)");
@@ -40,6 +45,21 @@ int main(int argc, char const *argv[]){
         }// end else
         //-------------------------- 
     }// end if (argc > 2)
+    //--------------------------
+    if (argc > 3){
+        //--------------------------
+        if (std::atoi(argv[3]) > 0){
+            //--------------------------
+            epoch = std::stoul(argv[3]);
+            //--------------------------
+        }// end if (std::atoi(argv[3]) > 0)
+        else{
+            //--------------------------
+            throw std::out_of_range("Must be at least postive");
+            //--------------------------
+        }// end else
+        //-------------------------- 
+    }// end if (argc > 3)
     //--------------------------
     std::cout << "training_size: " << training_size << " generated_size: " << generated_size << std::endl;
     //--------------------------------------------------------------
@@ -68,14 +88,14 @@ int main(int argc, char const *argv[]){
     //--------------------------
     torch::Device device(device_type);
     //--------------------------
-    Net model;
-    model.to(device);
-    // LSTMNet model(device);
+    // Net model;
     // model.to(device);
+    LSTMNet model(device);
+    model.to(device);
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1L).momentum(0.95).nesterov(true));
     //--------------------------
-    NetworkHandling<Net> handler(model, device);
+    NetworkHandling<LSTMNet> handler(model, device);
     //--------------------------
     for (size_t i = 0; i < training_size; i++){
         //--------------------------
@@ -114,7 +134,7 @@ int main(int argc, char const *argv[]){
         //--------------------------
         Timing _timer(__FUNCTION__);
         auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 2.5E-1L);
-        // auto loss = handler.train(std::move(data_loader), optimizer, 100);
+        // auto loss = handler.train(std::move(data_loader), optimizer, epoch);
         //--------------------------
         printf("\n-----------------Done:[%zu]-----------------\n", i);
         //--------------------------

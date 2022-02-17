@@ -58,6 +58,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_network SHARED
   src/Network/Network.cpp
+  src/Network/Networks.cpp
   src/Network/NetworkHandling.cpp
   src/Network/DataLoader.cpp
   src/Network/Normalize.cpp

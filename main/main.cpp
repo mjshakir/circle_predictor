@@ -1,22 +1,20 @@
 #include "Network/Network.hpp"
-#include "Network/NetworkHandling.hpp"
 #include "Generate/Generate.hpp"
-#include "Network/DataLoader.hpp"
-#include "Network/Normalize.hpp"
 #include <random>
 #include <fstream>
 
 int main(int argc, char const *argv[]){
     //--------------------------
-    if (argc >= 5){
+    if (argc >= 6){
         throw std::invalid_argument("More arugments then can be allocation");
-    }// end if (argc >= 5)
+    }// end if (argc >= 6)
     //--------------------------------------------------------------
     // Command line arugments for training size and data generation 
     //--------------------------
     size_t training_size{100}, generated_size{10000}, epoch{100};
+    long double precision{2.5E-1L};
     //--------------------------
-     if (argc > 1){
+    if (argc > 1){
         //--------------------------
         if (std::atoi(argv[1]) > 0){
             //--------------------------
@@ -45,10 +43,16 @@ int main(int argc, char const *argv[]){
         }// end else
         //-------------------------- 
     }// end if (argc > 2)
-    //--------------------------
+    //-----------
     if (argc > 3){
         //--------------------------
-        if (std::atoi(argv[3]) > 0){
+        precision = std::stold(argv[3]);
+        //--------------------------
+    }// end if (argc > 3)
+    //-----------
+    if (argc > 4){
+        //--------------------------
+        if (std::atoi(argv[4]) > 0){
             //--------------------------
             epoch = std::stoul(argv[3]);
             //--------------------------
@@ -61,7 +65,7 @@ int main(int argc, char const *argv[]){
         //-------------------------- 
     }// end if (argc > 3)
     //--------------------------
-    std::cout << "training_size: " << training_size << " generated_size: " << generated_size << std::endl;
+    // std::cout << "training_size: " << training_size << " generated_size: " << generated_size << " epoch: " << epoch << std::endl;
     //--------------------------------------------------------------
     // Creating a random number generator
     //--------------------------
@@ -88,14 +92,14 @@ int main(int argc, char const *argv[]){
     //--------------------------
     torch::Device device(device_type);
     //--------------------------
-    // Net model;
-    // model.to(device);
-    LSTMNet model(device);
+    Net model;
     model.to(device);
+    // LSTMNet model(device);
+    // model.to(device);
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1L).momentum(0.95).nesterov(true));
     //--------------------------
-    NetworkHandling<LSTMNet> handler(model, device);
+    NetworkHandling<Net> handler(model, device);
     //--------------------------
     for (size_t i = 0; i < training_size; i++){
         //--------------------------
@@ -133,7 +137,7 @@ int main(int argc, char const *argv[]){
 
         //--------------------------
         Timing _timer(__FUNCTION__);
-        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, 2.5E-1L);
+        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
         // auto loss = handler.train(std::move(data_loader), optimizer, epoch);
         //--------------------------
         printf("\n-----------------Done:[%zu]-----------------\n", i);

@@ -161,23 +161,28 @@ int main(int argc, char const *argv[]){
     //--------------------------
     Generate test_generate(random_radius(rng), 60, {random_centers(center_rng), random_centers(center_rng)});
     // Generate test_generate(5, 60, {0, 0}); 
-    // auto test_data = test_generate.get_data();
     //--------------------------
     std::cout   << "test data radius: " << test_generate.get_radius() 
                 << " at center: (" << std::get<0>(test_generate.get_center()) << "," 
                 << std::get<1>(test_generate.get_center()) << ")" << std::endl;
+    //--------------------------------------------------------------
+    // Normalize the data
     //--------------------------
     Normalize test_input_normal(std::get<0>(test_generate.get_data()));
     Normalize test_target_normal(std::get<1>(test_generate.get_data()));
     //--------------------------
     // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
     // batches into a single tensor.
+    //--------------------------
     auto test_data_set = DataLoader(test_input_normal.normalization(), 
                                     test_target_normal.normalization()).map(torch::data::transforms::Stack<>());
     //--------------------------
     // Generate a data loader.
+    //--------------------------
     auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>( std::move(test_data_set), 
                                                                                             torch::data::DataLoaderOptions(20));
+    //--------------------------
+    // Test the data
     //--------------------------
     auto test = handler.test(std::move(test_data_loader));
     //--------------------------
@@ -196,6 +201,7 @@ int main(int argc, char const *argv[]){
     std::fstream fout;
     //--------------------------
     // opens an existing csv file or creates a new file.
+    //--------------------------
     fout.open("test_data.csv", std::ios::out | std::ios::app);
     //--------------------------
     fout    << "Radius: " << test_generate.get_radius() 

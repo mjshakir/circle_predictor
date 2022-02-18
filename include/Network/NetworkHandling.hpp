@@ -16,10 +16,34 @@ class NetworkHandling{
         //--------------------------------------------------------------
         NetworkHandling() = delete;
         //--------------------------
-        NetworkHandling(Network& model, torch::Device& device): m_model(model), m_device(device){
+        /**
+         *  @brief A constructor 
+         *
+         *  @tparam model: A torch network struct that inherits from torch::nn::Module.
+         *  @tparam device  torch::Device cpu or gpu.
+         */
+        NetworkHandling(Network& model, const torch::Device& device): m_model(model), m_device(device){
             //--------------------------
         }// end NetworkHandling(Network& model, torch::Device& device)
         //--------------------------
+        /**
+         *  @brief A constructor 
+         *
+         *  @tparam model: A torch network struct that inherits from torch::nn::Module.
+         *  @tparam device  torch::Device cpu or gpu.
+         */
+        NetworkHandling(Network&& model, const torch::Device& device): m_model(std::move(model)), m_device(device){
+            //--------------------------
+        }// end NetworkHandling(Network& model, torch::Device& device)
+        //--------------------------
+        /**
+         *  @brief Train the model with fix epoch iteration
+         *
+         *  @tparam data_loader: A torch dataloader.
+         *  @tparam optimizer:  torch::optim::Optimizer.
+         *  @tparam epoch:  How many iteration to train.
+         *  @return vector of float
+         */
         template <typename Dataloader>
         std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
             //--------------------------
@@ -27,6 +51,16 @@ class NetworkHandling{
             //--------------------------
         }// end std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch)
         //--------------------------
+        /**
+         *  @brief Train the model with a validation set. The training stop when precision is hit
+         *
+         *  @tparam data_loader: A torch dataloader.
+         *  @tparam data_loader_test: A torch dataloader.
+         *  @tparam optimizer:  torch::optim::Optimizer.
+         *  @tparam precision:  a value that will stop the training once hit.
+         * 
+         *  @return vector of float
+         */
         template <typename Dataloader, typename Test_Dataloader>
         std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, long double precision = 1E-2L){
             //--------------------------
@@ -34,6 +68,13 @@ class NetworkHandling{
             //--------------------------
         }// end  std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, float precision = 10)
         //--------------------------
+        /**
+         *  @brief Run a validation set on the modal
+         *
+         *  @tparam data_loader: A torch dataloader.
+         * 
+         *  @return vector of float
+         */
         template <typename Dataset>
         std::vector<float> validation(Dataset&& data_loader){
             //--------------------------
@@ -41,6 +82,16 @@ class NetworkHandling{
             //--------------------------
         }// end std::vector<float> validation(Dataset&& data_loader)
         //--------------------------------------------------------------
+        /**
+         *  @brief Run a test set on the modal
+         *
+         *  @tparam data_loader: A torch dataloader.
+         * 
+         *  @return vector of tuples
+         *  1) torch::Tensor: Original targets set
+         *  2) torch::Tensor: Results set
+         *  3) float: Set Loss
+         */
         template <typename Dataset>
         std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> test(Dataset&& data_loader){
             //--------------------------

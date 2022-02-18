@@ -105,7 +105,7 @@ int main(int argc, char const *argv[]){
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-1L).momentum(0.95).nesterov(true));
     //--------------------------
-    NetworkHandling<Net> handler(model, device);
+    NetworkHandling<Net> handler(std::move(model), device);
     //--------------------------------------------------------------
     // Training loop
     //--------------------------

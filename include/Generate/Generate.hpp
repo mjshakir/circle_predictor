@@ -1,8 +1,6 @@
 #pragma once
-
-#include <iostream>
 //--------------------------------------------------------------
-#include "SharedLibrary/SharedLibrary.hpp"
+#include <torch/torch.h>
 //--------------------------------------------------------------
 class Generate{
     //--------------------------------------------------------------
@@ -10,19 +8,19 @@ class Generate{
         //--------------------------------------------------------------
         Generate() = delete;
         //--------------------------
-        // ~Generate();
+        Generate(const double& radius = 1, const size_t& generated_points = 60000, const std::tuple<double, double>& center = {0,0});
         //--------------------------
-        Generate(const double& radius = 1, const size_t& generated_points = 60000);
-        //--------------------------
-        Generate(const torch::Tensor& x_value, const double& radius = 1, const size_t& generated_points = 60000);
+        Generate(const torch::Tensor& x_value, const double& radius = 1, const size_t& generated_points = 60000, const std::tuple<double, double>& center = {0,0});
         //--------------------------
         torch::Tensor get_input(void); 
         //--------------------------
         torch::Tensor get_target(void);
         //--------------------------
-        GenerateDate get_data(void);
+        std::tuple<torch::Tensor, torch::Tensor> get_data(void);
         //--------------------------
-        GenerateDate get_test(void);
+        std::tuple<torch::Tensor, torch::Tensor> get_validation(void);
+        //--------------------------
+        std::tuple<double, double> get_center(void);
         //--------------------------
         double get_radius(void);
         //--------------------------------------------------------------
@@ -31,11 +29,13 @@ class Generate{
         //--------------------------------------------------------------
         // Functions
         //--------------------------
-        const GenerateDate generate_value(const double& radius);
+        const std::tuple<torch::Tensor, torch::Tensor> generate_value(const double& radius);
         //--------------------------
-        const GenerateDate generate_test_value(const double& radius);
+        const std::tuple<torch::Tensor, torch::Tensor> generate_validation_value(const double& radius);
         //--------------------------
         const torch::Tensor generate_value(const torch::Tensor& x_value, const double& radius);
+        //--------------------------
+        const std::vector<double> generate_value(const std::vector<double>& x_value, const double& radius);
         //--------------------------------------------------------------
     private:
         //--------------------------
@@ -47,6 +47,8 @@ class Generate{
         //--------------------------
         torch::Tensor m_x_value, y_value;
         //--------------------------
-        GenerateDate full_data, test_data;
+        std::tuple<double, double> m_center;
+        //--------------------------
+        std::tuple<torch::Tensor, torch::Tensor> full_data, validation_data;
         //--------------------------------------------------------------
 };

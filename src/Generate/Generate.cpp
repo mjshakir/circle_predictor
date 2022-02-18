@@ -1,3 +1,6 @@
+//--------------------------------------------------------------
+// Main Header 
+//--------------------------------------------------------------
 #include "Generate/Generate.hpp"
 #include "Timing/Timing.hpp"
 #include <random>

@@ -1,7 +1,7 @@
-#include "Network/Network.hpp"
-#include "Generate/Generate.hpp"
 #include <random>
 #include <fstream>
+#include "Network/Network.hpp"
+#include "Generate/Generate.hpp"
 
 //--------------------------------------------------------------
 int main(int argc, char const *argv[]){

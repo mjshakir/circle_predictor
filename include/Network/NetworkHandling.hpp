@@ -47,7 +47,7 @@ class NetworkHandling{
         template <typename Dataloader>
         std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
             //--------------------------
-            return network_train(data_loader, optimizer, epoch);
+            return network_train(std::move(data_loader), optimizer, epoch);
             //--------------------------
         }// end std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch)
         //--------------------------
@@ -64,7 +64,7 @@ class NetworkHandling{
         template <typename Dataloader, typename Test_Dataloader>
         std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, long double precision = 1E-2L){
             //--------------------------
-            return network_train(data_loader, data_loader_test, optimizer, precision);
+            return network_train(std::move(data_loader), std::move(data_loader_test), optimizer, precision);
             //--------------------------
         }// end  std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, float precision = 10)
         //--------------------------
@@ -78,7 +78,7 @@ class NetworkHandling{
         template <typename Dataset>
         std::vector<float> validation(Dataset&& data_loader){
             //--------------------------
-            return network_validation(data_loader);
+            return network_validation(std::move(data_loader));
             //--------------------------
         }// end std::vector<float> validation(Dataset&& data_loader)
         //--------------------------------------------------------------
@@ -95,14 +95,11 @@ class NetworkHandling{
         template <typename Dataset>
         std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> test(Dataset&& data_loader){
             //--------------------------
-            return network_test(data_loader);
+            return network_test(std::move(data_loader));
             //--------------------------
         }// end std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> test(Dataset&& data_loader)
         //--------------------------------------------------------------
-    private:
-        //--------------------------
-        Network m_model; 
-        torch::Device m_device;
+    protected:
         //--------------------------
         template <typename Batch>
         float network_train_batch(Batch&& batch, torch::optim::Optimizer& optimizer, bool *tensorIsNan){
@@ -324,6 +321,11 @@ class NetworkHandling{
             //--------------------------
         }// end std::tuple<std::vector<torch::Tensor>, std::vector<torch::Tensor>, std::vector<float>> network_test(Dataset&& data_loader)
         //--------------------------------------------------------------
+    private:
+        //--------------------------
+        Network m_model; 
+        torch::Device m_device;
+        //--------------------------
         template <typename T, typename R>
         bool check_learning(const std::vector<T>& elements, const R& tolerance){
             //--------------------------

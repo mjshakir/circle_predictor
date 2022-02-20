@@ -17,14 +17,14 @@ git pull --recurse-submodules
 sudo apt-get install -y unzip 
 unzip path/to/libtorch.zip
 ```
-- Copy ```libtorch``` to the project folder ```cp -r ~/path/to/libtorch ~/path/to/circle_predictor```
+- Copy ```libtorch``` to the project folder ```cp -r ~/path/to/libtorch ~/path/to/external_library/circle_predictor```
 - Folder system should look like 
 ```
 circle_predictor/
 ├── CMakeLists.txt
 ├── external_library
+    └── libtorch
 ├── include
-├── libtorch
 ├── main
 └── src
 ``` 

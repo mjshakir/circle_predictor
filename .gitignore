@@ -1,2 +1,3 @@
-libtorch/
-build/
+external_library/libtorch/
+build/*
+Images/

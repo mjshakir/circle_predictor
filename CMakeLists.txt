@@ -20,10 +20,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 #------------------------------------------------------------------------------------------
-set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/libtorch)
+set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/external_library/libtorch)
 #------------------------------------------------------------------------------------------
-include_directories(${CMAKE_SOURCE_DIR}/libtorch/include)
-link_directories(${CMAKE_SOURCE_DIR}/libtorch/lib)
+include_directories(${CMAKE_SOURCE_DIR}/external_library/libtorch/include)
+link_directories(${CMAKE_SOURCE_DIR}/external_library/libtorch/lib)
 #------------------------------------------------------------------------------------------
 # add_library(Torch SHARED) # or STATIC instead of SHARED
 #------------------------------------------------------------------------------------------

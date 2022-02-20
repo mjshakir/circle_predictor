@@ -111,7 +111,7 @@ const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_value(const do
     //--------------------------
     m_x_value = torch::tensor(x_location);
     auto _target = generate_value(x_location, radius);
-    y_value = torch::transpose(torch::cat({torch::tensor(_target), 2*torch::tensor(_target)}).view({2,-1}), 0, 1);
+    y_value = torch::transpose(torch::cat({torch::tensor(_target), (2*std::get<1>(m_center))-torch::tensor(_target)}).view({2,-1}), 0, 1);
     //--------------------------
     // std::cout << "m_x_value: \n" << m_x_value << " y_value: \n" << y_value << std::endl;
     //--------------------------
@@ -140,7 +140,7 @@ const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_validation_val
     auto _test_input = torch::tensor(x_location);
     //--------------------------
     auto _target = generate_value(x_location, radius);
-    auto _test_target = torch::transpose(torch::cat({torch::tensor(_target), 2*torch::tensor(_target)}).view({2,-1}), 0, 1);
+    auto _test_target = torch::transpose(torch::cat({torch::tensor(_target), (2*std::get<1>(m_center))-torch::tensor(_target)}).view({2,-1}), 0, 1);
     //--------------------------
     return {_test_input, _test_target};
     //--------------------------

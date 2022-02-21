@@ -1,5 +1,6 @@
 #include <random>
 #include <fstream>
+#include <cctype>
 #include "Network/Network.hpp"
 #include "Generate/Generate.hpp"
 #include "Timing/Timing.hpp"
@@ -14,6 +15,7 @@ int main(int argc, char const *argv[]){
     // Command line arugments for training size and data generation 
     //--------------------------
     size_t training_size{100}, generated_size{10000}, epoch{100};
+    bool isEpoch{false};
     long double precision{2.5E-1L};
     //--------------------------
     if (argc > 1){
@@ -33,14 +35,14 @@ int main(int argc, char const *argv[]){
     //-----------
     if (argc > 2){
         //--------------------------
-        if (std::atoi(argv[2]) > 200){
+        if (std::atoi(argv[2]) >= 200){
             //--------------------------
             generated_size = std::stoul(argv[2]);
             //--------------------------
-        }// end if (std::atoi(argv[2]) > 0)
+        }// end if (std::atoi(argv[2]) >= 200)
         else{
             //--------------------------
-            throw std::out_of_range("Must be at least 200 (x > 200)");
+            throw std::out_of_range("Must be at least 200 (x >= 200)");
             //--------------------------
         }// end else
         //-------------------------- 
@@ -48,29 +50,45 @@ int main(int argc, char const *argv[]){
     //-----------
     if (argc > 3){
         //--------------------------
-        precision = std::stold(argv[3]);
-        //--------------------------
-    }// end if (argc > 3)
+        if (std::atoi(argv[3]) == 1 or std::strncmp(argv[3], "true", 4) == 0){
+            //--------------------------
+            isEpoch = true;
+            //--------------------------
+        }// end if (std::atoi(argv[4]) == 1 or tolower(argv[4]) == "true")
+        //-------------------------- 
+    }// end if (std::atoi(argv[3]) == 1 or std::strncmp(argv[3], "true", 4) == 0)
     //-----------
-    if (argc > 4){
+    if (argc > 4 and !isEpoch){
+        //--------------------------
+        precision = std::stold(argv[4]);
+        //--------------------------
+    }// end if (argc > 4 and !isEpoch)
+    //-----------
+    if (argc > 4 and isEpoch){
         //--------------------------
         if (std::atoi(argv[4]) > 0){
             //--------------------------
-            epoch = std::stoul(argv[3]);
+            epoch = std::stoul(argv[4]);
             //--------------------------
-        }// end if (std::atoi(argv[3]) > 0)
+        }// end if (std::atoi(argv[5]) > 0)
         else{
             //--------------------------
             throw std::out_of_range("Must be at least postive");
             //--------------------------
         }// end else
         //-------------------------- 
-    }// end if (argc > 3)
+    }// end if (argc > 4 and isEpoch)
     //--------------------------
-    std::cout << "training_size: " << training_size 
-    << "\ngenerated_size: " << generated_size 
-    << "\nprecision: " << precision
-    << "\nepoch: " << epoch << std::endl;
+    if(isEpoch){
+        std::cout   << "training_size: " << training_size 
+                    << "\ngenerated_size: " << generated_size 
+                    << "\nepoch: " << epoch << std::endl;
+    }// end if(isEpoch)
+    else{
+        std::cout   << "training_size: " << training_size 
+                    << "\ngenerated_size: " << generated_size 
+                    << "\nprecision: " << precision << std::endl;
+    }// end else
     //--------------------------------------------------------------
     // Creating a random number generator
     //--------------------------
@@ -132,27 +150,31 @@ int main(int argc, char const *argv[]){
         auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
                                                                                                 torch::data::DataLoaderOptions(20));
         //--------------------------------------------------------------
-        // Generate your validation data set. At this point you can add transforms to you data set, e.g. stack your
-        // batches into a single tensor.
-        //--------------------------
-        auto validation_data_set = DataLoader(  Normalize::normalization(std::get<0>(_generate.get_validation())), 
-                                                Normalize::normalization(std::get<1>(_generate.get_validation())))
-                                                    .map(torch::data::transforms::Stack<>());
-        //--------------------------
-        // Generate a data loader.
-        //--------------------------
-        auto validation_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(validation_data_set), 
-                                                                                                        torch::data::DataLoaderOptions(20));
-
-        //--------------------------------------------------------------
         // Time the loop
         //--------------------------
         Timing _timer(__FUNCTION__);
         //--------------------------------------------------------------
         // Train the network
         //--------------------------
-        auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
-        // auto loss = handler.train(std::move(data_loader), optimizer, epoch);
+        if (isEpoch){
+            auto loss = handler.train(std::move(data_loader), optimizer, epoch);
+        }// end if (isEpoch)
+        else{
+            //--------------------------------------------------------------
+            // Generate your validation data set. At this point you can add transforms to you data set, e.g. stack your
+            // batches into a single tensor.
+            //--------------------------
+            auto validation_data_set = DataLoader(  Normalize::normalization(std::get<0>(_generate.get_validation())), 
+                                                    Normalize::normalization(std::get<1>(_generate.get_validation())))
+                                                        .map(torch::data::transforms::Stack<>());
+            //--------------------------
+            // Generate a data loader.
+            //--------------------------
+            auto validation_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(validation_data_set), 
+                                                                                                            torch::data::DataLoaderOptions(20));
+            //--------------------------
+            auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
+        }// end else 
         //--------------------------
         printf("\n-----------------Done:[%zu]-----------------\n", i);
         //--------------------------

@@ -2,6 +2,7 @@
 #include <fstream>
 #include "Network/Network.hpp"
 #include "Generate/Generate.hpp"
+#include "Timing/Timing.hpp"
 
 //--------------------------------------------------------------
 int main(int argc, char const *argv[]){

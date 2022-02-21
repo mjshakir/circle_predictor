@@ -1,5 +1,6 @@
 # Circle Predictor
-This use the ```libtorch``` to create a simple circle predictor just as an example.**This is not a perfect network, but feel free to imptove it.**
+This use the ```libtorch``` to create a simple circle predictor just as an example.**This is not a perfect network, but feel free to imptove it.**.
+In this example, the network is fed an **X** value/point from the cartesian coordinate system. The results is the **Y** point and its opposite point in the circle.  
 
 # How to build
 - Clone the repo: 

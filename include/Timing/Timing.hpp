@@ -31,8 +31,6 @@ class Timing{
     protected:
         //--------------------------
         void set_function_name(const std::string& function_name);
-        //--------------------------
-        // std::chrono::time_point_cast<std::chrono::microseconds> 
         //--------------------------------------------------------------
     private:
         //--------------------------

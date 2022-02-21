@@ -50,7 +50,10 @@ int main(int argc, char const *argv[]){
     //-----------
     if (argc > 3){
         //--------------------------
-        if (std::atoi(argv[3]) == 1 or std::strncmp(argv[3], "true", 4) == 0){
+        std::string _input = argv[3];
+        std::transform(std::execution::par, _input.begin(), _input.end(), _input.begin(), [](uint8_t c){ return std::tolower(c);});
+        //--------------------------
+        if (std::atoi(argv[3]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
             //--------------------------
             isEpoch = true;
             //--------------------------

@@ -11,6 +11,10 @@ git clone https://github.com/Majedshakir/circle_predictor.git
 ```
 git pull --recurse-submodules
 ```
+- A shortcut is to clone with submodules
+```
+git clone https://github.com/Majedshakir/circle_predictor.git --recurse-submodules
+```
 ## Get libtorch
 - Go to [PyTorch](https://pytorch.org/) to get ```libtorch```
 - Unziping 

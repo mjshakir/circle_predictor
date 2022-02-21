@@ -6,10 +6,13 @@
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
-#include "Timing/Timing.hpp"
+#include "Timing/TimeIT.hpp"
+//--------------------------------------------------------------
+#include "fort.hpp"
 //--------------------------------------------------------------
 #include "progressbar/include/progressbar.hpp"
 //--------------------------------------------------------------
+
 template<typename Network>
 class NetworkHandling{
     public:
@@ -170,7 +173,7 @@ class NetworkHandling{
             //--------------------------
             for (size_t i = 0; i < epoch; i++){
                 //--------------------------
-                // Timing _timer_loop("epoch: " + std::to_string(i));
+                TimeIT _timer;
                 //--------------------------
                 progressbar bar(data_loader_size);
                 //--------------------------
@@ -195,7 +198,7 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss);});
+                auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss, _timer.get_time());});
                 //--------------------------
             }// end for (size_t i = 0; i < epoch; i++)
             //--------------------------
@@ -225,7 +228,7 @@ class NetworkHandling{
                 //--------------------------
                 std::cout << "Training: ";
                 //--------------------------
-                Timing _timer_loop("While loop");
+                TimeIT _timer;
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
@@ -258,7 +261,7 @@ class NetworkHandling{
                 //--------------------------
                 _learning_elements.push_back(_element_sum);
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){loss_display(_test_loss, _element_sum);});
+                auto printing_threads = std::async(std::launch::async, [&](){loss_display(_test_loss, _element_sum, _timer.get_time());});
                 //--------------------------
                 if (_learning_elements.size() > 2){
                     _learning = check_learning(_learning_elements, precision);
@@ -338,32 +341,66 @@ class NetworkHandling{
             return true;
         }// end bool NetworkHandling::check_learning(const std::vector<double>& elements, const double tolerance)
         //--------------------------------------------------------------
-        void loss_display(const std::vector<float>& loss){
+        void loss_display(const std::vector<float>& loss, const uint64_t& ns_time){
             //--------------------------
             double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L);
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
             //--------------------------
-            printf("\n-----------------Average Loss:[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
-                    elements_sum,
-                    std::distance(loss.begin(), _min_element), 
-                    *_min_element,  
-                    std::distance(loss.begin(), _max_element), 
-                    *_max_element);
+            fort::char_table table;
+            //--------------------------
+            // Change border style
+            //--------------------------
+            table.set_border_style(FT_DOUBLE2_STYLE);
+            //--------------------------
+            table   << fort::header
+                    << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
+                    << elements_sum
+                    << std::distance(loss.begin(), _min_element)
+                    << *_min_element
+                    << std::distance(loss.begin(), _max_element)
+                    << *_max_element 
+                    << ns_time << fort::endr;
+            //--------------------------
+            // Set center alignment for the 1st and 3rd columns
+            //--------------------------
+            table.column(1).set_cell_text_align(fort::text_align::center);
+            table.column(3).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_content_fg_color(fort::color::red);
+            //--------------------------
+            std::cout << "\n" << table.to_string() << std::endl;
             //--------------------------
         }// end void loss_display(std::vector<float>, double elements_sum)
         //--------------------------------------------------------------
-        void loss_display(const std::vector<float>& loss, const double& elements_sum){
+        void loss_display(const std::vector<float>& loss, const double& elements_sum, const uint64_t& ns_time){
             //--------------------------
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
             //--------------------------
-            printf("\n-----------------Loss Sum:[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
-                    elements_sum,
-                    std::distance(loss.begin(), _min_element), 
-                    *_min_element,  
-                    std::distance(loss.begin(), _max_element), 
-                    *_max_element);
+            fort::char_table table;
+            //--------------------------
+            // Change border style
+            //--------------------------
+            table.set_border_style(FT_DOUBLE2_STYLE);
+            //--------------------------
+            table   << fort::header
+                    << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
+                    << elements_sum
+                    << std::distance(loss.begin(), _min_element)
+                    << *_min_element
+                    << std::distance(loss.begin(), _max_element)
+                    << *_max_element 
+                    << ns_time << fort::endr;
+            //--------------------------
+            // Set center alignment for the 1st and 3rd columns
+            //--------------------------
+            table.column(1).set_cell_text_align(fort::text_align::center);
+            table.column(3).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_content_fg_color(fort::color::red);
+            //--------------------------
+            std::cout << "\n" << table.to_string() << std::endl;
             //--------------------------
         }// end void loss_display(std::vector<float>, double elements_sum)
         //--------------------------------------------------------------

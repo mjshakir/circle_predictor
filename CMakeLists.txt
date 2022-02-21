@@ -25,7 +25,10 @@ set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/external_library/libtorch)
 include_directories(${CMAKE_SOURCE_DIR}/external_library/libtorch/include)
 link_directories(${CMAKE_SOURCE_DIR}/external_library/libtorch/lib)
 #------------------------------------------------------------------------------------------
-# add_library(Torch SHARED) # or STATIC instead of SHARED
+# Disable building tests and examples in libfort project
+set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/libfort)
 #------------------------------------------------------------------------------------------
 find_package(Torch REQUIRED)
 #---------------
@@ -70,10 +73,11 @@ add_library(${PROJECT_NAME}_data SHARED
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_timing SHARED
   src/Timing/Timing.cpp
+  src/Timing/TimeIT.cpp
 )
 #------------------------------------------------------------------------------------------
-target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} tbb)
-target_link_libraries(${PROJECT_NAME}_data ${TORCH_LIBRARIES} tbb)
+target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} tbb fort)
+target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES} tbb)
 #------------------------------------------------------------------------------------------
 include_directories(
   include

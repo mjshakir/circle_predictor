@@ -1,6 +1,5 @@
 #include <random>
 #include <fstream>
-#include <cctype>
 #include "Network/Network.hpp"
 #include "Generate/Generate.hpp"
 #include "Timing/Timing.hpp"

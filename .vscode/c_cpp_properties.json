@@ -4,6 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**" ,
+                "${workspaceFolder}/external_library/**",
                 "${workspaceFolder}/external_library/libtorch/**",
                 "/usr/include/**"
             ],

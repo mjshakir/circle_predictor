@@ -343,7 +343,7 @@ class NetworkHandling{
         //--------------------------------------------------------------
         void loss_display(const std::vector<float>& loss, const uint64_t& ns_time){
             //--------------------------
-            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L);
+            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L)/loss.size();
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
             //--------------------------

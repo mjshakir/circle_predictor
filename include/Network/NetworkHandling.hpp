@@ -354,7 +354,7 @@ class NetworkHandling{
             table.set_border_style(FT_DOUBLE2_STYLE);
             //--------------------------
             table   << fort::header
-                    << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
+                    << "Average Loss" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
                     << elements_sum
                     << std::distance(loss.begin(), _min_element)
                     << *_min_element

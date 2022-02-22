@@ -63,7 +63,7 @@ ninja
 ## Command line arguments
 - ```training_size```: default ```100```
   - Accept an integer ```x > 0```
-  - How many different point to train
+  - How many different points to train
 - ```generated_size```: default ```10000```
   - Accept an integer ```x > 200```
   - How many points generated

@@ -19,7 +19,7 @@ class Normalize{
             //--------------------------
             return unnormalization_data_nonTensor(input);
             //--------------------------
-        }// end long double unnormalization_data_nontensor(const T& input)
+        }// end T unnormalization_data_nontensor(const T& input)
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -34,7 +34,7 @@ class Normalize{
             //--------------------------
             return (input*(m_max.item<T>()-m_min.item<T>()))+m_min.item<T>();
             //--------------------------
-        }// end long double unnormalization_data_nontensor(const T& input)
+        }// end T unnormalization_data_nontensor(const T& input)
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------

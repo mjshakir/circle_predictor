@@ -50,15 +50,15 @@ int main(int argc, char const *argv[]){
     if (argc > 3){
         //--------------------------
         std::string _input = argv[3];
-        std::transform(std::execution::par, _input.begin(), _input.end(), _input.begin(), [](uint8_t c){ return std::tolower(c);});
+        std::transform(std::execution::par, _input.begin(), _input.end(), _input.begin(), [](const uint8_t& c){ return std::tolower(c);});
         //--------------------------
         if (std::atoi(argv[3]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
             //--------------------------
             isEpoch = true;
             //--------------------------
-        }// end if (std::atoi(argv[4]) == 1 or tolower(argv[4]) == "true")
+        }// end if std::atoi(argv[3]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0)
         //-------------------------- 
-    }// end if (std::atoi(argv[3]) == 1 or std::strncmp(argv[3], "true", 4) == 0)
+    }// end if (argc > 3)
     //-----------
     if (argc > 4 and !isEpoch){
         //--------------------------
@@ -72,7 +72,7 @@ int main(int argc, char const *argv[]){
             //--------------------------
             epoch = std::stoul(argv[4]);
             //--------------------------
-        }// end if (std::atoi(argv[5]) > 0)
+        }// end if (std::atoi(argv[4]) > 0)
         else{
             //--------------------------
             throw std::out_of_range("Must be at least postive");

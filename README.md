@@ -60,3 +60,16 @@ ninja
 ```
 ./bin/circle_predictor
 ```
+## Command line arguments
+- ```training_size```: default ```100```
+  - Accept an integer ```x > 0```
+  - How many different point to train
+- ```generated_size```: default ```10000```
+  - Accept an integer ```x > 200```
+  - How many points generated
+- ```isEpoch```: default ```false```
+  - Accept a bool ```true``` or ```1```
+  - Train with an epoch iteration or validation precision
+- ```precision``` if ```isEpoch``` is ```false``` or ```epoch``` if ```isEpoch``` is ```true```
+  - ```precision```: a long double that determine when to stop the training. This uses a validation set.
+  - ```epoch```: how many iteration to train

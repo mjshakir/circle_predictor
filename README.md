@@ -34,23 +34,23 @@ circle_predictor/
 └── src
 ``` 
 ## Build
-* Create a build folder 
+- Create a build folder 
 ```
 ~/path/to/circle_predictor/; mkdir build; cd build
 ```
-* Get Ninja: 
+- Get Ninja: 
 ```
 sudo apt-get install -y ninja-build
 ```
-* Build Ninja: 
+- Build Ninja: 
 ```
 cmake -DCMAKE_BUILD_TYPE=release .. -G Ninja
 ```
-  * Build Ninja using ```CLang```:
+  - Build Ninja using ```CLang```:
 ```
 cmake -DUSE_CLANG=ON -DCMAKE_BUILD_TYPE=release .. -G Ninja
 ```  
-* Build the project: 
+- Build the project: 
 ```
 ninja
 ```

@@ -368,7 +368,7 @@ class NetworkHandling{
             //--------------------------
             std::cout << "\n" << table.to_string() << std::endl;
             //--------------------------
-        }// end void loss_display(std::vector<float>, double elements_sum)
+        }// end void loss_display(const std::vector<T>& loss, const R& ns_time)
         //--------------------------------------------------------------
         template <typename T, typename D, typename R>
         void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time){
@@ -400,7 +400,7 @@ class NetworkHandling{
             //--------------------------
             std::cout << "\n" << table.to_string() << std::endl;
             //--------------------------
-        }// end void loss_display(std::vector<float>, double elements_sum)
+        }// end void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time)
         //--------------------------------------------------------------
 };
 //--------------------------------------------------------------

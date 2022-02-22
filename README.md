@@ -65,7 +65,7 @@ ninja
   - Accept an integer ```x > 0```
   - How many different points to train
 - ```generated_size```: default ```10000```
-  - Accept an integer ```x > 200```
+  - Accept an integer ```x >= 200```
   - How many points generated
 - ```isEpoch```: default ```false```
   - Accept a bool ```true``` or ```1```

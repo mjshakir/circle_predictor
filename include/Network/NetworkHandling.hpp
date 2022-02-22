@@ -115,7 +115,6 @@ class NetworkHandling{
             //--------------------------
             auto output = m_model.forward(data);
             // output = torch::transpose(output.view({2,-1}), 0, 1);
-            // std::cout << "output: " << output.sizes() << std::endl;
             //--------------------------
             torch::Tensor loss = torch::mse_loss(output, targets);
             // AT_ASSERT(!std::isnan(loss.template item<float>()));
@@ -134,7 +133,6 @@ class NetworkHandling{
         float network_validation_batch(Batch&& batch){
             //--------------------------
             torch::NoGradGuard no_grad;
-            // m_model.train(false);
             m_model.eval();
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
@@ -149,7 +147,6 @@ class NetworkHandling{
         std::tuple<torch::Tensor, torch::Tensor, float> network_test_batch(Batch&& batch){
             //--------------------------
             torch::NoGradGuard no_grad;
-            // m_model.train(false);
             m_model.eval();
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
@@ -208,8 +205,6 @@ class NetworkHandling{
         //--------------------------
         template <typename Dataloader, typename Test_Dataloader, typename R>
         std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const R& precision){
-            //--------------------------
-            // std::mutex mutex;
             //--------------------------
             double _element_sum{100};
             std::vector<float> Loss;
@@ -272,15 +267,15 @@ class NetworkHandling{
                                     }// end if(_learning)
                                     else{
                                         printf("\n\x1b[36m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
-                                    }
+                                    }// end else
                                 });
-                }// end if (_learning_elements.size > 4)
+                }// end if (_learning_elements.size > 2)
                 //--------------------------
             } while(_learning and !tensorIsNan);
             //--------------------------
             return Loss;
             //--------------------------
-        }// end std::vector<at::Tensor> NetworkHandling::network_train(DataLoader& data_loader, size_t& epoch)
+        }// end std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const R& precision)
         //--------------------------
         template <typename Dataset>
         std::vector<float> network_validation(Dataset&& data_loader){
@@ -297,11 +292,11 @@ class NetworkHandling{
                 //------------
                 test_loss.emplace_back(network_validation_batch(std::move(batch)));
                 //--------------------------
-            }// end for (const auto& batch : data_loader)
+            }// end for (const auto& batch : *data_loader)
             //--------------------------
             return test_loss;
             //--------------------------
-        }// end std::vector<double> NetworkHandling::network_validation(DataLoader& data_loader)
+        }// end std::vector<float> network_validation(Dataset&& data_loader)
         //--------------------------------------------------------------
         template <typename Dataset>
         std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> network_test(Dataset&& data_loader){
@@ -322,7 +317,7 @@ class NetworkHandling{
             //--------------------------
             return results;
             //--------------------------
-        }// end std::tuple<std::vector<torch::Tensor>, std::vector<torch::Tensor>, std::vector<float>> network_test(Dataset&& data_loader)
+        }// end std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> network_test(Dataset&& data_loader)
         //--------------------------------------------------------------
     private:
         //--------------------------
@@ -339,11 +334,13 @@ class NetworkHandling{
             }// end std::abs(average - elements.front()) <= tolerance)
             //--------------------------
             return true;
-        }// end bool NetworkHandling::check_learning(const std::vector<double>& elements, const double tolerance)
-        //--------------------------------------------------------------
-        void loss_display(const std::vector<float>& loss, const uint64_t& ns_time){
             //--------------------------
-            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L)/loss.size();
+        }// end bool check_learning(const std::vector<T>& elements, const R& tolerance)
+        //--------------------------------------------------------------
+        template <typename T, typename R>
+        void loss_display(const std::vector<T>& loss, const R& ns_time){
+            //--------------------------
+            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L) / loss.size();
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
             //--------------------------
@@ -373,7 +370,8 @@ class NetworkHandling{
             //--------------------------
         }// end void loss_display(std::vector<float>, double elements_sum)
         //--------------------------------------------------------------
-        void loss_display(const std::vector<float>& loss, const double& elements_sum, const uint64_t& ns_time){
+        template <typename T, typename D, typename R>
+        void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time){
             //--------------------------
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());

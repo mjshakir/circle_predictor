@@ -5,18 +5,20 @@
 #include "Timing/Timing.hpp"
 #include <random>
 //--------------------------------------------------------------
-Generate::Generate(const torch::Tensor& x_value, const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) :    m_radius(radius), 
-                                                                                                                                                        m_generated_points((generated_points < 20) ? 20 : generated_points), 
-                                                                                                                                                        m_x_value(x_value),
-                                                                                                                                                        m_center(center){
+Generate::Generate(const torch::Tensor& x_value, const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) 
+                    :   m_radius(radius), 
+                        m_generated_points((generated_points < 200) ? 200 : generated_points), 
+                        m_x_value(x_value),
+                        m_center(center){
     //--------------------------
     y_value = generate_value(x_value, radius);
     //--------------------------
 }// end Generate::Generate(const torch::Tensor& x_value, const double& radius, const size_t& generated_points)
 //--------------------------------------------------------------
-Generate::Generate(const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) :  m_radius(radius), 
-                                                                                                                        m_generated_points((generated_points < 20) ? 20 : generated_points),
-                                                                                                                        m_center(center){
+Generate::Generate(const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) 
+                    :   m_radius(radius), 
+                        m_generated_points((generated_points < 200) ? 200 : generated_points),
+                        m_center(center){
     //--------------------------
     full_data = generate_value(radius);
     validation_data = generate_validation_value(radius);

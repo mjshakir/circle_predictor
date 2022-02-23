@@ -73,3 +73,13 @@ ninja
 - ```precision``` if ```isEpoch``` is ```false``` or ```epoch``` if ```isEpoch``` is ```true```
   - ```precision```: a long double that determine when to stop the training. This uses a validation set.
   - ```epoch```: how many iteration to train
+
+### Example: 
+- With precision and validation:
+  - ``` 
+  ./bin/circle_predictor 10 1200 false 1E-2
+  ```
+- With Epoch iteration:
+  - ``` 
+  ./bin/circle_predictor 10 1200 true 10
+  ```

@@ -185,7 +185,6 @@ int main(int argc, char const *argv[]){
     // Generate test data
     //--------------------------
     Generate test_generate(random_radius(rng), 60, {random_centers(center_rng), random_centers(center_rng)});
-    // Generate test_generate(5, 60, {0, 0}); 
     //--------------------------
     std::cout   << "test data radius: " << test_generate.get_radius() 
                 << " at center: (" << std::get<0>(test_generate.get_center()) << "," 

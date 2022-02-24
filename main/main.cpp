@@ -210,13 +210,13 @@ int main(int argc, char const *argv[]){
     //--------------------------
     auto test = handler.test(std::move(test_data_loader));
     //--------------------------
-    for (const auto& _test : test){
+    for (const auto& [_target, _output, _loss] : test){
         //--------------------------
-        std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(std::get<0>(_test)) 
-                    << "\noutput: \n" << test_target_normal.unnormalization(std::get<1>(_test)) 
-                    << "\ntarget origial: \n" << std::get<0>(_test) 
-                    << "\noutput origial: \n" << std::get<1>(_test)
-                    << "\nloss: " << std::get<2>(_test) << std::endl;
+        std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(_target) 
+                    << "\noutput: \n" << test_target_normal.unnormalization(_output) 
+                    << "\ntarget origial: \n" << _target 
+                    << "\noutput origial: \n" << _output
+                    << "\nloss: " << _loss << std::endl;
         //--------------------------
     }// end for (const auto& _test : test)
     //--------------------------------------------------------------
@@ -239,14 +239,14 @@ int main(int argc, char const *argv[]){
     //--------------------------
     fout.flush();
     //--------------------------
-    for (const auto& _test : test){
+    for (const auto& [_test_target, _test_output, _loss] : test){
         //--------------------------
-        auto num_row = std::get<0>(_test).size(0);
-        auto num_col = std::get<0>(_test).size(1);
+        auto num_row = _test_target.size(0);
+        auto num_col = _test_target.size(1);
         //--------------------------
-        auto _output_temp = std::get<0>(_test).cpu();
+        auto _output_temp = _test_target.cpu();
         auto _output = _output_temp.accessor<float, 2>();
-        auto _target_temp = std::get<1>(_test).cpu();
+        auto _target_temp = _test_output.cpu();
         auto _target = _target_temp.accessor<float, 2>();
         //--------------------------
         for (int64_t i = 0; i < num_row; i++){
@@ -257,7 +257,7 @@ int main(int argc, char const *argv[]){
                         << test_target_normal.unnormalization_nonTensor(_target[i][j]) << "," 
                         << _output[i][j] << ","
                         << _target[i][j] << "," 
-                        << std::get<2>(_test) << "\n";
+                        << _loss << "\n";
                 //--------------------------
                 fout.flush();
                 //--------------------------

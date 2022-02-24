@@ -40,16 +40,6 @@ else()
   message(STATUS " Library  - ${TORCH_LIBRARIES}")
 endif (NOT Torch_FOUND)
 #----------------------------------
-find_package(OpenMP)
-#---------------
-if (NOT OpenMP_FOUND)
-  message(FATAL_ERROR "Fatal error: OpenMP required.")
-else()
-  message(STATUS "Setting up OpenMP")
-  message(STATUS " Includes - ${OpenMP_INCLUDE_DIRS}")
-  message(STATUS " Library  - ${OpenMP_LIBRARIES}")
-endif (NOT OpenMP_FOUND)
-#----------------------------------
 find_package(TBB REQUIRED)
 #---------------
 if (NOT TBB_FOUND)

@@ -195,7 +195,8 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss, _timer.get_time());});
+                auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss, _timer.get_time());
+                                                                             Loss.clear();                                       });
                 //--------------------------
             }// end for (size_t i = 0; i < epoch; i++)
             //--------------------------
@@ -340,7 +341,7 @@ class NetworkHandling{
         template <typename T, typename R>
         void loss_display(const std::vector<T>& loss, const R& ns_time){
             //--------------------------
-            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L) / loss.size();
+            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L);
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
             //--------------------------
@@ -351,7 +352,7 @@ class NetworkHandling{
             table.set_border_style(FT_DOUBLE2_STYLE);
             //--------------------------
             table   << fort::header
-                    << "Average Loss" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
+                    << "Sum Loss" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
                     << elements_sum
                     << std::distance(loss.begin(), _min_element)
                     << *_min_element

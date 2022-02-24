@@ -1,16 +1,9 @@
 #include <random>
 #include <fstream>
-<<<<<<< master
 #include "Network/Network.hpp"
 #include "Generate/Generate.hpp"
 #include "Timing/Timing.hpp"
 
-=======
-//--------------------------------------------------------------
-// OpenMP library
-//--------------------------------------------------------------
-#include <omp.h>
->>>>>>> Multiprocessing
 //--------------------------------------------------------------
 int main(int argc, char const *argv[]){
     //--------------------------
@@ -137,10 +130,25 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // Training loop
     //--------------------------
-    #pragma omp parallel shared(training_size, generated_size, epoch, precision, random_radius, random_centers, rng, model, optimizer, handler)
-    {
+    for (size_t i = 0; i < training_size; i++){
+        //--------------------------------------------------------------
+        // Generate data
         //--------------------------
-<<<<<<< master
+        Generate _generate(random_radius(rng), generated_size, {random_centers(center_rng), random_centers(center_rng)}); 
+        //------------
+        std::cout   << "Training data radius: " << _generate.get_radius() 
+                    << " at center: (" << std::get<0>(_generate.get_center()) << "," 
+                    << std::get<1>(_generate.get_center()) << ")" << std::endl;
+        //--------------------------------------------------------------
+        // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
+        // batches into a single tensor.
+        // auto data_set = DataLoader(std::move(std::get<0>(data)), std::move(std::get<1>(data))).map(torch::data::transforms::Normalize<>(0.5, 0.25)).map(torch::data::transforms::Stack<>());
+        //--------------------------
+        auto data_set = DataLoader( Normalize::normalization(std::get<0>(_generate.get_data())), 
+                                    Normalize::normalization(std::get<1>(_generate.get_data()))).map(torch::data::transforms::Stack<>());
+        //--------------------------
+        // Generate a data loader.
+        //--------------------------
         auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
                                                                                                 torch::data::DataLoaderOptions(20));
         //--------------------------------------------------------------
@@ -154,31 +162,6 @@ int main(int argc, char const *argv[]){
             auto loss = handler.train(std::move(data_loader), optimizer, epoch);
         }// end if (isEpoch)
         else{
-=======
-        #pragma omp for nowait schedule(dynamic)
-        //--------------------------
-        for (size_t i = 0; i < training_size; i++){
-            //--------------------------------------------------------------
-            // Generate data
-            //--------------------------
-            Generate _generate(random_radius(rng), generated_size, {random_centers(center_rng), random_centers(center_rng)}); 
-            //------------
-            std::cout   << "Training data radius: " << _generate.get_radius() 
-                        << " at center: (" << std::get<0>(_generate.get_center()) << "," 
-                        << std::get<1>(_generate.get_center()) << ")" << std::endl;
-            //--------------------------------------------------------------
-            // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
-            // batches into a single tensor.
-            // auto data_set = DataLoader(std::move(std::get<0>(data)), std::move(std::get<1>(data))).map(torch::data::transforms::Normalize<>(0.5, 0.25)).map(torch::data::transforms::Stack<>());
-            //--------------------------
-            auto data_set = DataLoader( Normalize::normalization(std::get<0>(_generate.get_data())), 
-                                        Normalize::normalization(std::get<1>(_generate.get_data()))).map(torch::data::transforms::Stack<>());
-            //--------------------------
-            // Generate a data loader.
-            //--------------------------
-            auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
-                                                                                                    torch::data::DataLoaderOptions(20));
->>>>>>> Multiprocessing
             //--------------------------------------------------------------
             // Generate your validation data set. At this point you can add transforms to you data set, e.g. stack your
             // batches into a single tensor.
@@ -191,7 +174,6 @@ int main(int argc, char const *argv[]){
             //--------------------------
             auto validation_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(validation_data_set), 
                                                                                                             torch::data::DataLoaderOptions(20));
-<<<<<<< master
             //--------------------------
             auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
         }// end else 
@@ -199,29 +181,6 @@ int main(int argc, char const *argv[]){
         printf("\n-----------------Done:[%zu]-----------------\n", i);
         //--------------------------
     }// end (size_t i = 0; i < training_size; i++)
-=======
-
-            //--------------------------------------------------------------
-            // Time the loop
-            //--------------------------
-            Timing _timer(__FUNCTION__);
-            //--------------------------------------------------------------
-            // Train the network
-            //--------------------------
-            #pragma omp critical
-            {
-                //--------------------------
-                auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
-                // auto loss = handler.train(std::move(data_loader), optimizer, epoch);
-                //--------------------------
-            }// end #pragma omp critical(data) 
-            //--------------------------
-            printf("\n-----------------Done:[%zu]-----------------\n", i);
-            //--------------------------
-        }// end (size_t i = 0; i < 3; i++)
-        //--------------------------
-    }// end omp parallel shared(data)
->>>>>>> Multiprocessing
     //--------------------------------------------------------------
     // Generate test data
     //--------------------------

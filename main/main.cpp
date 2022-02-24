@@ -1,17 +1,14 @@
 #include <random>
 #include <fstream>
-<<<<<<< master
 #include "Network/Network.hpp"
 #include "Generate/Generate.hpp"
 #include "Timing/Timing.hpp"
-
-=======
 //--------------------------------------------------------------
 // OpenMP library
 //--------------------------------------------------------------
 #include <omp.h>
->>>>>>> Multiprocessing
 //--------------------------------------------------------------
+
 int main(int argc, char const *argv[]){
     //--------------------------
     if (argc >= 6){
@@ -140,21 +137,6 @@ int main(int argc, char const *argv[]){
     #pragma omp parallel shared(training_size, generated_size, epoch, precision, random_radius, random_centers, rng, model, optimizer, handler)
     {
         //--------------------------
-<<<<<<< master
-        auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
-                                                                                                torch::data::DataLoaderOptions(20));
-        //--------------------------------------------------------------
-        // Time the loop
-        //--------------------------
-        Timing _timer(__FUNCTION__);
-        //--------------------------------------------------------------
-        // Train the network
-        //--------------------------
-        if (isEpoch){
-            auto loss = handler.train(std::move(data_loader), optimizer, epoch);
-        }// end if (isEpoch)
-        else{
-=======
         #pragma omp for nowait schedule(dynamic)
         //--------------------------
         for (size_t i = 0; i < training_size; i++){
@@ -178,29 +160,6 @@ int main(int argc, char const *argv[]){
             //--------------------------
             auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
                                                                                                     torch::data::DataLoaderOptions(20));
->>>>>>> Multiprocessing
-            //--------------------------------------------------------------
-            // Generate your validation data set. At this point you can add transforms to you data set, e.g. stack your
-            // batches into a single tensor.
-            //--------------------------
-            auto validation_data_set = DataLoader(  Normalize::normalization(std::get<0>(_generate.get_validation())), 
-                                                    Normalize::normalization(std::get<1>(_generate.get_validation())))
-                                                        .map(torch::data::transforms::Stack<>());
-            //--------------------------
-            // Generate a data loader.
-            //--------------------------
-            auto validation_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(validation_data_set), 
-                                                                                                            torch::data::DataLoaderOptions(20));
-<<<<<<< master
-            //--------------------------
-            auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
-        }// end else 
-        //--------------------------
-        printf("\n-----------------Done:[%zu]-----------------\n", i);
-        //--------------------------
-    }// end (size_t i = 0; i < training_size; i++)
-=======
-
             //--------------------------------------------------------------
             // Time the loop
             //--------------------------
@@ -208,20 +167,37 @@ int main(int argc, char const *argv[]){
             //--------------------------------------------------------------
             // Train the network
             //--------------------------
-            #pragma omp critical
-            {
+            if (isEpoch){
+                #pragma omp critical
+                {
+                    auto loss = handler.train(std::move(data_loader), optimizer, epoch);
+                }// end #pragma omp critical
+            }// end if (isEpoch)
+            else{
+                //--------------------------------------------------------------
+                // Generate your validation data set. At this point you can add transforms to you data set, e.g. stack your
+                // batches into a single tensor.
                 //--------------------------
-                auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
-                // auto loss = handler.train(std::move(data_loader), optimizer, epoch);
+                auto validation_data_set = DataLoader(  Normalize::normalization(std::get<0>(_generate.get_validation())), 
+                                                        Normalize::normalization(std::get<1>(_generate.get_validation())))
+                                                            .map(torch::data::transforms::Stack<>());
                 //--------------------------
-            }// end #pragma omp critical(data) 
+                // Generate a data loader.
+                //--------------------------
+                auto validation_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(validation_data_set), 
+                                                                                                                torch::data::DataLoaderOptions(20));
+                //--------------------------
+                #pragma omp critical
+                {
+                    auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
+                }// end #pragma omp critical
+            }// end else 
             //--------------------------
             printf("\n-----------------Done:[%zu]-----------------\n", i);
             //--------------------------
-        }// end (size_t i = 0; i < 3; i++)
+        }// end (size_t i = 0; i < training_size; i++)
         //--------------------------
-    }// end omp parallel shared(data)
->>>>>>> Multiprocessing
+    }// end omp parallel shared(training_size, generated_size, epoch, precision, random_radius, random_centers, rng, model, optimizer, handler)
     //--------------------------------------------------------------
     // Generate test data
     //--------------------------

@@ -29,11 +29,11 @@ struct LSTMNet : torch::nn::Module {
     //--------------------------
     LSTMNet(const torch::Device& device);
     //--------------------------------------------------------------
-    torch::Tensor forward(const torch::Tensor& x);
+    torch::Tensor forward(torch::Tensor& x);
     //--------------------------------------------------------------
   protected:
     //--------------------------------------------------------------
-    torch::Tensor lstm_layers(const torch::Tensor& x);
+    torch::Tensor lstm_layers(torch::Tensor& x);
     //--------------------------------------------------------------
   private:
     //--------------------------------------------------------------

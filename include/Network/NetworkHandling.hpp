@@ -6,52 +6,103 @@
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
-#include "Timing/Timing.hpp"
+#include "Timing/TimeIT.hpp"
+//--------------------------------------------------------------
+#include "fort.hpp"
 //--------------------------------------------------------------
 #include "progressbar/include/progressbar.hpp"
 //--------------------------------------------------------------
+
 template<typename Network>
 class NetworkHandling{
     public:
         //--------------------------------------------------------------
         NetworkHandling() = delete;
         //--------------------------
-        NetworkHandling(Network& model, torch::Device& device): m_model(model), m_device(device){
+        /**
+         *  @brief A constructor 
+         *
+         *  @tparam model: A torch network struct that inherits from torch::nn::Module.
+         *  @tparam device  torch::Device cpu or gpu.
+         */
+        NetworkHandling(Network& model, const torch::Device& device): m_model(model), m_device(device){
             //--------------------------
         }// end NetworkHandling(Network& model, torch::Device& device)
         //--------------------------
+        /**
+         *  @brief A constructor 
+         *
+         *  @tparam model: A torch network struct that inherits from torch::nn::Module.
+         *  @tparam device  torch::Device cpu or gpu.
+         */
+        NetworkHandling(Network&& model, const torch::Device& device): m_model(std::move(model)), m_device(device){
+            //--------------------------
+        }// end NetworkHandling(Network& model, torch::Device& device)
+        //--------------------------
+        /**
+         *  @brief Train the model with fix epoch iteration
+         *
+         *  @tparam data_loader: A torch dataloader.
+         *  @tparam optimizer:  torch::optim::Optimizer.
+         *  @tparam epoch:  How many iteration to train.
+         *  @return vector of float
+         */
         template <typename Dataloader>
         std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
             //--------------------------
-            return network_train(data_loader, optimizer, epoch);
+            return network_train(std::move(data_loader), optimizer, epoch);
             //--------------------------
         }// end std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch)
         //--------------------------
+        /**
+         *  @brief Train the model with a validation set. The training stop when precision is hit
+         *
+         *  @tparam data_loader: A torch dataloader.
+         *  @tparam data_loader_test: A torch dataloader.
+         *  @tparam optimizer:  torch::optim::Optimizer.
+         *  @tparam precision:  a value that will stop the training once hit.
+         * 
+         *  @return vector of float
+         */
         template <typename Dataloader, typename Test_Dataloader>
         std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, long double precision = 1E-2L){
             //--------------------------
-            return network_train(data_loader, data_loader_test, optimizer, precision);
+            return network_train(std::move(data_loader), std::move(data_loader_test), optimizer, precision);
             //--------------------------
         }// end  std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, float precision = 10)
         //--------------------------
+        /**
+         *  @brief Run a validation set on the modal
+         *
+         *  @tparam data_loader: A torch dataloader.
+         * 
+         *  @return vector of float
+         */
         template <typename Dataset>
         std::vector<float> validation(Dataset&& data_loader){
             //--------------------------
-            return network_validation(data_loader);
+            return network_validation(std::move(data_loader));
             //--------------------------
         }// end std::vector<float> validation(Dataset&& data_loader)
         //--------------------------------------------------------------
+        /**
+         *  @brief Run a test set on the modal
+         *
+         *  @tparam data_loader: A torch dataloader.
+         * 
+         *  @return vector of tuples
+         *  1) torch::Tensor: Original targets set
+         *  2) torch::Tensor: Results set
+         *  3) float: Set Loss
+         */
         template <typename Dataset>
         std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> test(Dataset&& data_loader){
             //--------------------------
-            return network_test(data_loader);
+            return network_test(std::move(data_loader));
             //--------------------------
         }// end std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> test(Dataset&& data_loader)
         //--------------------------------------------------------------
-    private:
-        //--------------------------
-        Network m_model; 
-        torch::Device m_device;
+    protected:
         //--------------------------
         template <typename Batch>
         float network_train_batch(Batch&& batch, torch::optim::Optimizer& optimizer, bool *tensorIsNan){
@@ -64,7 +115,6 @@ class NetworkHandling{
             //--------------------------
             auto output = m_model.forward(data);
             // output = torch::transpose(output.view({2,-1}), 0, 1);
-            // std::cout << "output: " << output.sizes() << std::endl;
             //--------------------------
             torch::Tensor loss = torch::mse_loss(output, targets);
             // AT_ASSERT(!std::isnan(loss.template item<float>()));
@@ -83,7 +133,6 @@ class NetworkHandling{
         float network_validation_batch(Batch&& batch){
             //--------------------------
             torch::NoGradGuard no_grad;
-            // m_model.train(false);
             m_model.eval();
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
@@ -98,7 +147,6 @@ class NetworkHandling{
         std::tuple<torch::Tensor, torch::Tensor, float> network_test_batch(Batch&& batch){
             //--------------------------
             torch::NoGradGuard no_grad;
-            // m_model.train(false);
             m_model.eval();
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
@@ -122,7 +170,7 @@ class NetworkHandling{
             //--------------------------
             for (size_t i = 0; i < epoch; i++){
                 //--------------------------
-                // Timing _timer_loop("epoch: " + std::to_string(i));
+                TimeIT _timer;
                 //--------------------------
                 progressbar bar(data_loader_size);
                 //--------------------------
@@ -147,7 +195,8 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss);});
+                auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss, _timer.get_time());
+                                                                             Loss.clear();                                       });
                 //--------------------------
             }// end for (size_t i = 0; i < epoch; i++)
             //--------------------------
@@ -157,8 +206,6 @@ class NetworkHandling{
         //--------------------------
         template <typename Dataloader, typename Test_Dataloader, typename R>
         std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const R& precision){
-            //--------------------------
-            // std::mutex mutex;
             //--------------------------
             double _element_sum{100};
             std::vector<float> Loss;
@@ -177,7 +224,7 @@ class NetworkHandling{
                 //--------------------------
                 std::cout << "Training: ";
                 //--------------------------
-                Timing _timer_loop("While loop");
+                TimeIT _timer;
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
@@ -210,7 +257,7 @@ class NetworkHandling{
                 //--------------------------
                 _learning_elements.push_back(_element_sum);
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){loss_display(_test_loss, _element_sum);});
+                auto printing_threads = std::async(std::launch::async, [&](){loss_display(_test_loss, _element_sum, _timer.get_time());});
                 //--------------------------
                 if (_learning_elements.size() > 2){
                     _learning = check_learning(_learning_elements, precision);
@@ -221,15 +268,15 @@ class NetworkHandling{
                                     }// end if(_learning)
                                     else{
                                         printf("\n\x1b[36m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
-                                    }
+                                    }// end else
                                 });
-                }// end if (_learning_elements.size > 4)
+                }// end if (_learning_elements.size > 2)
                 //--------------------------
             } while(_learning and !tensorIsNan);
             //--------------------------
             return Loss;
             //--------------------------
-        }// end std::vector<at::Tensor> NetworkHandling::network_train(DataLoader& data_loader, size_t& epoch)
+        }// end std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const R& precision)
         //--------------------------
         template <typename Dataset>
         std::vector<float> network_validation(Dataset&& data_loader){
@@ -246,11 +293,11 @@ class NetworkHandling{
                 //------------
                 test_loss.emplace_back(network_validation_batch(std::move(batch)));
                 //--------------------------
-            }// end for (const auto& batch : data_loader)
+            }// end for (const auto& batch : *data_loader)
             //--------------------------
             return test_loss;
             //--------------------------
-        }// end std::vector<double> NetworkHandling::network_validation(DataLoader& data_loader)
+        }// end std::vector<float> network_validation(Dataset&& data_loader)
         //--------------------------------------------------------------
         template <typename Dataset>
         std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> network_test(Dataset&& data_loader){
@@ -271,8 +318,13 @@ class NetworkHandling{
             //--------------------------
             return results;
             //--------------------------
-        }// end std::tuple<std::vector<torch::Tensor>, std::vector<torch::Tensor>, std::vector<float>> network_test(Dataset&& data_loader)
+        }// end std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> network_test(Dataset&& data_loader)
         //--------------------------------------------------------------
+    private:
+        //--------------------------
+        Network m_model; 
+        torch::Device m_device;
+        //--------------------------
         template <typename T, typename R>
         bool check_learning(const std::vector<T>& elements, const R& tolerance){
             //--------------------------
@@ -283,36 +335,73 @@ class NetworkHandling{
             }// end std::abs(average - elements.front()) <= tolerance)
             //--------------------------
             return true;
-        }// end bool NetworkHandling::check_learning(const std::vector<double>& elements, const double tolerance)
+            //--------------------------
+        }// end bool check_learning(const std::vector<T>& elements, const R& tolerance)
         //--------------------------------------------------------------
-        void loss_display(const std::vector<float>& loss){
+        template <typename T, typename R>
+        void loss_display(const std::vector<T>& loss, const R& ns_time){
             //--------------------------
             double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L);
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
             //--------------------------
-            printf("\n-----------------Average Loss:[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
-                    elements_sum,
-                    std::distance(loss.begin(), _min_element), 
-                    *_min_element,  
-                    std::distance(loss.begin(), _max_element), 
-                    *_max_element);
+            fort::char_table table;
             //--------------------------
-        }// end void loss_display(std::vector<float>, double elements_sum)
+            // Change border style
+            //--------------------------
+            table.set_border_style(FT_DOUBLE2_STYLE);
+            //--------------------------
+            table   << fort::header
+                    << "Sum Loss" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
+                    << elements_sum
+                    << std::distance(loss.begin(), _min_element)
+                    << *_min_element
+                    << std::distance(loss.begin(), _max_element)
+                    << *_max_element 
+                    << ns_time << fort::endr;
+            //--------------------------
+            // Set center alignment for the 1st and 3rd columns
+            //--------------------------
+            table.column(1).set_cell_text_align(fort::text_align::center);
+            table.column(3).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_content_fg_color(fort::color::red);
+            //--------------------------
+            std::cout << "\n" << table.to_string() << std::endl;
+            //--------------------------
+        }// end void loss_display(const std::vector<T>& loss, const R& ns_time)
         //--------------------------------------------------------------
-        void loss_display(const std::vector<float>& loss, const double& elements_sum){
+        template <typename T, typename D, typename R>
+        void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time){
             //--------------------------
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
             //--------------------------
-            printf("\n-----------------Loss Sum:[%f]---------Min[%ld] loss:[%f]---------Max:[%ld] loss[%f]-----------------\n", 
-                    elements_sum,
-                    std::distance(loss.begin(), _min_element), 
-                    *_min_element,  
-                    std::distance(loss.begin(), _max_element), 
-                    *_max_element);
+            fort::char_table table;
             //--------------------------
-        }// end void loss_display(std::vector<float>, double elements_sum)
+            // Change border style
+            //--------------------------
+            table.set_border_style(FT_DOUBLE2_STYLE);
+            //--------------------------
+            table   << fort::header
+                    << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
+                    << elements_sum
+                    << std::distance(loss.begin(), _min_element)
+                    << *_min_element
+                    << std::distance(loss.begin(), _max_element)
+                    << *_max_element 
+                    << ns_time << fort::endr;
+            //--------------------------
+            // Set center alignment for the 1st and 3rd columns
+            //--------------------------
+            table.column(1).set_cell_text_align(fort::text_align::center);
+            table.column(3).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_content_fg_color(fort::color::red);
+            //--------------------------
+            std::cout << "\n" << table.to_string() << std::endl;
+            //--------------------------
+        }// end void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time)
         //--------------------------------------------------------------
 };
 //--------------------------------------------------------------

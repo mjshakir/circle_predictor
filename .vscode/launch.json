@@ -12,7 +12,7 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
-            "additionalSOLibSearchPath": "${workspaceFolder}/build/libcircle_predictor_network.so",
+            "additionalSOLibSearchPath": "${workspaceFolder}/build/lib/*",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",

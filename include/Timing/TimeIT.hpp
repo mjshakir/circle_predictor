@@ -5,36 +5,21 @@
 #include <iostream>
 #include <chrono>
 //--------------------------------------------------------------
-class Timing{
+class TimeIT{
     //--------------------------------------------------------------
     public:
         //--------------------------
         // Constructor 
         //--------------------------
-        Timing();
+        TimeIT();
         //--------------------------
-        // Constructor 
-        //--------------------------
-        // std::string function_name: a string to pass the function name 
-        //--------------------------
-        // Examples of ways to pass the function name
-        //------------
-        // MSVC: __FUNCTION__, __FUNCDNAME__, __FUNCSIG__
-        // GCC: __func__, __FUNCTION__, __PRETTY_FUNCTION__
-        //--------------------------
-        Timing(const std::string& function_name);
-        //--------------------------
-        // Destructor
-        //--------------------------
-        ~Timing();
+         uint64_t get_time(void);
         //--------------------------------------------------------------
     protected:
         //--------------------------
-        void set_function_name(const std::string& function_name);
+        uint64_t nanoseconds_time(void);
         //--------------------------------------------------------------
     private:
-        //--------------------------
-        std::string m_function_name;
         //--------------------------
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
     //--------------------------------------------------------------

@@ -6,20 +6,48 @@ class Normalize{
         //--------------------------------------------------------------
         Normalize() = delete;
         //--------------------------
+        /**
+         *  @brief A constructor 
+         *
+         *  @tparam input: a torch tensor
+         */
         Normalize(const torch::Tensor& input);
         //--------------------------
+        /**
+         *  @brief Normalize the input tensor from the constructor. This uses Min-max feature scaling.
+         *
+         *  @return A normalized a torch tensor
+         */
         torch::Tensor normalization(void);
         //--------------------------
+        /**
+         *  @brief  A static Normalizing function. This uses Min-max feature scaling. 
+         *          Warning: cannot use unnormalization.
+         * 
+         *  @warning Cannot use unnormalization since you are using a static function. 
+         *
+         *  @return A normalized a torch tensor
+         */
         static torch::Tensor normalization(const torch::Tensor& input);
         //--------------------------
+        /**
+         *  @brief  Unnormalize the input tensor. This uses inverse Min-max feature scaling.
+         * 
+         *  @return A unnormalize a torch tensor
+         */
         torch::Tensor unnormalization(const torch::Tensor& input);
         //--------------------------
+        /**
+         *  @brief  Template: unnormalize the input tensor. This uses Min-max feature scaling.
+         * 
+         *  @return Depends on the input type
+         */
         template<typename T>
         T unnormalization_nonTensor(const T& input){
             //--------------------------
             return unnormalization_data_nonTensor(input);
             //--------------------------
-        }// end long double unnormalization_data_nontensor(const T& input)
+        }// end T unnormalization_data_nontensor(const T& input)
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -34,7 +62,7 @@ class Normalize{
             //--------------------------
             return (input*(m_max.item<T>()-m_min.item<T>()))+m_min.item<T>();
             //--------------------------
-        }// end long double unnormalization_data_nontensor(const T& input)
+        }// end T unnormalization_data_nontensor(const T& input)
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------

@@ -1,19 +1,24 @@
+//--------------------------------------------------------------
+// Main Header 
+//--------------------------------------------------------------
 #include "Generate/Generate.hpp"
 #include "Timing/Timing.hpp"
 #include <random>
 //--------------------------------------------------------------
-Generate::Generate(const torch::Tensor& x_value, const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) :    m_radius(radius), 
-                                                                                                                                                        m_generated_points((generated_points < 20) ? 20 : generated_points), 
-                                                                                                                                                        m_x_value(x_value),
-                                                                                                                                                        m_center(center){
+Generate::Generate(const torch::Tensor& x_value, const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) 
+                    :   m_radius(radius), 
+                        m_generated_points((generated_points < 200) ? 200 : generated_points), 
+                        m_x_value(x_value),
+                        m_center(center){
     //--------------------------
     y_value = generate_value(x_value, radius);
     //--------------------------
 }// end Generate::Generate(const torch::Tensor& x_value, const double& radius, const size_t& generated_points)
 //--------------------------------------------------------------
-Generate::Generate(const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) :  m_radius(radius), 
-                                                                                                                        m_generated_points((generated_points < 20) ? 20 : generated_points),
-                                                                                                                        m_center(center){
+Generate::Generate(const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) 
+                    :   m_radius(radius), 
+                        m_generated_points((generated_points < 200) ? 200 : generated_points),
+                        m_center(center){
     //--------------------------
     full_data = generate_value(radius);
     validation_data = generate_validation_value(radius);
@@ -108,7 +113,7 @@ const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_value(const do
     //--------------------------
     m_x_value = torch::tensor(x_location);
     auto _target = generate_value(x_location, radius);
-    y_value = torch::transpose(torch::cat({torch::tensor(_target), 2*torch::tensor(_target)}).view({2,-1}), 0, 1);
+    y_value = torch::transpose(torch::cat({torch::tensor(_target), (2*std::get<1>(m_center))-torch::tensor(_target)}).view({2,-1}), 0, 1);
     //--------------------------
     // std::cout << "m_x_value: \n" << m_x_value << " y_value: \n" << y_value << std::endl;
     //--------------------------
@@ -137,7 +142,7 @@ const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_validation_val
     auto _test_input = torch::tensor(x_location);
     //--------------------------
     auto _target = generate_value(x_location, radius);
-    auto _test_target = torch::transpose(torch::cat({torch::tensor(_target), 2*torch::tensor(_target)}).view({2,-1}), 0, 1);
+    auto _test_target = torch::transpose(torch::cat({torch::tensor(_target), (2*std::get<1>(m_center))-torch::tensor(_target)}).view({2,-1}), 0, 1);
     //--------------------------
     return {_test_input, _test_target};
     //--------------------------

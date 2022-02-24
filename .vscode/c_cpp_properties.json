@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**" ,
-                "${workspaceFolder}/libtorch/**",
+                "${workspaceFolder}/external_library/**",
+                "${workspaceFolder}/external_library/libtorch/**",
                 "/usr/include/**"
             ],
             "defines": [],

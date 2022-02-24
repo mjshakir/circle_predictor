@@ -1,3 +1,6 @@
+//--------------------------------------------------------------
+// Main Header 
+//--------------------------------------------------------------
 #include "Network/Networks.hpp"
 
 //--------------------------------------------------------------
@@ -44,22 +47,21 @@ LSTMNet::LSTMNet(const torch::Device& device):  m_device(device),
     //--------------------------
     register_module("recurrent_layer", recurrent_layer);
     //--------------------------
-    std::get<0>(_gates) = h0.to(m_device);
-    std::get<1>(_gates) = c0.to(m_device);
+    _gates = {h0.to(m_device), c0.to(m_device)};
     //--------------------------
 }// end Net(torch::Device& device)
 //--------------------------------------------------------------
-torch::Tensor LSTMNet::forward(const torch::Tensor& x){
+torch::Tensor LSTMNet::forward(torch::Tensor& x){
     //--------------------------
     return lstm_layers(x);
     //--------------------------
 }// end torch::Tensor LSTMNet::forward(const torch::Tensor& x)
 //--------------------------------------------------------------
-torch::Tensor LSTMNet::lstm_layers(const torch::Tensor& x){
+torch::Tensor LSTMNet::lstm_layers(torch::Tensor& x){
     //--------------------------
-    auto _input_lstm = x.view({-1, 1, 10}).to(m_device);
+    x = x.view({-1, 1, 10}).to(m_device);
     //--------------------------
-    auto x_lstm = recurrent_layer->forward(_input_lstm, _gates);
+    auto x_lstm = recurrent_layer->forward(x, _gates);
     //--------------------------
     _gates = {std::get<0>(std::get<1>(x_lstm)), std::get<1>(std::get<1>(x_lstm))};
     //-------------------------

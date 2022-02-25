@@ -62,14 +62,20 @@ ninja
 ```
 ## Command line arguments
 - ```training_size```: default ```100```
-  - Accept an integer ```x > 0```
   - How many different points to train
+  - Accept an integer ```x > 0```
 - ```generated_size```: default ```10000```
-  - Accept an integer ```x >= 200```
   - How many points generated
+  - Accept an integer ```x >= 200```
+- ```batch_size```: default ```20```
+  - Batch the generated data to train 
+  - Limitations:
+    - Accept an unsigned integer ```x > 0```
+    - Must be less then the ```generated_size```
+    - Must be less the ```1000``` this a ```libtorch``` limitation
 - ```isEpoch```: default ```false```
-  - Accept a bool ```true``` or ```1```
   - Train with an epoch iteration or validation precision
+  - Accept a bool ```true``` or ```1```
 - ```precision``` if ```isEpoch``` is ```false``` or ```epoch``` if ```isEpoch``` is ```true```
   - ```precision```: a long double that determine when to stop the training. This uses a validation set.
   - ```epoch```: how many iteration to train

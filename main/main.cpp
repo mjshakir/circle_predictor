@@ -7,13 +7,13 @@
 //--------------------------------------------------------------
 int main(int argc, char const *argv[]){
     //--------------------------
-    if (argc >= 6){
+    if (argc >= 7){
         throw std::invalid_argument("More arugments then can be allocation");
-    }// end if (argc >= 6)
+    }// end if (argc >= 7)
     //--------------------------------------------------------------
     // Command line arugments for training size and data generation 
     //--------------------------
-    size_t training_size{100}, generated_size{10000}, epoch{100};
+    size_t training_size{100}, generated_size{10000}, batch_size{20}, epoch{100};
     bool isEpoch{false};
     long double precision{2.5E-1L};
     //--------------------------
@@ -49,30 +49,45 @@ int main(int argc, char const *argv[]){
     //-----------
     if (argc > 3){
         //--------------------------
-        std::string _input = argv[3];
+        if (std::atoi(argv[3]) > 0 and std::atoi(argv[3]) <= static_cast<int>(generated_size) and std::atoi(argv[3]) <= 1000){
+            //--------------------------
+            batch_size = std::stoul(argv[3]);
+            //--------------------------
+        }// end if (std::atoi(argv[3]) > 0)
+        else{
+            //--------------------------
+            throw std::out_of_range("Must be at least postive or less the generated size or less then 1000 (x <= 200)");
+            //--------------------------
+        }// end else
+        //-------------------------- 
+    }// end if (argc > 3)
+    //-----------
+    if (argc > 4){
+        //--------------------------
+        std::string _input = argv[4];
         std::transform(std::execution::par, _input.begin(), _input.end(), _input.begin(), [](const uint8_t& c){ return std::tolower(c);});
         //--------------------------
-        if (std::atoi(argv[3]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
+        if (std::atoi(argv[4]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
             //--------------------------
             isEpoch = true;
             //--------------------------
         }// end if std::atoi(argv[3]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0)
         //-------------------------- 
-    }// end if (argc > 3)
+    }// end if (argc > 4)
     //-----------
-    if (argc > 4 and !isEpoch){
+    if (argc > 5 and !isEpoch){
         //--------------------------
-        precision = std::stold(argv[4]);
+        precision = std::stold(argv[5]);
         //--------------------------
-    }// end if (argc > 4 and !isEpoch)
+    }// end if (argc > 5 and !isEpoch)
     //-----------
-    if (argc > 4 and isEpoch){
+    if (argc > 5 and isEpoch){
         //--------------------------
-        if (std::atoi(argv[4]) > 0){
+        if (std::atoi(argv[5]) > 0){
             //--------------------------
-            epoch = std::stoul(argv[4]);
+            epoch = std::stoul(argv[5]);
             //--------------------------
-        }// end if (std::atoi(argv[4]) > 0)
+        }// end if (std::atoi(argv[5]) > 0)
         else{
             //--------------------------
             throw std::out_of_range("Must be at least postive");
@@ -83,12 +98,14 @@ int main(int argc, char const *argv[]){
     //--------------------------
     if(isEpoch){
         std::cout   << "training_size: " << training_size 
-                    << "\ngenerated_size: " << generated_size 
+                    << "\ngenerated_size: " << generated_size
+                    << "\nbatch_size: " << batch_size
                     << "\nepoch: " << epoch << std::endl;
     }// end if(isEpoch)
     else{
         std::cout   << "training_size: " << training_size 
-                    << "\ngenerated_size: " << generated_size 
+                    << "\ngenerated_size: " << generated_size
+                    << "\nbatch_size: " << batch_size 
                     << "\nprecision: " << precision << std::endl;
     }// end else
     //--------------------------------------------------------------
@@ -119,7 +136,7 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // Initialize the network
     //--------------------------
-    Net model;
+    Net model(batch_size);
     model.to(device);
     // LSTMNet model(device);
     // model.to(device);
@@ -150,7 +167,7 @@ int main(int argc, char const *argv[]){
         // Generate a data loader.
         //--------------------------
         auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
-                                                                                                torch::data::DataLoaderOptions(20));
+                                                                                                torch::data::DataLoaderOptions(batch_size));
         //--------------------------------------------------------------
         // Time the loop
         //--------------------------
@@ -173,7 +190,7 @@ int main(int argc, char const *argv[]){
             // Generate a data loader.
             //--------------------------
             auto validation_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(validation_data_set), 
-                                                                                                            torch::data::DataLoaderOptions(20));
+                                                                                                            torch::data::DataLoaderOptions(batch_size));
             //--------------------------
             auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
         }// end else 
@@ -204,7 +221,7 @@ int main(int argc, char const *argv[]){
     // Generate a data loader.
     //--------------------------
     auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>( std::move(test_data_set), 
-                                                                                            torch::data::DataLoaderOptions(20));
+                                                                                            torch::data::DataLoaderOptions(batch_size));
     //--------------------------
     // Test the data
     //--------------------------

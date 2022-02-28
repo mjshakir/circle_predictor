@@ -291,7 +291,7 @@ class NetworkHandling{
                 //--------------------------
                 bar.update();
                 //------------
-                test_loss.emplace_back(network_validation_batch(std::move(batch)));
+                test_loss.push_back(network_validation_batch(std::move(batch)));
                 //--------------------------
             }// end for (const auto& batch : *data_loader)
             //--------------------------
@@ -349,7 +349,7 @@ class NetworkHandling{
             //--------------------------
             // Change border style
             //--------------------------
-            table.set_border_style(FT_DOUBLE2_STYLE);
+            table.set_border_style(FT_NICE_STYLE);
             //--------------------------
             table   << fort::header
                     << "Sum Loss" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
@@ -381,7 +381,7 @@ class NetworkHandling{
             //--------------------------
             // Change border style
             //--------------------------
-            table.set_border_style(FT_DOUBLE2_STYLE);
+            table.set_border_style(FT_NICE_STYLE);
             //--------------------------
             table   << fort::header
                     << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr

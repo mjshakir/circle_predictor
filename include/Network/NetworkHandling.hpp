@@ -214,7 +214,7 @@ class NetworkHandling{
             //--------------------------
             bool _learning = true, tensorIsNan = false;
             std::vector<double> _learning_elements;
-            _learning_elements.reserve(5);
+            _learning_elements.reserve(3);
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
@@ -260,8 +260,10 @@ class NetworkHandling{
                 auto printing_threads = std::async(std::launch::async, [&](){loss_display(_test_loss, _element_sum, _timer.get_time());});
                 //--------------------------
                 if (_learning_elements.size() > 2){
+                    //--------------------------
                     _learning = check_learning(_learning_elements, precision);
                     _learning_elements.clear();
+                    //--------------------------
                     printing_threads = std::async(std::launch::async, [&_learning](){
                                     if(_learning){
                                         printf("\n\x1b[33m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
@@ -270,6 +272,7 @@ class NetworkHandling{
                                         printf("\n\x1b[36m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
                                     }// end else
                                 });
+                    //--------------------------
                 }// end if (_learning_elements.size > 2)
                 //--------------------------
             } while(_learning and !tensorIsNan);

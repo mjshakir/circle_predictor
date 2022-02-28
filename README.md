@@ -61,6 +61,8 @@ ninja
 ./bin/circle_predictor
 ```
 ## Command line arguments
+- ```filename```: default ```test_results```
+  - Save the results of the test data in ```csv``` file.
 - ```training_size```: default ```100```
   - How many different points to train
   - Accept an integer ```x > 0```

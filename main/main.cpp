@@ -7,56 +7,48 @@
 //--------------------------------------------------------------
 int main(int argc, char const *argv[]){
     //--------------------------
-    if (argc >= 7){
+    if (argc >= 8){
         throw std::invalid_argument("More arugments then can be allocation");
-    }// end if (argc >= 7)
+    }// end if (argc >= 8)
     //--------------------------------------------------------------
     // Command line arugments for training size and data generation 
     //--------------------------
+    std::string filename{"test_results.csv"};
     size_t training_size{100}, generated_size{10000}, batch_size{20}, epoch{100};
     bool isEpoch{false};
     long double precision{2.5E-1L};
     //--------------------------
     if (argc > 1){
         //--------------------------
-        if (std::atoi(argv[1]) > 0){
+        filename = argv[1] + std::string(".csv");
+        //--------------------------
+    }// end if (argc > 1)
+    //-----------
+    if (argc > 2){
+        //--------------------------
+        if (std::atoi(argv[2]) > 0){
             //--------------------------
-            training_size = std::stoul(argv[1]);
+            training_size = std::stoul(argv[2]);
             //--------------------------
-        }// end if (std::atoi(argv[1]) > 0)
+        }// end if (std::atoi(argv[2]) > 0)
         else{
             //--------------------------
             throw std::out_of_range("Must be at least postive");
             //--------------------------
         }// end else 
         //--------------------------
-    }// end if (argc > 1)
-    //-----------
-    if (argc > 2){
-        //--------------------------
-        if (std::atoi(argv[2]) >= 200){
-            //--------------------------
-            generated_size = std::stoul(argv[2]);
-            //--------------------------
-        }// end if (std::atoi(argv[2]) >= 200)
-        else{
-            //--------------------------
-            throw std::out_of_range("Must be at least 200 (x >= 200)");
-            //--------------------------
-        }// end else
-        //-------------------------- 
     }// end if (argc > 2)
     //-----------
     if (argc > 3){
         //--------------------------
-        if (std::atoi(argv[3]) > 0 and std::atoi(argv[3]) <= static_cast<int>(generated_size) and std::atoi(argv[3]) <= 1000){
+        if (std::atoi(argv[3]) >= 200){
             //--------------------------
-            batch_size = std::stoul(argv[3]);
+            generated_size = std::stoul(argv[3]);
             //--------------------------
-        }// end if (std::atoi(argv[3]) > 0)
+        }// end if (std::atoi(argv[3]) >= 200)
         else{
             //--------------------------
-            throw std::out_of_range("Must be at least postive or less the generated size or less then 1000 (x <= 200)");
+            throw std::out_of_range("Must be at least 200 (x >= 200)");
             //--------------------------
         }// end else
         //-------------------------- 
@@ -64,49 +56,66 @@ int main(int argc, char const *argv[]){
     //-----------
     if (argc > 4){
         //--------------------------
-        std::string _input = argv[4];
-        std::transform(std::execution::par, _input.begin(), _input.end(), _input.begin(), [](const uint8_t& c){ return std::tolower(c);});
-        //--------------------------
-        if (std::atoi(argv[4]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
+        if (std::atoi(argv[4]) > 0 and std::atoi(argv[4]) <= static_cast<int>(generated_size) and std::atoi(argv[4]) <= 1000){
             //--------------------------
-            isEpoch = true;
+            batch_size = std::stoul(argv[4]);
             //--------------------------
-        }// end if std::atoi(argv[3]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0)
+        }// end if (std::atoi(argv[4]) > 0)
+        else{
+            //--------------------------
+            throw std::out_of_range("Must be at least postive or less the generated size or less then 1000 (x <= 1000)");
+            //--------------------------
+        }// end else
         //-------------------------- 
     }// end if (argc > 4)
     //-----------
-    if (argc > 5 and !isEpoch){
+    if (argc > 5){
         //--------------------------
-        precision = std::stold(argv[5]);
+        std::string _input = argv[5];
+        std::transform(std::execution::par, _input.begin(), _input.end(), _input.begin(), [](const uint8_t& c){ return std::tolower(c);});
         //--------------------------
-    }// end if (argc > 5 and !isEpoch)
+        if (std::atoi(argv[5]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
+            //--------------------------
+            isEpoch = true;
+            //--------------------------
+        }// end if std::atoi(argv[5]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0)
+        //-------------------------- 
+    }// end if (argc > 4)
     //-----------
-    if (argc > 5 and isEpoch){
+    if (argc > 6 and !isEpoch){
         //--------------------------
-        if (std::atoi(argv[5]) > 0){
+        precision = std::stold(argv[6]);
+        //--------------------------
+    }// end if (argc > 6 and !isEpoch)
+    //-----------
+    if (argc > 6 and isEpoch){
+        //--------------------------
+        if (std::atoi(argv[6]) > 0){
             //--------------------------
-            epoch = std::stoul(argv[5]);
+            epoch = std::stoul(argv[6]);
             //--------------------------
-        }// end if (std::atoi(argv[5]) > 0)
+        }// end if (std::atoi(argv[6]) > 0)
         else{
             //--------------------------
             throw std::out_of_range("Must be at least postive");
             //--------------------------
         }// end else
         //-------------------------- 
-    }// end if (argc > 4 and isEpoch)
+    }// end if (argc > 6 and isEpoch)
     //--------------------------
     if(isEpoch){
-        std::cout   << "training_size: " << training_size 
-                    << "\ngenerated_size: " << generated_size
-                    << "\nbatch_size: " << batch_size
-                    << "\nepoch: " << epoch << std::endl;
+        std::cout   << "filename: " << filename << "\n"
+                    << "training_size: " << training_size << "\n"
+                    << "generated_size: " << generated_size << "\n"
+                    << "batch_size: " << batch_size << "\n"
+                    << "epoch: " << epoch << std::endl;
     }// end if(isEpoch)
     else{
-        std::cout   << "training_size: " << training_size 
-                    << "\ngenerated_size: " << generated_size
-                    << "\nbatch_size: " << batch_size 
-                    << "\nprecision: " << precision << std::endl;
+        std::cout   << "filename: " << filename << "\n"
+                    << "training_size: " << training_size << "\n"
+                    << "generated_size: " << generated_size << "\n"
+                    << "batch_size: " << batch_size << "\n"
+                    << "precision: " << precision << std::endl;
     }// end else
     //--------------------------------------------------------------
     // Creating a random number generator
@@ -243,7 +252,7 @@ int main(int argc, char const *argv[]){
     //--------------------------
     // opens an existing csv file or creates a new file.
     //--------------------------
-    fout.open("test_data.csv", std::ios::out | std::ios::app);
+    fout.open(filename, std::ios::out | std::ios::app);
     //--------------------------
     fout    << "Radius: " << test_generate.get_radius() 
             << " at center: (" << std::get<0>(test_generate.get_center()) << "." 

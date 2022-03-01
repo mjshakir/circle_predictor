@@ -85,9 +85,9 @@ ninja
 ### Example: 
 - With precision and validation:
 ``` 
-./bin/circle_predictor 10 1200 false 1E-2
+./bin/circle_predictor precision_results 10 1200 false 1E-2
 ```
 - With Epoch iteration:
 ``` 
-./bin/circle_predictor 10 1200 true 10
+./bin/circle_predictor epoch_results 10 1200 true 10
 ```

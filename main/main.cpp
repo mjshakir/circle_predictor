@@ -235,16 +235,6 @@ int main(int argc, char const *argv[]){
     // Test the data
     //--------------------------
     auto test = handler.test(std::move(test_data_loader));
-    //--------------------------
-    for (const auto& [_target, _output, _loss] : test){
-        //--------------------------
-        std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(_target) 
-                    << "\noutput: \n" << test_target_normal.unnormalization(_output) 
-                    << "\ntarget origial: \n" << _target 
-                    << "\noutput origial: \n" << _output
-                    << "\nloss: " << _loss << std::endl;
-        //--------------------------
-    }// end for (const auto& _test : test)
     //--------------------------------------------------------------
     // file pointer
     //--------------------------------------------------------------
@@ -266,6 +256,12 @@ int main(int argc, char const *argv[]){
     fout.flush();
     //--------------------------
     for (const auto& [_test_target, _test_output, _loss] : test){
+        //--------------------------
+        std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(_test_target) 
+                    << "\noutput: \n" << test_target_normal.unnormalization(_test_output) 
+                    << "\ntarget origial: \n" << _test_target 
+                    << "\noutput origial: \n" << _test_output
+                    << "\nloss: " << _loss << std::endl;
         //--------------------------
         auto num_row = _test_target.size(0);
         auto num_col = _test_target.size(1);

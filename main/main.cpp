@@ -236,7 +236,7 @@ int main(int argc, char const *argv[]){
     //--------------------------
     auto test = handler.test(std::move(test_data_loader));
     //--------------------------------------------------------------
-    // Print table
+    // Print table settup
     //--------------------------
      fort::char_table table;
     //--------------------------

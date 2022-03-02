@@ -236,8 +236,27 @@ int main(int argc, char const *argv[]){
     //--------------------------
     auto test = handler.test(std::move(test_data_loader));
     //--------------------------------------------------------------
-    // file pointer
+    // Print table
+    //--------------------------
+     fort::char_table table;
+    //--------------------------
+    // Change border style
+    //--------------------------
+    table.set_border_style(FT_BASIC2_STYLE);
+    //--------------------------
+    // Set center alignment for the 1st and 3rd columns
+    //--------------------------
+    table.column(0).set_cell_text_align(fort::text_align::center);
+    table.column(1).set_cell_text_align(fort::text_align::center);
+    table.column(2).set_cell_text_align(fort::text_align::center);
+    table.column(3).set_cell_text_align(fort::text_align::center);
+    table.column(4).set_cell_text_align(fort::text_align::center);
+    //--------------------------
+    table   << fort::header
+            << "Target" << "Output" << "Target Origial" << "Output origial" << "Loss" << fort::endr;
     //--------------------------------------------------------------
+    // File pointer
+    //--------------------------
     std::fstream fout;
     //--------------------------
     // opens an existing csv file or creates a new file.
@@ -257,11 +276,11 @@ int main(int argc, char const *argv[]){
     //--------------------------
     for (const auto& [_test_target, _test_output, _loss] : test){
         //--------------------------
-        std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(_test_target) 
-                    << "\noutput: \n" << test_target_normal.unnormalization(_test_output) 
-                    << "\ntarget origial: \n" << _test_target 
-                    << "\noutput origial: \n" << _test_output
-                    << "\nloss: " << _loss << std::endl;
+        table   << test_target_normal.unnormalization(_test_target) 
+                << test_target_normal.unnormalization(_test_output) 
+                << _test_target 
+                << _test_output
+                << _loss << fort::endr;
         //--------------------------
         auto num_row = _test_target.size(0);
         auto num_col = _test_target.size(1);
@@ -291,6 +310,8 @@ int main(int argc, char const *argv[]){
     //--------------------------
     fout.close();
     //--------------------------------------------------------------
+    std::cout << "\n" << table.to_string() << std::endl;
+    //--------------------------
     std::cout << "test data Saved" << std::endl;
     //--------------------------------------------------------------
     return 0;

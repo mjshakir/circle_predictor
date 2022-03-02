@@ -244,7 +244,11 @@ int main(int argc, char const *argv[]){
     //--------------------------
     table.set_border_style(FT_BASIC2_STYLE);
     //--------------------------
-    // Set center alignment for the 1st and 3rd columns
+    // Set color
+    //--------------------------
+    table.row(0).set_cell_content_fg_color(fort::color::light_blue);
+    //--------------------------
+    // Set center alignment for the all columns
     //--------------------------
     table.column(0).set_cell_text_align(fort::text_align::center);
     table.column(1).set_cell_text_align(fort::text_align::center);

@@ -185,7 +185,9 @@ int main(int argc, char const *argv[]){
         // Train the network
         //--------------------------
         if (isEpoch){
+            //--------------------------
             auto loss = handler.train(std::move(data_loader), optimizer, epoch);
+            //--------------------------
         }// end if (isEpoch)
         else{
             //--------------------------------------------------------------
@@ -310,7 +312,7 @@ int main(int argc, char const *argv[]){
             //--------------------------
         }// end for (size_t i = 0; i < num_col; i++)
         //--------------------------
-    }// end for (const auto& _test : test)
+    }// end for (const auto& [_test_target, _test_output, _loss] : test)
     //--------------------------
     fout.close();
     //--------------------------------------------------------------

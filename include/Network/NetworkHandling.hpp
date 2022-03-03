@@ -125,14 +125,12 @@ class NetworkHandling{
             optimizer.zero_grad();
             //--------------------------
             auto output = m_model.forward(data);
-            // output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             torch::Tensor loss = torch::mse_loss(output, targets);
             // AT_ASSERT(!std::isnan(loss.template item<float>()));
             //--------------------------
             *tensorIsNan = at::isnan(loss).any().item<bool>(); // will be of type bool
             //--------------------------
-            // loss.backward(torch::nullopt, /*keep_graph=*/ true, /*create_graph=*/ false);
             loss.backward({},c10::optional<bool>(true), false);
             optimizer.step();
             //--------------------------
@@ -148,7 +146,6 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
-            // output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             return torch::mse_loss(output, targets, torch::Reduction::Sum).template item<double>();
             //--------------------------
@@ -162,7 +159,6 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
-            // output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             return {targets, output, torch::mse_loss(output, targets, torch::Reduction::Sum).template item<float>()};
             //--------------------------
@@ -223,7 +219,7 @@ class NetworkHandling{
             //--------------------------
             auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
             //--------------------------
-            bool _learning = true, tensorIsNan = false;
+            bool _learning{true}, tensorIsNan{false};
             std::vector<double> _learning_elements;
             _learning_elements.reserve(3);
             //--------------------------

@@ -203,8 +203,12 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss, _timer.get_time());
-                                                                             Loss.clear();                                       });
+                auto printing_threads = std::async(std::launch::async, [&](){
+                                            std::vector<float> _loss;   
+                                            _loss.reserve(data_loader_size);
+                                            std::copy(std::execution::par_unseq, Loss.end()-data_loader_size, Loss.end(), std::back_inserter(_loss));
+                                            loss_display(_loss, _timer.get_time());
+                                        });
                 //--------------------------
             }// end for (size_t i = 0; i < epoch; i++)
             //--------------------------

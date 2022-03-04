@@ -172,14 +172,15 @@ class NetworkHandling{
             bool tensorIsNan = false;
             //--------------------------
             std::vector<float> Loss;
+            Loss.reserve(data_loader_size*epoch);
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
             for (size_t i = 0; i < epoch; i++){
                 //--------------------------
-                TimeIT _timer;
-                //--------------------------
                 progressbar bar(data_loader_size);
+                //--------------------------
+                TimeIT _timer;
                 //--------------------------
                 std::cout << "Training: ";
                 //--------------------------

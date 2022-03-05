@@ -214,7 +214,8 @@ int main(int argc, char const *argv[]){
     //--------------------------
     Generate test_generate(random_radius(rng), 3*batch_size, {random_centers(center_rng), random_centers(center_rng)});
     //--------------------------
-    std::cout   << "test data radius: " << test_generate.get_radius() 
+    std::cout   << "\n" << "Test Data"
+                << "\n" << "test data radius: " << test_generate.get_radius() 
                 << " at center: (" << std::get<0>(test_generate.get_center()) << "," 
                 << std::get<1>(test_generate.get_center()) << ")" << std::endl;
     //--------------------------------------------------------------

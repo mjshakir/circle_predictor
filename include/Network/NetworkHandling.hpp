@@ -171,8 +171,7 @@ class NetworkHandling{
             //--------------------------
             bool tensorIsNan = false;
             //--------------------------
-            std::vector<float> Loss;
-            Loss.reserve(data_loader_size*epoch);
+            std::vector<float> Loss(data_loader_size*epoch);
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
@@ -180,9 +179,9 @@ class NetworkHandling{
                 //--------------------------
                 progressbar bar(data_loader_size);
                 //--------------------------
-                TimeIT _timer;
-                //--------------------------
                 std::cout << "Training: ";
+                //--------------------------
+                TimeIT _timer;
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
@@ -203,11 +202,12 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){
-                                            std::vector<float> _loss;   
-                                            _loss.reserve(data_loader_size);
-                                            std::copy(std::execution::par_unseq, Loss.end()-data_loader_size, Loss.end(), std::back_inserter(_loss));
+                auto printing_threads = std::async(std::launch::async, [&Loss, &data_loader_size, &_timer, this](){
+                                            //--------------------------
+                                            std::vector<float> _loss(data_loader_size);
+                                            std::copy(std::execution::par_unseq, Loss.end()-data_loader_size, Loss.end(), _loss.begin());
                                             loss_display(_loss, _timer.get_time());
+                                            //--------------------------
                                         });
                 //--------------------------
             }// end for (size_t i = 0; i < epoch; i++)
@@ -253,23 +253,25 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto _test_loss = network_validation(std::move(data_loader_test));
+                auto validation_loss = network_validation(std::move(data_loader_test));
                 //--------------------------
-                if (!_test_loss.empty()){
+                if (!validation_loss.empty()){
                     //--------------------------
                     _element_sum = 0.f;
                     //--------------------------
-                    for (const auto& _loss : _test_loss){
+                    for (const auto& _loss : validation_loss){
                         //--------------------------
                         _element_sum += _loss;
                         //--------------------------
-                    }// end for (const auto& _loss : _test_loss)
+                    }// end for (const auto& _loss : validation_loss)
                     //--------------------------
-                }// end if (!_test_loss.empty())
+                }// end if (!validation_loss.empty())
                 //--------------------------
                 _learning_elements.push_back(_element_sum);
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){loss_display(_test_loss, _element_sum, _timer.get_time());});
+                auto printing_threads = std::async(std::launch::async, [&validation_loss, &_element_sum, &_timer, this](){
+                                                        loss_display(validation_loss, _element_sum, _timer.get_time());
+                                                    });
                 //--------------------------
                 if (_learning_elements.size() > 2){
                     //--------------------------
@@ -278,10 +280,10 @@ class NetworkHandling{
                     //--------------------------
                     printing_threads = std::async(std::launch::async, [&_learning](){
                                     if(_learning){
-                                        printf("\n\x1b[33m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
+                                        printf("\n\x1b[32m\033[1m-----------------Learning:[True]-----------------\033[0m\x1b[0m\n");
                                     }// end if(_learning)
                                     else{
-                                        printf("\n\x1b[36m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
+                                        printf("\n\x1b[36m\033[1m-----------------Learning:[False]-----------------\033[0m\x1b[0m\n");
                                     }// end else
                                 });
                     //--------------------------

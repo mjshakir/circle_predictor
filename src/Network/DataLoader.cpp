@@ -2,7 +2,6 @@
 // Main Header 
 //--------------------------------------------------------------
 #include "Network/DataLoader.hpp"
-
 //--------------------------------------------------------------
 DataLoader::DataLoader(torch::Tensor&& input, torch::Tensor&& target) : m_states_(std::move(input)), m_labels_(std::move(target)), 
                                                                         m_tensor(m_states_.data_ptr<float>(), m_states_.data_ptr<float>() + m_states_.numel()){

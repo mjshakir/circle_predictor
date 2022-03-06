@@ -2,8 +2,14 @@
 // Main Header 
 //--------------------------------------------------------------
 #include "Generate/Generate.hpp"
-#include "Timing/Timing.hpp"
+//--------------------------------------------------------------
+// User Defined library
+//--------------------------------------------------------------
 #include <random>
+//--------------------------------------------------------------
+// User Defined library
+//--------------------------------------------------------------
+#include "Timing/Timing.hpp"
 //--------------------------------------------------------------
 Generate::Generate(const torch::Tensor& x_value, const double& radius, const size_t& generated_points, const std::tuple<double, double>& center) 
                     :   m_radius(radius), 

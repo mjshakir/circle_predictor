@@ -204,6 +204,7 @@ int main(int argc, char const *argv[]){
                                                                                                             torch::data::DataLoaderOptions(batch_size));
             //--------------------------
             auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
+            //--------------------------
         }// end else 
         //--------------------------
         printf("\n-----------------Done:[%zu]-----------------\n", i);

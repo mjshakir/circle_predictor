@@ -5,7 +5,7 @@ In this example, the network is fed an **X** value/point from the cartesian coor
 # How to build
 - Clone the repo: 
 ```
-git clone https://github.com/Majedshakir/circle_predictor.git
+git clone https://github.com/mjshakir/circle_predictor.git
 ```
 - Pull the submodules: 
 ```
@@ -13,7 +13,7 @@ git pull --recurse-submodules
 ```
 - A shortcut is to clone with submodules
 ```
-git clone https://github.com/Majedshakir/circle_predictor.git --recurse-submodules
+git clone https://github.com/mjshakir/circle_predictor.git --recurse-submodules
 ```
 ## Get libtorch
 - Go to [PyTorch](https://pytorch.org/) to get ```libtorch```

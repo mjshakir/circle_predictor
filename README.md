@@ -15,6 +15,21 @@ git pull --recurse-submodules
 ```
 git clone https://github.com/mjshakir/circle_predictor.git --recurse-submodules
 ```
+### TTB issue
+If TBB is an issue, use the ```TTB_issues``` branch
+
+- Switch to the branch:
+```
+cd ~/path/to/circle_predictor
+```
+```
+git check out TTB_issues
+```
+- Clone the branch directly:
+```
+git clone --branch TTB_issues https://github.com/mjshakir/circle_predictor.git --recurse-submodules
+```
+
 ## Get libtorch
 - Go to [PyTorch](https://pytorch.org/) to get ```libtorch```
 - Unziping 
@@ -22,7 +37,10 @@ git clone https://github.com/mjshakir/circle_predictor.git --recurse-submodules
 sudo apt-get install -y unzip 
 unzip path/to/libtorch.zip
 ```
-- Copy ```libtorch``` to the project folder ```cp -r ~/path/to/libtorch ~/path/to/external_library/circle_predictor```
+- Copy ```libtorch``` to the project folder 
+```
+cp -r ~/path/to/libtorch ~/path/to/external_library/circle_predictor
+```
 - Folder system should look like 
 ```
 circle_predictor/

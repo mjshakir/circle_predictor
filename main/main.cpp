@@ -215,7 +215,7 @@ int main(int argc, char const *argv[]){
         //--------------------------
         printf("\n-----------------Done:[%zu]-----------------\n", i);
         //--------------------------
-    }// end (size_t i = 0; i < training_size; i++)
+    }// end (size_t i = 0; i < training_size; ++i)
     //--------------------------------------------------------------
     // Generate test data
     //--------------------------
@@ -313,9 +313,9 @@ int main(int argc, char const *argv[]){
                 //--------------------------
                 fout.flush();
                 //--------------------------
-            }// end for (size_t i = 0; i < _test_target.size(0); i++)
+            }// end for (size_t i = 0; i < _test_target.size(0); ++i)
             //--------------------------
-        }// end for (size_t i = 0; i < _test_target.size(1); i++)
+        }// end for (size_t i = 0; i < _test_target.size(1); ++i)
         //--------------------------
     }// end for (const auto& [_test_target, _test_output, _loss] : test)
     //--------------------------

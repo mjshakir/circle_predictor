@@ -13,9 +13,9 @@
 
 int main(int argc, char const *argv[]){
     //--------------------------
-    if (argc >= 8){
+    if (argc > 7){
         throw std::invalid_argument("More arugments then can be allocation");
-    }// end if (argc >= 8)
+    }// end if (argc > 7)
     //--------------------------------------------------------------
     // Command line arugments for training size and data generation 
     //--------------------------
@@ -162,7 +162,7 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // Training loop
     //--------------------------
-    for (size_t i = 0; i < training_size; i++){
+    for (size_t i = 0; i < training_size; ++i){
         //--------------------------------------------------------------
         // Generate data
         //--------------------------
@@ -296,17 +296,14 @@ int main(int argc, char const *argv[]){
                 << _test_output
                 << _loss << fort::endr;
         //--------------------------
-        auto num_row = _test_target.size(0);
-        auto num_col = _test_target.size(1);
-        //--------------------------
         auto _output_temp = _test_target.cpu();
         auto _output = _output_temp.accessor<float, 2>();
         auto _target_temp = _test_output.cpu();
         auto _target = _target_temp.accessor<float, 2>();
         //--------------------------
-        for (int64_t i = 0; i < num_row; i++){
+        for (int64_t i = 0; i < _test_target.size(0); ++i){
             //--------------------------
-            for (int64_t j = 0; j < num_col; j++){
+            for (int64_t j = 0; j < _test_target.size(1); ++j){
                 //--------------------------
                 fout    << test_target_normal.unnormalization_nonTensor(_output[i][j]) << ","
                         << test_target_normal.unnormalization_nonTensor(_target[i][j]) << "," 
@@ -316,9 +313,9 @@ int main(int argc, char const *argv[]){
                 //--------------------------
                 fout.flush();
                 //--------------------------
-            }// end for (size_t i = 0; i < num_col; i++)
+            }// end for (size_t i = 0; i < _test_target.size(0); i++)
             //--------------------------
-        }// end for (size_t i = 0; i < num_col; i++)
+        }// end for (size_t i = 0; i < _test_target.size(1); i++)
         //--------------------------
     }// end for (const auto& [_test_target, _test_output, _loss] : test)
     //--------------------------

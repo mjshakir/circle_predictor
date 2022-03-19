@@ -175,7 +175,7 @@ class NetworkHandling{
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
-            for (size_t i = 0; i < epoch; i++){
+            for (size_t i = 0; i < epoch; ++i){
                 //--------------------------
                 progressbar bar(data_loader_size);
                 //--------------------------
@@ -210,7 +210,7 @@ class NetworkHandling{
                                             //--------------------------
                                         });
                 //--------------------------
-            }// end for (size_t i = 0; i < epoch; i++)
+            }// end for (size_t i = 0; i < epoch; ++i)
             //--------------------------
             return Loss;
             //--------------------------

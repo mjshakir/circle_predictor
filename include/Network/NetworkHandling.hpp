@@ -1,14 +1,25 @@
 #pragma once
 
 //--------------------------------------------------------------
-#include <torch/torch.h>
+// Standard cpp library
+//--------------------------------------------------------------
 #include <future>
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
+// LibTorch library
+//--------------------------------------------------------------
+#include <torch/torch.h>
+//--------------------------------------------------------------
+// User Defined library
+//--------------------------------------------------------------
 #include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
+// LibFort library (enable table printing)
+//--------------------------------------------------------------
 #include "fort.hpp"
+//--------------------------------------------------------------
+// Progressbar library
 //--------------------------------------------------------------
 #include "progressbar/include/progressbar.hpp"
 //--------------------------------------------------------------
@@ -114,14 +125,12 @@ class NetworkHandling{
             optimizer.zero_grad();
             //--------------------------
             auto output = m_model.forward(data);
-            // output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             torch::Tensor loss = torch::mse_loss(output, targets);
             // AT_ASSERT(!std::isnan(loss.template item<float>()));
             //--------------------------
             *tensorIsNan = at::isnan(loss).any().item<bool>(); // will be of type bool
             //--------------------------
-            // loss.backward(torch::nullopt, /*keep_graph=*/ true, /*create_graph=*/ false);
             loss.backward({},c10::optional<bool>(true), false);
             optimizer.step();
             //--------------------------
@@ -137,7 +146,6 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
-            // output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             return torch::mse_loss(output, targets, torch::Reduction::Sum).template item<double>();
             //--------------------------
@@ -151,7 +159,6 @@ class NetworkHandling{
             //--------------------------
             auto data = batch.data.to(m_device), targets = batch.target.to(m_device);
             auto output = m_model.forward(data);
-            // output = torch::transpose(output.view({2,-1}), 0, 1);
             //--------------------------
             return {targets, output, torch::mse_loss(output, targets, torch::Reduction::Sum).template item<float>()};
             //--------------------------
@@ -164,17 +171,17 @@ class NetworkHandling{
             //--------------------------
             bool tensorIsNan = false;
             //--------------------------
-            std::vector<float> Loss;
+            std::vector<float> Loss(data_loader_size*epoch);
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
-            for (size_t i = 0; i < epoch; i++){
-                //--------------------------
-                TimeIT _timer;
+            for (size_t i = 0; i < epoch; ++i){
                 //--------------------------
                 progressbar bar(data_loader_size);
                 //--------------------------
                 std::cout << "Training: ";
+                //--------------------------
+                TimeIT _timer;
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
@@ -195,10 +202,15 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){loss_display(Loss, _timer.get_time());
-                                                                             Loss.clear();                                       });
+                auto printing_threads = std::async(std::launch::async, [&Loss, &data_loader_size, &_timer, this](){
+                                            //--------------------------
+                                            std::vector<float> _loss(data_loader_size);
+                                            std::copy(std::execution::par_unseq, Loss.end()-data_loader_size, Loss.end(), _loss.begin());
+                                            loss_display(_loss, _timer.get_time());
+                                            //--------------------------
+                                        });
                 //--------------------------
-            }// end for (size_t i = 0; i < epoch; i++)
+            }// end for (size_t i = 0; i < epoch; ++i)
             //--------------------------
             return Loss;
             //--------------------------
@@ -212,9 +224,9 @@ class NetworkHandling{
             //--------------------------
             auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
             //--------------------------
-            bool _learning = true, tensorIsNan = false;
+            bool _learning{true}, tensorIsNan{false};
             std::vector<double> _learning_elements;
-            _learning_elements.reserve(5);
+            _learning_elements.reserve(3);
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
@@ -241,35 +253,40 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto _test_loss = network_validation(std::move(data_loader_test));
+                auto validation_loss = network_validation(std::move(data_loader_test));
                 //--------------------------
-                if (!_test_loss.empty()){
+                if (!validation_loss.empty()){
                     //--------------------------
                     _element_sum = 0.f;
                     //--------------------------
-                    for (const auto& _loss : _test_loss){
+                    for (const auto& _loss : validation_loss){
                         //--------------------------
                         _element_sum += _loss;
                         //--------------------------
-                    }// end for (const auto& _loss : _test_loss)
+                    }// end for (const auto& _loss : validation_loss)
                     //--------------------------
-                }// end if (!_test_loss.empty())
+                }// end if (!validation_loss.empty())
                 //--------------------------
                 _learning_elements.push_back(_element_sum);
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&](){loss_display(_test_loss, _element_sum, _timer.get_time());});
+                auto printing_threads = std::async(std::launch::async, [&validation_loss, &_element_sum, &_timer, this](){
+                                                        loss_display(validation_loss, _element_sum, _timer.get_time());
+                                                    });
                 //--------------------------
                 if (_learning_elements.size() > 2){
+                    //--------------------------
                     _learning = check_learning(_learning_elements, precision);
                     _learning_elements.clear();
+                    //--------------------------
                     printing_threads = std::async(std::launch::async, [&_learning](){
                                     if(_learning){
-                                        printf("\n\x1b[33m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
+                                        printf("\n\x1b[32m\033[1m-----------------Learning:[True]-----------------\033[0m\x1b[0m\n");
                                     }// end if(_learning)
                                     else{
-                                        printf("\n\x1b[36m-----------------Learning:[%s]-----------------\x1b[0m\n", (_learning) ? "True" : "False");
+                                        printf("\n\x1b[36m\033[1m-----------------Learning:[False]-----------------\033[0m\x1b[0m\n");
                                     }// end else
                                 });
+                    //--------------------------
                 }// end if (_learning_elements.size > 2)
                 //--------------------------
             } while(_learning and !tensorIsNan);
@@ -291,7 +308,7 @@ class NetworkHandling{
                 //--------------------------
                 bar.update();
                 //------------
-                test_loss.emplace_back(network_validation_batch(std::move(batch)));
+                test_loss.push_back(network_validation_batch(std::move(batch)));
                 //--------------------------
             }// end for (const auto& batch : *data_loader)
             //--------------------------
@@ -349,7 +366,7 @@ class NetworkHandling{
             //--------------------------
             // Change border style
             //--------------------------
-            table.set_border_style(FT_DOUBLE2_STYLE);
+            table.set_border_style(FT_NICE_STYLE);
             //--------------------------
             table   << fort::header
                     << "Sum Loss" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
@@ -381,7 +398,7 @@ class NetworkHandling{
             //--------------------------
             // Change border style
             //--------------------------
-            table.set_border_style(FT_DOUBLE2_STYLE);
+            table.set_border_style(FT_NICE_STYLE);
             //--------------------------
             table   << fort::header
                     << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr

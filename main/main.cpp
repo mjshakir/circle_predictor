@@ -1,99 +1,127 @@
+//--------------------------------------------------------------
+// Standard cpp library
+//--------------------------------------------------------------
 #include <random>
 #include <fstream>
+//--------------------------------------------------------------
+// User Defined library
+//--------------------------------------------------------------
 #include "Network/Network.hpp"
 #include "Generate/Generate.hpp"
 #include "Timing/Timing.hpp"
 //--------------------------------------------------------------
-// OpenMP library
-//--------------------------------------------------------------
-#include <omp.h>
-//--------------------------------------------------------------
 
 int main(int argc, char const *argv[]){
     //--------------------------
-    if (argc >= 6){
+    if (argc > 7){
         throw std::invalid_argument("More arugments then can be allocation");
-    }// end if (argc >= 6)
+    }// end if (argc > 7)
     //--------------------------------------------------------------
     // Command line arugments for training size and data generation 
     //--------------------------
-    size_t training_size{100}, generated_size{10000}, epoch{100};
+    std::string filename{"test_results.csv"};
+    size_t training_size{100}, generated_size{10000}, batch_size{20}, epoch{100};
     bool isEpoch{false};
     long double precision{2.5E-1L};
     //--------------------------
     if (argc > 1){
         //--------------------------
-        if (std::atoi(argv[1]) > 0){
+        filename = argv[1] + std::string(".csv");
+        //--------------------------
+    }// end if (argc > 1)
+    //-----------
+    if (argc > 2){
+        //--------------------------
+        if (std::atoi(argv[2]) > 0){
             //--------------------------
-            training_size = std::stoul(argv[1]);
+            training_size = std::stoul(argv[2]);
             //--------------------------
-        }// end if (std::atoi(argv[1]) > 0)
+        }// end if (std::atoi(argv[2]) > 0)
         else{
             //--------------------------
             throw std::out_of_range("Must be at least postive");
             //--------------------------
         }// end else 
         //--------------------------
-    }// end if (argc > 1)
+    }// end if (argc > 2)
     //-----------
-    if (argc > 2){
+    if (argc > 3){
         //--------------------------
-        if (std::atoi(argv[2]) >= 200){
+        if (std::atoi(argv[3]) >= 200){
             //--------------------------
-            generated_size = std::stoul(argv[2]);
+            generated_size = std::stoul(argv[3]);
             //--------------------------
-        }// end if (std::atoi(argv[2]) >= 200)
+        }// end if (std::atoi(argv[3]) >= 200)
         else{
             //--------------------------
             throw std::out_of_range("Must be at least 200 (x >= 200)");
             //--------------------------
         }// end else
         //-------------------------- 
-    }// end if (argc > 2)
+    }// end if (argc > 3)
     //-----------
-    if (argc > 3){
+    if (argc > 4){
         //--------------------------
-        std::string _input = argv[3];
+        if (std::atoi(argv[4]) > 0 and std::atoi(argv[4]) <= static_cast<int>(generated_size) and std::atoi(argv[4]) <= 1000){
+            //--------------------------
+            batch_size = std::stoul(argv[4]);
+            //--------------------------
+        }// end if (std::atoi(argv[4]) > 0)
+        else{
+            //--------------------------
+            throw std::out_of_range("Must be at least postive or less the generated size or less then 1000 (x <= 1000)");
+            //--------------------------
+        }// end else
+        //-------------------------- 
+    }// end if (argc > 4)
+    //-----------
+    if (argc > 5){
+        //--------------------------
+        std::string _input = argv[5];
         std::transform(std::execution::par, _input.begin(), _input.end(), _input.begin(), [](const uint8_t& c){ return std::tolower(c);});
         //--------------------------
-        if (std::atoi(argv[3]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
+        if (std::atoi(argv[5]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
             //--------------------------
             isEpoch = true;
             //--------------------------
-        }// end if std::atoi(argv[3]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0)
+        }// end if std::atoi(argv[5]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0)
         //-------------------------- 
-    }// end if (argc > 3)
+    }// end if (argc > 4)
     //-----------
-    if (argc > 4 and !isEpoch){
+    if (argc > 6 and !isEpoch){
         //--------------------------
-        precision = std::stold(argv[4]);
+        precision = std::stold(argv[6]);
         //--------------------------
-    }// end if (argc > 4 and !isEpoch)
+    }// end if (argc > 6 and !isEpoch)
     //-----------
-    if (argc > 4 and isEpoch){
+    if (argc > 6 and isEpoch){
         //--------------------------
-        if (std::atoi(argv[4]) > 0){
+        if (std::atoi(argv[6]) > 0){
             //--------------------------
-            epoch = std::stoul(argv[4]);
+            epoch = std::stoul(argv[6]);
             //--------------------------
-        }// end if (std::atoi(argv[4]) > 0)
+        }// end if (std::atoi(argv[6]) > 0)
         else{
             //--------------------------
             throw std::out_of_range("Must be at least postive");
             //--------------------------
         }// end else
         //-------------------------- 
-    }// end if (argc > 4 and isEpoch)
+    }// end if (argc > 6 and isEpoch)
     //--------------------------
     if(isEpoch){
-        std::cout   << "training_size: " << training_size 
-                    << "\ngenerated_size: " << generated_size 
-                    << "\nepoch: " << epoch << std::endl;
+        std::cout   << "filename: " << filename << "\n"
+                    << "training_size: " << training_size << "\n"
+                    << "generated_size: " << generated_size << "\n"
+                    << "batch_size: " << batch_size << "\n"
+                    << "epoch: " << epoch << std::endl;
     }// end if(isEpoch)
     else{
-        std::cout   << "training_size: " << training_size 
-                    << "\ngenerated_size: " << generated_size 
-                    << "\nprecision: " << precision << std::endl;
+        std::cout   << "filename: " << filename << "\n"
+                    << "training_size: " << training_size << "\n"
+                    << "generated_size: " << generated_size << "\n"
+                    << "batch_size: " << batch_size << "\n"
+                    << "precision: " << precision << std::endl;
     }// end else
     //--------------------------------------------------------------
     // Creating a random number generator
@@ -123,7 +151,7 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // Initialize the network
     //--------------------------
-    Net model;
+    Net model(batch_size);
     model.to(device);
     // LSTMNet model(device);
     // model.to(device);
@@ -134,76 +162,67 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // Training loop
     //--------------------------
-    #pragma omp parallel shared(training_size, generated_size, epoch, precision, random_radius, random_centers, rng, model, optimizer, handler)
-    {
+    for (size_t i = 0; i < training_size; ++i){
+        //--------------------------------------------------------------
+        // Generate data
         //--------------------------
-        #pragma omp for nowait schedule(dynamic)
+        Generate _generate(random_radius(rng), generated_size, {random_centers(center_rng), random_centers(center_rng)}); 
+        //------------
+        std::cout   << "Training data radius: " << _generate.get_radius() 
+                    << " at center: (" << std::get<0>(_generate.get_center()) << "," 
+                    << std::get<1>(_generate.get_center()) << ")" << std::endl;
+        //--------------------------------------------------------------
+        // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
+        // batches into a single tensor.
+        // auto data_set = DataLoader(std::move(std::get<0>(data)), std::move(std::get<1>(data))).map(torch::data::transforms::Normalize<>(0.5, 0.25)).map(torch::data::transforms::Stack<>());
         //--------------------------
-        for (size_t i = 0; i < training_size; i++){
-            //--------------------------------------------------------------
-            // Generate data
+        auto data_set = DataLoader( Normalize::normalization(std::get<0>(_generate.get_data())), 
+                                    Normalize::normalization(std::get<1>(_generate.get_data()))).map(torch::data::transforms::Stack<>());
+        //--------------------------
+        // Generate a data loader.
+        //--------------------------
+        auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
+                                                                                                torch::data::DataLoaderOptions(batch_size));
+        //--------------------------------------------------------------
+        // Time the loop
+        //--------------------------
+        Timing _timer(__FUNCTION__);
+        //--------------------------------------------------------------
+        // Train the network
+        //--------------------------
+        if (isEpoch){
             //--------------------------
-            Generate _generate(random_radius(rng), generated_size, {random_centers(center_rng), random_centers(center_rng)}); 
-            //------------
-            std::cout   << "Training data radius: " << _generate.get_radius() 
-                        << " at center: (" << std::get<0>(_generate.get_center()) << "," 
-                        << std::get<1>(_generate.get_center()) << ")" << std::endl;
+            auto loss = handler.train(std::move(data_loader), optimizer, epoch);
+            //--------------------------
+        }// end if (isEpoch)
+        else{
             //--------------------------------------------------------------
-            // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
+            // Generate your validation data set. At this point you can add transforms to you data set, e.g. stack your
             // batches into a single tensor.
-            // auto data_set = DataLoader(std::move(std::get<0>(data)), std::move(std::get<1>(data))).map(torch::data::transforms::Normalize<>(0.5, 0.25)).map(torch::data::transforms::Stack<>());
             //--------------------------
-            auto data_set = DataLoader( Normalize::normalization(std::get<0>(_generate.get_data())), 
-                                        Normalize::normalization(std::get<1>(_generate.get_data()))).map(torch::data::transforms::Stack<>());
+            auto validation_data_set = DataLoader(  Normalize::normalization(std::get<0>(_generate.get_validation())), 
+                                                    Normalize::normalization(std::get<1>(_generate.get_validation())))
+                                                        .map(torch::data::transforms::Stack<>());
             //--------------------------
             // Generate a data loader.
             //--------------------------
-            auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
-                                                                                                    torch::data::DataLoaderOptions(20));
-            //--------------------------------------------------------------
-            // Time the loop
+            auto validation_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(validation_data_set), 
+                                                                                                            torch::data::DataLoaderOptions(batch_size));
             //--------------------------
-            Timing _timer(__FUNCTION__);
-            //--------------------------------------------------------------
-            // Train the network
+            auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
             //--------------------------
-            if (isEpoch){
-                #pragma omp critical
-                {
-                    auto loss = handler.train(std::move(data_loader), optimizer, epoch);
-                }// end #pragma omp critical
-            }// end if (isEpoch)
-            else{
-                //--------------------------------------------------------------
-                // Generate your validation data set. At this point you can add transforms to you data set, e.g. stack your
-                // batches into a single tensor.
-                //--------------------------
-                auto validation_data_set = DataLoader(  Normalize::normalization(std::get<0>(_generate.get_validation())), 
-                                                        Normalize::normalization(std::get<1>(_generate.get_validation())))
-                                                            .map(torch::data::transforms::Stack<>());
-                //--------------------------
-                // Generate a data loader.
-                //--------------------------
-                auto validation_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(std::move(validation_data_set), 
-                                                                                                                torch::data::DataLoaderOptions(20));
-                //--------------------------
-                #pragma omp critical
-                {
-                    auto loss = handler.train(std::move(data_loader), std::move(validation_data_loader), optimizer, precision);
-                }// end #pragma omp critical
-            }// end else 
-            //--------------------------
-            printf("\n-----------------Done:[%zu]-----------------\n", i);
-            //--------------------------
-        }// end (size_t i = 0; i < training_size; i++)
+        }// end else 
         //--------------------------
-    }// end omp parallel shared(training_size, generated_size, epoch, precision, random_radius, random_centers, rng, model, optimizer, handler)
+        printf("\n-----------------Done:[%zu]-----------------\n", i);
+        //--------------------------
+    }// end (size_t i = 0; i < training_size; ++i)
     //--------------------------------------------------------------
     // Generate test data
     //--------------------------
-    Generate test_generate(random_radius(rng), 60, {random_centers(center_rng), random_centers(center_rng)});
+    Generate test_generate(random_radius(rng), 3*batch_size, {random_centers(center_rng), random_centers(center_rng)});
     //--------------------------
-    std::cout   << "test data radius: " << test_generate.get_radius() 
+    std::cout   << "\n" << "Test Data"
+                << "\n" << "test data radius: " << test_generate.get_radius() 
                 << " at center: (" << std::get<0>(test_generate.get_center()) << "," 
                 << std::get<1>(test_generate.get_center()) << ")" << std::endl;
     //--------------------------------------------------------------
@@ -221,29 +240,42 @@ int main(int argc, char const *argv[]){
     // Generate a data loader.
     //--------------------------
     auto test_data_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>( std::move(test_data_set), 
-                                                                                            torch::data::DataLoaderOptions(20));
+                                                                                            torch::data::DataLoaderOptions(batch_size));
     //--------------------------
     // Test the data
     //--------------------------
     auto test = handler.test(std::move(test_data_loader));
+    //--------------------------------------------------------------
+    // Print table settup
     //--------------------------
-    for (const auto& [_target, _output, _loss] : test){
-        //--------------------------
-        std::cout   << "\ntarget : \n" << test_target_normal.unnormalization(_target) 
-                    << "\noutput: \n" << test_target_normal.unnormalization(_output) 
-                    << "\ntarget origial: \n" << _target 
-                    << "\noutput origial: \n" << _output
-                    << "\nloss: " << _loss << std::endl;
-        //--------------------------
-    }// end for (const auto& _test : test)
+     fort::char_table table;
+    //--------------------------
+    // Change border style
+    //--------------------------
+    table.set_border_style(FT_BASIC2_STYLE);
+    //--------------------------
+    // Set color
+    //--------------------------
+    table.row(0).set_cell_content_fg_color(fort::color::light_blue);
+    //--------------------------
+    // Set center alignment for the all columns
+    //--------------------------
+    table.column(0).set_cell_text_align(fort::text_align::center);
+    table.column(1).set_cell_text_align(fort::text_align::center);
+    table.column(2).set_cell_text_align(fort::text_align::center);
+    table.column(3).set_cell_text_align(fort::text_align::center);
+    table.column(4).set_cell_text_align(fort::text_align::center);
+    //--------------------------
+    table   << fort::header
+            << "Target" << "Output" << "Target Origial" << "Output origial" << "Loss" << fort::endr;
     //--------------------------------------------------------------
-    // file pointer
-    //--------------------------------------------------------------
+    // File pointer
+    //--------------------------
     std::fstream fout;
     //--------------------------
     // opens an existing csv file or creates a new file.
     //--------------------------
-    fout.open("test_data.csv", std::ios::out | std::ios::app);
+    fout.open(filename, std::ios::out | std::ios::app);
     //--------------------------
     fout    << "Radius: " << test_generate.get_radius() 
             << " at center: (" << std::get<0>(test_generate.get_center()) << "." 
@@ -258,17 +290,20 @@ int main(int argc, char const *argv[]){
     //--------------------------
     for (const auto& [_test_target, _test_output, _loss] : test){
         //--------------------------
-        auto num_row = _test_target.size(0);
-        auto num_col = _test_target.size(1);
+        table   << test_target_normal.unnormalization(_test_target) 
+                << test_target_normal.unnormalization(_test_output) 
+                << _test_target 
+                << _test_output
+                << _loss << fort::endr;
         //--------------------------
         auto _output_temp = _test_target.cpu();
         auto _output = _output_temp.accessor<float, 2>();
         auto _target_temp = _test_output.cpu();
         auto _target = _target_temp.accessor<float, 2>();
         //--------------------------
-        for (int64_t i = 0; i < num_row; i++){
+        for (int64_t i = 0; i < _test_target.size(0); ++i){
             //--------------------------
-            for (int64_t j = 0; j < num_col; j++){
+            for (int64_t j = 0; j < _test_target.size(1); ++j){
                 //--------------------------
                 fout    << test_target_normal.unnormalization_nonTensor(_output[i][j]) << ","
                         << test_target_normal.unnormalization_nonTensor(_target[i][j]) << "," 
@@ -278,14 +313,16 @@ int main(int argc, char const *argv[]){
                 //--------------------------
                 fout.flush();
                 //--------------------------
-            }// end for (size_t i = 0; i < num_col; i++)
+            }// end for (size_t i = 0; i < _test_target.size(0); ++i)
             //--------------------------
-        }// end for (size_t i = 0; i < num_col; i++)
+        }// end for (size_t i = 0; i < _test_target.size(1); ++i)
         //--------------------------
-    }// end for (const auto& _test : test)
+    }// end for (const auto& [_test_target, _test_output, _loss] : test)
     //--------------------------
     fout.close();
     //--------------------------------------------------------------
+    std::cout << "\n" << table.to_string() << std::endl;
+    //--------------------------
     std::cout << "test data Saved" << std::endl;
     //--------------------------------------------------------------
     return 0;

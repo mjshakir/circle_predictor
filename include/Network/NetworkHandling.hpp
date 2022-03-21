@@ -220,13 +220,17 @@ class NetworkHandling{
         std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const R& precision){
             //--------------------------
             double _element_sum{100};
-            std::vector<float> Loss;
+            //--------------------------
+            size_t _training_limiter{3};
             //--------------------------
             auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
             //--------------------------
             bool _learning{true}, tensorIsNan{false};
             std::vector<double> _learning_elements;
-            _learning_elements.reserve(3);
+            _learning_elements.reserve(_training_limiter);
+            //--------------------------
+            std::vector<float> Loss;
+            Loss.reserve(data_loader_size*_training_limiter);
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
@@ -273,7 +277,7 @@ class NetworkHandling{
                                                         loss_display(validation_loss, _element_sum, _timer.get_time());
                                                     });
                 //--------------------------
-                if (_learning_elements.size() > 2){
+                if (_learning_elements.size() > (_training_limiter-1)){
                     //--------------------------
                     _learning = check_learning(_learning_elements, precision);
                     _learning_elements.clear();

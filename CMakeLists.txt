@@ -9,11 +9,11 @@ endif()
 #------------------------------------------------------------------------------------------
 option(USE_CLANG "build application with CLang" OFF) # OFF is the default
 SET(USE_CLANG OFF CACHE BOOL "Set CLang Option")
-MESSAGE("USE_CLANG: " ${USE_CLANG})
+MESSAGE("-- USE_CLANG: " ${USE_CLANG})
 #---------------
 option(USE_TTB "build application with TTB" ON) # ON is the default
 SET(USE_TTB ON CACHE BOOL "Set TTB Option")
-MESSAGE("USE_TTB: " ${USE_TTB})
+MESSAGE("-- USE_TTB: " ${USE_TTB})
 #---------------
 #------------------------------------------------------------------------------------------
 if(USE_CLANG EQUAL ON)
@@ -42,9 +42,9 @@ find_package(Torch REQUIRED)
 if (NOT Torch_FOUND)
   message(FATAL_ERROR "Fatal error: Torch required.")
 else()
-  message(STATUS "Setting up Torch")
-  message(STATUS " Includes - ${TORCH_INCLUDE_DIRS}")
-  message(STATUS " Library  - ${TORCH_LIBRARIES}")
+  message(STATUS "-- Setting up Torch")
+  message(STATUS "--- Includes - ${TORCH_INCLUDE_DIRS}")
+  message(STATUS "--- Library  - ${TORCH_LIBRARIES}")
 endif (NOT Torch_FOUND)
 #----------------------------------
 if(USE_TTB EQUAL ON)
@@ -54,9 +54,9 @@ if(USE_TTB EQUAL ON)
     if (NOT TBB_FOUND)
       message(FATAL_ERROR "Fatal error: TBB required.")
     else()
-      message(STATUS "Setting up TBB")
-      message(STATUS " Includes - ${TBB_INCLUDE_DIRS}")
-      message(STATUS " Library  - ${TBB_LIBRARIES}")
+      message(STATUS "-- Setting up TBB")
+      message(STATUS "--- Includes - ${TBB_INCLUDE_DIRS}")
+      message(STATUS "--- Library  - ${TBB_LIBRARIES}")
     endif (NOT TBB_FOUND)
     #---------------
 endif(USE_TTB EQUAL ON)

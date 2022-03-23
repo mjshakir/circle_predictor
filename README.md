@@ -15,20 +15,6 @@ git pull --recurse-submodules
 ```
 git clone https://github.com/mjshakir/circle_predictor.git --recurse-submodules
 ```
-### TTB issue
-If TBB is an issue, use the ```TTB_issues``` branch
-
-- Switch to the branch:
-```
-cd ~/path/to/circle_predictor
-```
-```
-git check out TTB_issues
-```
-- Clone the branch directly:
-```
-git clone --branch TTB_issues https://github.com/mjshakir/circle_predictor.git --recurse-submodules
-```
 
 ## Get libtorch
 - Go to [PyTorch](https://pytorch.org/) to get ```libtorch```
@@ -60,6 +46,7 @@ circle_predictor/
 ```
 sudo apt-get install -y ninja-build
 ```
+### Build Ninja
 - Build Ninja: 
 ```
 cmake -DCMAKE_BUILD_TYPE=release .. -G Ninja
@@ -72,7 +59,19 @@ cmake -DUSE_CLANG=ON -DCMAKE_BUILD_TYPE=release .. -G Ninja
 ```
 ninja
 ```
-
+### TTB issue
+- Build Ninja: 
+```
+cmake -DUSE_TTB=OFF -DCMAKE_BUILD_TYPE=release .. -G Ninja
+```
+  - Build Ninja using ```CLang```:
+```
+cmake -DUSE_CLANG=ON -DUSE_TTB=OFF -DCMAKE_BUILD_TYPE=release .. -G Ninja
+```  
+- Build the project: 
+```
+ninja
+```
 # Run the program
 - Run: (*Reminder: be in ```~/path/to/circle_predictor/build/```*) 
 ```

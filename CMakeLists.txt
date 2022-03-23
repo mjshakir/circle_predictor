@@ -7,18 +7,24 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
 endif()
 #------------------------------------------------------------------------------------------
+# option(USE_CLANG "build application with CLang" OFF) # OFF is the default
+# MESSAGE(STATUS "USE_CLANG: " ${USE_CLANG})
+# #---------------
+# option(USE_TTB "build application with TTB" ON) # ON is the default
+# MESSAGE(STATUS "USE_TTB: " ${USE_TTB})
+
 option(USE_CLANG "build application with CLang" OFF) # OFF is the default
-SET(USE_CLANG OFF CACHE BOOL "Set CLang Option")
-MESSAGE("-- USE_CLANG: " ${USE_CLANG})
+set(THIS_USE_CLANG USE_CLANG CACHE BOOL "Using CLang")
+MESSAGE(STATUS "USE_CLANG: " ${THIS_USE_CLANG})
 #---------------
 option(USE_TTB "build application with TTB" ON) # ON is the default
-SET(USE_TTB ON CACHE BOOL "Set TTB Option")
-MESSAGE("-- USE_TTB: " ${USE_TTB})
-#---------------
+set(THIS_USE_TTB USE_TTB CACHE BOOL "Using TTB")
+MESSAGE(STATUS "USE_TTB: " ${THIS_USE_TTB})
 #------------------------------------------------------------------------------------------
-if(USE_CLANG EQUAL ON)
+if(${THIS_USE_CLANG})
+  MESSAGE(STATUS "Using CLang")
   set(CMAKE_CXX_COMPILER /usr/bin/clang++)
-endif(USE_CLANG EQUAL ON)
+endif(${THIS_USE_CLANG})
 #------------------------------------------------------------------------------------------
 add_compile_options(-Wall -Wextra -Wpedantic)
 #------------------------------------------------------------------------------------------
@@ -42,24 +48,24 @@ find_package(Torch REQUIRED)
 if (NOT Torch_FOUND)
   message(FATAL_ERROR "Fatal error: Torch required.")
 else()
-  message(STATUS "-- Setting up Torch")
-  message(STATUS "--- Includes - ${TORCH_INCLUDE_DIRS}")
-  message(STATUS "--- Library  - ${TORCH_LIBRARIES}")
+  message(STATUS "Setting up Torch")
+  message(STATUS "Includes - ${TORCH_INCLUDE_DIRS}")
+  message(STATUS "Library  - ${TORCH_LIBRARIES}")
 endif (NOT Torch_FOUND)
 #----------------------------------
-if(USE_TTB EQUAL ON)
+if(${THIS_USE_TTB})
   #---------------
   find_package(TBB REQUIRED)
     #---------------
     if (NOT TBB_FOUND)
       message(FATAL_ERROR "Fatal error: TBB required.")
     else()
-      message(STATUS "-- Setting up TBB")
-      message(STATUS "--- Includes - ${TBB_INCLUDE_DIRS}")
-      message(STATUS "--- Library  - ${TBB_LIBRARIES}")
+      message(STATUS "Setting up TBB")
+      message(STATUS "Includes - ${TBB_INCLUDE_DIRS}")
+      message(STATUS "Library  - ${TBB_LIBRARIES}")
     endif (NOT TBB_FOUND)
     #---------------
-endif(USE_TTB EQUAL ON)
+endif(${THIS_USE_TTB})
 #----------------------------------
 LINK_DIRECTORIES( ${LIBRARYPATH} )
 #------------------------------------------------------------------------------------------
@@ -82,13 +88,13 @@ add_library(${PROJECT_NAME}_timing SHARED
   src/Timing/TimeIT.cpp
 )
 #------------------------------------------------------------------------------------------
-if(USE_TTB EQUAL ON)
+if(${THIS_USE_TTB})
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} tbb fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES} tbb)
 else()
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES})
-endif(USE_TTB EQUAL ON)
+endif(${THIS_USE_TTB})
 #------------------------------------------------------------------------------------------
 include_directories(
   include

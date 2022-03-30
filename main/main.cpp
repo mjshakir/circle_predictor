@@ -160,6 +160,10 @@ int main(int argc, char const *argv[]){
     //--------------------------
     NetworkHandling<Net> handler(std::move(model), device);
     //--------------------------------------------------------------
+    // Timing main
+    //--------------------------
+    Timing _timer(__FUNCTION__);
+    //--------------------------------------------------------------
     // Training loop
     //--------------------------
     for (size_t i = 0; i < training_size; ++i){
@@ -186,7 +190,7 @@ int main(int argc, char const *argv[]){
         //--------------------------------------------------------------
         // Time the loop
         //--------------------------
-        Timing _timer(__FUNCTION__);
+        Timing _loop_timer("Main for loop");
         //--------------------------------------------------------------
         // Train the network
         //--------------------------

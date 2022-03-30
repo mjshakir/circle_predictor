@@ -76,7 +76,10 @@ class NetworkHandling{
          *  @return vector of float
          */
         template <typename Dataloader, typename Test_Dataloader>
-        std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, long double precision = 1E-2L){
+        std::vector<float> train(   Dataloader&& data_loader, 
+                                    Test_Dataloader&& data_loader_test, 
+                                    torch::optim::Optimizer& optimizer, 
+                                    long double precision = 1E-2L){
             //--------------------------
             return network_train(std::move(data_loader), std::move(data_loader_test), optimizer, precision);
             //--------------------------
@@ -347,7 +350,7 @@ class NetworkHandling{
         torch::Device m_device;
         //--------------------------
         template <typename T, typename R>
-        bool check_learning(const std::vector<T>& elements, const R& tolerance){
+        bool check_learning(const std::vector<T>& elements, const R& tolerance) const{
             //--------------------------
             long double average = std::reduce(std::execution::par_unseq, elements.begin(), elements.end(), 0.L) / elements.size();
             //--------------------------
@@ -360,7 +363,7 @@ class NetworkHandling{
         }// end bool check_learning(const std::vector<T>& elements, const R& tolerance)
         //--------------------------------------------------------------
         template <typename T, typename R>
-        void loss_display(const std::vector<T>& loss, const R& ns_time){
+        void loss_display(const std::vector<T>& loss, const R& ns_time) const{
             //--------------------------
             double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L);
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
@@ -393,7 +396,7 @@ class NetworkHandling{
         }// end void loss_display(const std::vector<T>& loss, const R& ns_time)
         //--------------------------------------------------------------
         template <typename T, typename D, typename R>
-        void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time){
+        void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time) const{
             //--------------------------
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());

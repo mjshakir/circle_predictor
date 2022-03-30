@@ -8,13 +8,13 @@ TimeIT::TimeIT() : m_start(std::chrono::high_resolution_clock::now()) {
     //--------------------------
 }// end Timing::Timing()
 //--------------------------------------------------------------
-uint64_t TimeIT::get_time(void){
+uint64_t TimeIT::get_time(void) const{
     //--------------------------
     return nanoseconds_time();
     //--------------------------
 }// end uint64_t TimeIT::nanoseconds_time(void)
 //--------------------------------------------------------------
-uint64_t TimeIT::nanoseconds_time(void){
+uint64_t TimeIT::nanoseconds_time(void) const{
     //--------------------------
     auto end = std::chrono::high_resolution_clock::now();
     //--------------------------

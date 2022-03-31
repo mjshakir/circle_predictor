@@ -305,9 +305,12 @@ class NetworkHandling{
         template <typename Dataset>
         std::vector<float> network_validation(Dataset&& data_loader){
             //--------------------------
-            progressbar bar(std::distance(data_loader->begin(), data_loader->end()));
+            auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
+            //--------------------------
+            progressbar bar(data_loader_size);
             //--------------------------
             std::vector<float> test_loss;
+            test_loss.reserve(data_loader_size);
             //--------------------------
             std::cout << "\nValidation: ";
             //--------------------------
@@ -326,11 +329,14 @@ class NetworkHandling{
         template <typename Dataset>
         std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> network_test(Dataset&& data_loader){
             //--------------------------
-            progressbar bar(std::distance(data_loader->begin(), data_loader->end()));
+            auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
+            //--------------------------
+            progressbar bar(data_loader_size);
             //--------------------------
             std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> results;
+            results.reserve(data_loader_size);
             //--------------------------
-            std::cout << "\nValidation: ";
+            std::cout << "\nTest data: ";
             //--------------------------
             for (const auto& batch : *data_loader){
                 //--------------------------

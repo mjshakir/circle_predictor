@@ -336,7 +336,7 @@ class NetworkHandling{
             std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> results;
             results.reserve(data_loader_size);
             //--------------------------
-            std::cout << "\nTest data: ";
+            std::cout << "Test data: ";
             //--------------------------
             for (const auto& batch : *data_loader){
                 //--------------------------

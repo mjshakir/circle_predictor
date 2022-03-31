@@ -252,7 +252,7 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // Print table settup
     //--------------------------
-     fort::char_table table;
+    fort::char_table table;
     //--------------------------
     // Change border style
     //--------------------------

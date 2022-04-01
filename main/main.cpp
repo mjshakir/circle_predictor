@@ -4,6 +4,10 @@
 #include <random>
 #include <fstream>
 //--------------------------------------------------------------
+// Boost library
+//--------------------------------------------------------------
+#include <boost/program_options.hpp>
+//--------------------------------------------------------------
 // User Defined library
 //--------------------------------------------------------------
 #include "Network/Network.hpp"
@@ -12,102 +16,59 @@
 //--------------------------------------------------------------
 
 int main(int argc, char const *argv[]){
-    //--------------------------
-    if (argc > 7){
-        throw std::invalid_argument("More arugments then can be allocation");
-    }// end if (argc > 7)
     //--------------------------------------------------------------
-    // Command line arugments for training size and data generation 
+    // Command line arugments using boost options 
     //--------------------------
-    std::string filename{"test_results.csv"};
-    size_t training_size{100}, generated_size{10000}, batch_size{20}, epoch{100};
-    bool isEpoch{false};
-    long double precision{2.5E-1L};
+    std::string filename;
+    size_t training_size, generated_size, batch_size, epoch;
+    bool isEpoch;
+    long double precision;
     //--------------------------
-    if (argc > 1){
-        //--------------------------
-        filename = argv[1] + std::string(".csv");
-        //--------------------------
-    }// end if (argc > 1)
+    boost::program_options::options_description description("Allowed options:");
+    //--------------------------
+    description.add_options()
+    ("help,h", "Display this help message")
+    ("filename,s", boost::program_options::value<std::string>(&filename)->default_value("test_results"), "Name of the file saved")
+    ("training_size,t", boost::program_options::value<size_t>(&training_size)->default_value(100), "How many different points to train. Accepts an integer x > 0")
+    ("generated_size,g", boost::program_options::value<size_t>(&generated_size)->default_value(10000), "How many points generated. Accepts an integer x >= 100")
+    ("batch_size,b", boost::program_options::value<size_t>(&batch_size)->default_value(20), "Batch the generated data to train. Limitations: - Must be less then the generated_size - Must be less the 1000 this a libtorch limitation")
+    ("precision,p", boost::program_options::value<long double>(&precision)->default_value(2.5E-1L), "Determine when to stop the training. This uses a validation set")
+    ("use_epoch,u", boost::program_options::value<bool>(&isEpoch)->default_value(false), "false: validation precision or true: Train with an epoch iteration")
+    ("epoch,e", boost::program_options::value<size_t>(&epoch)->default_value(20), "How many iterations to train");
+    //--------------------------
+    boost::program_options::variables_map vm;
+    boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(description).run(), vm);
+    boost::program_options::notify(vm);
+    //--------------------------
+    // Add protection to the values
     //-----------
-    if (argc > 2){
-        //--------------------------
-        if (std::atoi(argv[2]) > 0){
-            //--------------------------
-            training_size = std::stoul(argv[2]);
-            //--------------------------
-        }// end if (std::atoi(argv[2]) > 0)
-        else{
-            //--------------------------
-            throw std::out_of_range("Must be at least postive");
-            //--------------------------
-        }// end else 
-        //--------------------------
-    }// end if (argc > 2)
+    if (vm.count("help")){
+        std::cout << description;
+    }// end if (vm.count("help"))
     //-----------
-    if (argc > 3){
-        //--------------------------
-        if (std::atoi(argv[3]) >= 200){
-            //--------------------------
-            generated_size = std::stoul(argv[3]);
-            //--------------------------
-        }// end if (std::atoi(argv[3]) >= 200)
-        else{
-            //--------------------------
-            throw std::out_of_range("Must be at least 200 (x >= 200)");
-            //--------------------------
-        }// end else
-        //-------------------------- 
-    }// end if (argc > 3)
+    if (vm.count("filename")){
+        filename = vm["filename"].as<std::string>() + std::string(".csv");
+    }// end if (vm.count("filename"))
     //-----------
-    if (argc > 4){
-        //--------------------------
-        if (std::atoi(argv[4]) > 0 and std::atoi(argv[4]) <= static_cast<int>(generated_size) and std::atoi(argv[4]) <= 1000){
-            //--------------------------
-            batch_size = std::stoul(argv[4]);
-            //--------------------------
-        }// end if (std::atoi(argv[4]) > 0)
-        else{
-            //--------------------------
-            throw std::out_of_range("Must be at least postive or less the generated size or less then 1000 (x <= 1000)");
-            //--------------------------
-        }// end else
-        //-------------------------- 
-    }// end if (argc > 4)
+    if (vm["training_size"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("training_size") < 0)
     //-----------
-    if (argc > 5){
-        //--------------------------
-        std::string _input = argv[5];
-        std::transform(std::execution::par, _input.begin(), _input.end(), _input.begin(), [](const uint8_t& c){ return std::tolower(c);});
-        //--------------------------
-        if (std::atoi(argv[5]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
-            //--------------------------
-            isEpoch = true;
-            //--------------------------
-        }// end if std::atoi(argv[5]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0)
-        //-------------------------- 
-    }// end if (argc > 4)
+    if (vm["generated_size"].as<size_t>() < 100){
+        throw std::out_of_range("Must be at least 100 (x >= 100)");
+    }// end if (vm.count("generated_size") < 100)
     //-----------
-    if (argc > 6 and !isEpoch){
-        //--------------------------
-        precision = std::stold(argv[6]);
-        //--------------------------
-    }// end if (argc > 6 and !isEpoch)
+    if (vm["batch_size"].as<size_t>() < 0 and vm["batch_size"].as<size_t>() > generated_size and vm["batch_size"].as<size_t>() > 1000){
+        throw std::out_of_range("Must be at least postive or less then generated size or less then 1000 (x <= 1000)");
+    }// end  if (vm.count("batch_size") < 0 and vm.count("batch_size") > static_cast<int>(generated_size) and vm.count("batch_size") > 1000)
     //-----------
-    if (argc > 6 and isEpoch){
-        //--------------------------
-        if (std::atoi(argv[6]) > 0){
-            //--------------------------
-            epoch = std::stoul(argv[6]);
-            //--------------------------
-        }// end if (std::atoi(argv[6]) > 0)
-        else{
-            //--------------------------
-            throw std::out_of_range("Must be at least postive");
-            //--------------------------
-        }// end else
-        //-------------------------- 
-    }// end if (argc > 6 and isEpoch)
+    if (vm["epoch"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("epoch") < 0)
+    //-----------
+    if (vm["precision"].as<long double>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("precision") < 0)
     //--------------------------
     if(isEpoch){
         std::cout   << "filename: " << filename << "\n"

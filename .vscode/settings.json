@@ -71,7 +71,11 @@
         "*.ipp": "cpp",
         "future": "cpp",
         "execution": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "cfenv": "cpp",
+        "csignal": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

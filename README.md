@@ -78,26 +78,28 @@ ninja
 ./bin/circle_predictor
 ```
 ## Command line arguments
-- ```filename```: default ```test_results```
+- ```-h``` or ```--help```: 
+  - Display options and description:
+- ```-s``` or ```--filename```: default ```test_results```
   - Save the results of the test data in ```csv``` file.
-- ```training_size```: default ```100```
+- ```-t``` or ```---training_size```: default ```100```
   - How many different points to train
-  - Accept an integer ```x > 0```
-- ```generated_size```: default ```10000```
+  - Accepts an integer ```x > 0```
+- ```-g``` or ```--generated_size```: default ```10000```
   - How many points generated
-  - Accept an integer ```x >= 200```
-- ```batch_size```: default ```20```
+  - Accepts an integer ```x >= 100```
+- ```-b``` or ```--batch_size```: default ```20```
   - Batch the generated data to train 
   - Limitations:
     - Accept an unsigned integer ```x > 0```
     - Must be less then the ```generated_size```
     - Must be less the ```1000``` this a ```libtorch``` limitation
-- ```isEpoch```: default ```false```
-  - Train with an epoch iteration or validation precision
-  - Accept a bool ```true``` or ```1```
-- ```precision``` if ```isEpoch``` is ```false``` or ```epoch``` if ```isEpoch``` is ```true```
-  - ```precision```: a long double that determine when to stop the training. This uses a validation set.
-  - ```epoch```: how many iteration to train
+- ```-u``` or ```--use_epoch```: default ```false```
+  - Train with an epoch iterations or validation precision
+- ```-p``` or ```--precision```: default ```2.5E-1L``` 
+  - Determine when to stop the training. This uses a validation set.
+- ```-e``` or ```--epoch```: default ```20```
+  - How many iteration to train.
 
 ### Example: 
 - With precision and validation:

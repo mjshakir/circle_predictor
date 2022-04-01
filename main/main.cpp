@@ -4,6 +4,10 @@
 #include <random>
 #include <fstream>
 //--------------------------------------------------------------
+// Boost library
+//--------------------------------------------------------------
+#include <boost/program_options.hpp>
+//--------------------------------------------------------------
 // User Defined library
 //--------------------------------------------------------------
 #include "Network/Network.hpp"
@@ -12,102 +16,34 @@
 //--------------------------------------------------------------
 
 int main(int argc, char const *argv[]){
-    //--------------------------
-    if (argc > 7){
-        throw std::invalid_argument("More arugments then can be allocation");
-    }// end if (argc > 7)
     //--------------------------------------------------------------
     // Command line arugments for training size and data generation 
     //--------------------------
-    std::string filename{"test_results.csv"};
-    size_t training_size{100}, generated_size{10000}, batch_size{20}, epoch{100};
-    bool isEpoch{false};
-    long double precision{2.5E-1L};
+    std::string filename;
+    size_t training_size, generated_size, batch_size, epoch;
+    bool isEpoch;
+    long double precision;
     //--------------------------
-    if (argc > 1){
-        //--------------------------
-        filename = argv[1] + std::string(".csv");
-        //--------------------------
-    }// end if (argc > 1)
-    //-----------
-    if (argc > 2){
-        //--------------------------
-        if (std::atoi(argv[2]) > 0){
-            //--------------------------
-            training_size = std::stoul(argv[2]);
-            //--------------------------
-        }// end if (std::atoi(argv[2]) > 0)
-        else{
-            //--------------------------
-            throw std::out_of_range("Must be at least postive");
-            //--------------------------
-        }// end else 
-        //--------------------------
-    }// end if (argc > 2)
-    //-----------
-    if (argc > 3){
-        //--------------------------
-        if (std::atoi(argv[3]) >= 200){
-            //--------------------------
-            generated_size = std::stoul(argv[3]);
-            //--------------------------
-        }// end if (std::atoi(argv[3]) >= 200)
-        else{
-            //--------------------------
-            throw std::out_of_range("Must be at least 200 (x >= 200)");
-            //--------------------------
-        }// end else
-        //-------------------------- 
-    }// end if (argc > 3)
-    //-----------
-    if (argc > 4){
-        //--------------------------
-        if (std::atoi(argv[4]) > 0 and std::atoi(argv[4]) <= static_cast<int>(generated_size) and std::atoi(argv[4]) <= 1000){
-            //--------------------------
-            batch_size = std::stoul(argv[4]);
-            //--------------------------
-        }// end if (std::atoi(argv[4]) > 0)
-        else{
-            //--------------------------
-            throw std::out_of_range("Must be at least postive or less the generated size or less then 1000 (x <= 1000)");
-            //--------------------------
-        }// end else
-        //-------------------------- 
-    }// end if (argc > 4)
-    //-----------
-    if (argc > 5){
-        //--------------------------
-        std::string _input = argv[5];
-        std::transform(std::execution::par, _input.begin(), _input.end(), _input.begin(), [](const uint8_t& c){ return std::tolower(c);});
-        //--------------------------
-        if (std::atoi(argv[5]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0){
-            //--------------------------
-            isEpoch = true;
-            //--------------------------
-        }// end if std::atoi(argv[5]) == 1 or std::strncmp(_input.c_str(), "true", 4) == 0)
-        //-------------------------- 
-    }// end if (argc > 4)
-    //-----------
-    if (argc > 6 and !isEpoch){
-        //--------------------------
-        precision = std::stold(argv[6]);
-        //--------------------------
-    }// end if (argc > 6 and !isEpoch)
-    //-----------
-    if (argc > 6 and isEpoch){
-        //--------------------------
-        if (std::atoi(argv[6]) > 0){
-            //--------------------------
-            epoch = std::stoul(argv[6]);
-            //--------------------------
-        }// end if (std::atoi(argv[6]) > 0)
-        else{
-            //--------------------------
-            throw std::out_of_range("Must be at least postive");
-            //--------------------------
-        }// end else
-        //-------------------------- 
-    }// end if (argc > 6 and isEpoch)
+    boost::program_options::options_description description("Allowed options:");
+    //--------------------------
+    description.add_options()
+    ("help,h", "Display this help message")
+    ("version,v", "Display the version number")
+    ("training_size,t", boost::program_options::value<size_t>(&training_size)->default_value(100), "Training Size")
+    ("generated_size,g", boost::program_options::value<size_t>(&generated_size)->default_value(10000), "Generated Size")
+    ("batch_size,b", boost::program_options::value<size_t>(&batch_size)->default_value(20), "Batch Size")
+    ("epoch,e", boost::program_options::value<size_t>(&epoch)->default_value(100), "Epoch Size")
+    ("use_epoch,u", boost::program_options::value<bool>(&isEpoch)->default_value(false), "Using Epoch")
+    ("precision,p", boost::program_options::value<long double>(&precision)->default_value(2.5E-1L), "Precision")
+    ("filename,s", boost::program_options::value<std::string>(&filename)->default_value("test_results.csv"), "Name of the file saved");
+    //--------------------------
+    boost::program_options::variables_map vm;
+    boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(description).run(), vm);
+    boost::program_options::notify(vm);
+    //--------------------------
+    if (vm.count("help")){
+        std::cout << description;
+    }
     //--------------------------
     if(isEpoch){
         std::cout   << "filename: " << filename << "\n"

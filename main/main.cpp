@@ -55,7 +55,7 @@ int main(int argc, char const *argv[]){
     }// end if (vm.count("training_size") < 0)
     //--------------------------
     if (vm["generated_size"].as<size_t>() < 100){
-        throw std::out_of_range("Must be at least 200 (x >= 100)");
+        throw std::out_of_range("Must be at least 100 (x >= 100)");
     }// end if (vm.count("generated_size") < 100)
     //--------------------------
     if (vm["batch_size"].as<size_t>() < 0 and vm["batch_size"].as<size_t>() > generated_size and vm["batch_size"].as<size_t>() > 1000){

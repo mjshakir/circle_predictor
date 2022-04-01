@@ -28,7 +28,7 @@ int main(int argc, char const *argv[]){
     //--------------------------
     description.add_options()
     ("help,h", "Display this help message")
-    ("filename,s", boost::program_options::value<std::string>(&filename)->default_value("test_results.csv"), "Name of the file saved")
+    ("filename,s", boost::program_options::value<std::string>(&filename)->default_value("test_results"), "Name of the file saved")
     ("training_size,t", boost::program_options::value<size_t>(&training_size)->default_value(100), "Training Size")
     ("generated_size,g", boost::program_options::value<size_t>(&generated_size)->default_value(10000), "Generated Size")
     ("batch_size,b", boost::program_options::value<size_t>(&batch_size)->default_value(20), "Batch Size")

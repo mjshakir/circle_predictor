@@ -53,7 +53,7 @@ cmake -DCMAKE_BUILD_TYPE=release .. -G Ninja
 ```
   - Build Ninja using ```CLang```:
 ```
-cmake -DUSE_CLANG=ON -DCMAKE_BUILD_TYPE=release .. -G Ninja
+cmake -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=release .. -G Ninja
 ```  
 - Build the project: 
 ```
@@ -66,7 +66,7 @@ cmake -DUSE_TTB=OFF -DCMAKE_BUILD_TYPE=release .. -G Ninja
 ```
   - Build Ninja using ```CLang```:
 ```
-cmake -DUSE_CLANG=ON -DUSE_TTB=OFF -DCMAKE_BUILD_TYPE=release .. -G Ninja
+cmake -DUSE_TTB=OFF -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=release .. -G Ninja
 ```  
 - Build the project: 
 ```

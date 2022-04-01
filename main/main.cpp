@@ -41,31 +41,31 @@ int main(int argc, char const *argv[]){
     boost::program_options::notify(vm);
     //--------------------------
     // Add protection to the values
-    //--------------------------
+    //-----------
     if (vm.count("help")){
         std::cout << description;
     }// end if (vm.count("help"))
-    //--------------------------
+    //-----------
     if (vm.count("filename")){
         filename = vm["filename"].as<std::string>() + std::string(".csv");
     }// end if (vm.count("filename"))
-    //--------------------------
+    //-----------
     if (vm["training_size"].as<size_t>() < 0){
         throw std::out_of_range("Must be at least postive");
     }// end if (vm.count("training_size") < 0)
-    //--------------------------
+    //-----------
     if (vm["generated_size"].as<size_t>() < 100){
         throw std::out_of_range("Must be at least 100 (x >= 100)");
     }// end if (vm.count("generated_size") < 100)
-    //--------------------------
+    //-----------
     if (vm["batch_size"].as<size_t>() < 0 and vm["batch_size"].as<size_t>() > generated_size and vm["batch_size"].as<size_t>() > 1000){
         throw std::out_of_range("Must be at least postive or less then generated size or less then 1000 (x <= 1000)");
     }// end  if (vm.count("batch_size") < 0 and vm.count("batch_size") > static_cast<int>(generated_size) and vm.count("batch_size") > 1000)
-    //--------------------------
+    //-----------
     if (vm["epoch"].as<size_t>() < 0){
         throw std::out_of_range("Must be at least postive");
     }// end if (vm.count("epoch") < 0)
-    //--------------------------
+    //-----------
     if (vm["precision"].as<long double>() < 0){
         throw std::out_of_range("Must be at least postive");
     }// end if (vm.count("precision") < 0)

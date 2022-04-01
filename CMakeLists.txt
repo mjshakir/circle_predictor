@@ -7,16 +7,20 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
 endif()
 #------------------------------------------------------------------------------------------
-option(USE_CLANG "build application with CLang" OFF) # OFF is the default
-MESSAGE(STATUS "USE_CLANG: " ${USE_CLANG})
-#---------------
-option(USE_TTB "build application with TTB" ON) # ON is the default
-MESSAGE(STATUS "USE_TTB: " ${USE_TTB})
+function(set_with_default variable help_text type value)
+  set("${variable}" "<DEFAULT>" CACHE "${type}" "${help_text}")
+  if (${variable} STREQUAL "<DEFAULT>")
+    set("${variable}" "${value}" PARENT_SCOPE)
+  endif ()
+endfunction()
 #------------------------------------------------------------------------------------------
-if(${USE_CLANG})
-  MESSAGE(STATUS "Using CLang")
-  set(CMAKE_CXX_COMPILER /usr/bin/clang++)
-endif(${USE_CLANG})
+# option(USE_CLANG "build application with CLang" OFF) # OFF is the default
+# MESSAGE(STATUS "USE_CLANG: " ${USE_CLANG})
+#---------------
+# option(USE_TTB "build application with TTB" ON) # ON is the default
+# MESSAGE(STATUS "USE_TTB: " ${USE_TTB})
+#------------------------------------------------------------------------------------------
+set_with_default(USE_TTB "build application with TTB" BOOL ON)
 #------------------------------------------------------------------------------------------
 add_compile_options(-Wall -Wextra -Wpedantic)
 #------------------------------------------------------------------------------------------
@@ -45,7 +49,7 @@ else()
   message(STATUS "Library  - ${TORCH_LIBRARIES}")
 endif (NOT Torch_FOUND)
 #----------------------------------
-if(${USE_TTB})
+if(USE_TTB)
   #---------------
   find_package(TBB REQUIRED)
     #---------------
@@ -57,7 +61,7 @@ if(${USE_TTB})
       message(STATUS "Library  - ${TBB_LIBRARIES}")
     endif (NOT TBB_FOUND)
     #---------------
-endif(${USE_TTB})
+endif(USE_TTB)
 #----------------------------------
 LINK_DIRECTORIES( ${LIBRARYPATH} )
 #------------------------------------------------------------------------------------------
@@ -80,13 +84,13 @@ add_library(${PROJECT_NAME}_timing SHARED
   src/Timing/TimeIT.cpp
 )
 #------------------------------------------------------------------------------------------
-if(${USE_TTB})
+if(USE_TTB)
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} tbb fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES} tbb)
 else()
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES})
-endif(${USE_TTB})
+endif(USE_TTB)
 #------------------------------------------------------------------------------------------
 include_directories(
   include

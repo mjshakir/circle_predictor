@@ -39,6 +39,10 @@ set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/libfort)
 #------------------------------------------------------------------------------------------
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+#------------------------------------------------------------------------------------------
 find_package(Torch REQUIRED)
 #---------------
 if (NOT Torch_FOUND)
@@ -62,6 +66,8 @@ if(USE_TTB)
     endif (NOT TBB_FOUND)
     #---------------
 endif(USE_TTB)
+#----------------------------------
+find_package(Boost COMPONENTS program_options REQUIRED)
 #----------------------------------
 LINK_DIRECTORIES( ${LIBRARYPATH} )
 #------------------------------------------------------------------------------------------
@@ -104,6 +110,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   ${PROJECT_NAME}_data 
   ${PROJECT_NAME}_timing 
   ${TORCH_LIBRARIES}
+  ${Boost_LIBRARIES}
   )
 #------------------------------------------------------------------------------------------
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)

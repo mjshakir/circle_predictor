@@ -69,21 +69,21 @@ class NetworkHandling{
          *  @brief Train the model with a validation set. The training stop when precision is hit
          *
          *  @tparam data_loader: A torch dataloader.
-         *  @tparam data_loader_test: A torch dataloader.
+         *  @tparam data_loader_validation: A torch dataloader.
          *  @tparam optimizer:  torch::optim::Optimizer.
          *  @tparam precision:  a value that will stop the training once hit.
          * 
          *  @return vector of float
          */
-        template <typename Dataloader, typename Test_Dataloader>
+        template <typename Dataloader, typename Validation_Dataloader>
         std::vector<float> train(   Dataloader&& data_loader, 
-                                    Test_Dataloader&& data_loader_test, 
+                                    Validation_Dataloader&& data_loader_validation, 
                                     torch::optim::Optimizer& optimizer, 
                                     long double precision = 1E-2L){
             //--------------------------
-            return network_train(std::move(data_loader), std::move(data_loader_test), optimizer, precision);
+            return network_train(std::move(data_loader), std::move(data_loader_validation), optimizer, precision);
             //--------------------------
-        }// end  std::vector<float> train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, float precision = 10)
+        }// end  std::vector<float> train(Dataloader&& data_loader, Validation_Dataloader&& data_loader_validation, torch::optim::Optimizer& optimizer, float precision = 10)
         //--------------------------
         /**
          *  @brief Run a validation set on the modal
@@ -219,8 +219,8 @@ class NetworkHandling{
             //--------------------------
         }// end std::vector<float> network_train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch)
         //--------------------------
-        template <typename Dataloader, typename Test_Dataloader, typename R>
-        std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const R& precision){
+        template <typename Dataloader, typename Validation_Dataloader, typename R>
+        std::vector<float> network_train(Dataloader&& data_loader, Validation_Dataloader&& data_loader_validation, torch::optim::Optimizer& optimizer, const R& precision){
             //--------------------------
             double _element_sum{100};
             //--------------------------
@@ -260,7 +260,7 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto validation_loss = network_validation(std::move(data_loader_test));
+                auto validation_loss = network_validation(std::move(data_loader_validation));
                 //--------------------------
                 if (!validation_loss.empty()){
                     //--------------------------
@@ -300,7 +300,7 @@ class NetworkHandling{
             //--------------------------
             return Loss;
             //--------------------------
-        }// end std::vector<float> network_train(Dataloader&& data_loader, Test_Dataloader&& data_loader_test, torch::optim::Optimizer& optimizer, const R& precision)
+        }// end std::vector<float> network_train(Dataloader&& data_loader, Validation_Dataloader&& data_loader_validation, torch::optim::Optimizer& optimizer, const R& precision)
         //--------------------------
         template <typename Dataset>
         std::vector<float> network_validation(Dataset&& data_loader){

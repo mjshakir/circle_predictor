@@ -59,7 +59,7 @@ class NetworkHandling{
          *  @return vector of float
          */
         template <typename Dataloader>
-        std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch){
+        std::vector<float> train(Dataloader&& data_loader, torch::optim::Optimizer& optimizer, const size_t& epoch = 100UL){
             //--------------------------
             return network_train(std::move(data_loader), optimizer, epoch);
             //--------------------------

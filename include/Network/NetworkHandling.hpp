@@ -433,5 +433,5 @@ class NetworkHandling{
             //--------------------------
         }// end void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time)
         //--------------------------------------------------------------
-};
+};// end class NetworkHandling
 //--------------------------------------------------------------

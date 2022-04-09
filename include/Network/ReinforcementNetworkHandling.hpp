@@ -5,21 +5,26 @@
 //--------------------------------------------------------------
 #include <torch/torch.h>
 //--------------------------------------------------------------
-// User defined library  
-//--------------------------------------------------------------
-#include "NetworkHandling.hpp"
-//--------------------------------------------------------------
 
-class ReinforcementNetworkHandling : protected NetworkHandling{
+template<typename Network>
+class ReinforcementNetworkHandling{
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
-        NetworkHandling() = delete;
+        ReinforcementNetworkHandling() = delete;
         //--------------------------
-        ReinforcementNetworkHandling(Network& model, const torch::Device& device): NetworkHandling(model, device){
+        ReinforcementNetworkHandling(Network& model, const torch::Device& device){
             //--------------------------
-        }// end NetworkHandling(Network& model, torch::Device& device)
+        }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
         //--------------------------
+        ReinforcementNetworkHandling(Network&& model, const torch::Device& device){
+            //--------------------------
+        }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
+        //--------------------------
+    //--------------------------------------------------------------
+    protected:
+        //--------------------------
+
     //--------------------------------------------------------------
 };// end class ReinforcementNetworkHandling : protected NetworkHandling
 //--------------------------------------------------------------

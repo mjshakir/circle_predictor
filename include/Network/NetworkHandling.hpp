@@ -209,7 +209,7 @@ class NetworkHandling{
                                             //--------------------------
                                             std::vector<float> _loss(data_loader_size);
                                             std::copy(std::execution::par_unseq, Loss.end()-data_loader_size, Loss.end(), _loss.begin());
-                                            loss_display(_loss, _timer.get_time());
+                                            loss_display(_loss, _timer.get_time_seconds());
                                             //--------------------------
                                         });
                 //--------------------------
@@ -277,7 +277,7 @@ class NetworkHandling{
                 _learning_elements.push_back(_element_sum);
                 //--------------------------
                 auto printing_threads = std::async(std::launch::async, [&validation_loss, &_element_sum, &_timer, this](){
-                                                        loss_display(validation_loss, _element_sum, _timer.get_time());
+                                                        loss_display(validation_loss, _element_sum, _timer.get_time_seconds());
                                                     });
                 //--------------------------
                 if (_learning_elements.size() > (_training_limiter-1)){
@@ -369,7 +369,7 @@ class NetworkHandling{
         }// end bool check_learning(const std::vector<T>& elements, const R& tolerance)
         //--------------------------------------------------------------
         template <typename T, typename R>
-        void loss_display(const std::vector<T>& loss, const R& ns_time) const{
+        void loss_display(const std::vector<T>& loss, const R& run_time) const{
             //--------------------------
             double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L);
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
@@ -382,13 +382,13 @@ class NetworkHandling{
             table.set_border_style(FT_NICE_STYLE);
             //--------------------------
             table   << fort::header
-                    << "Sum Loss" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
+                    << "Sum Loss" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [s]" << fort::endr
                     << elements_sum
                     << std::distance(loss.begin(), _min_element)
                     << *_min_element
                     << std::distance(loss.begin(), _max_element)
                     << *_max_element 
-                    << ns_time << fort::endr;
+                    << run_time << fort::endr;
             //--------------------------
             // Set center alignment for the 1st and 3rd columns
             //--------------------------
@@ -402,7 +402,7 @@ class NetworkHandling{
         }// end void loss_display(const std::vector<T>& loss, const R& ns_time)
         //--------------------------------------------------------------
         template <typename T, typename D, typename R>
-        void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time) const{
+        void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& run_time) const{
             //--------------------------
             auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
             auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
@@ -414,13 +414,13 @@ class NetworkHandling{
             table.set_border_style(FT_NICE_STYLE);
             //--------------------------
             table   << fort::header
-                    << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [ns]" << fort::endr
+                    << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [s]" << fort::endr
                     << elements_sum
                     << std::distance(loss.begin(), _min_element)
                     << *_min_element
                     << std::distance(loss.begin(), _max_element)
                     << *_max_element 
-                    << ns_time << fort::endr;
+                    << run_time << fort::endr;
             //--------------------------
             // Set center alignment for the 1st and 3rd columns
             //--------------------------

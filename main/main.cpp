@@ -232,7 +232,7 @@ int main(int argc, char const *argv[]){
     table.column(4).set_cell_text_align(fort::text_align::center);
     //--------------------------
     table   << fort::header
-            << "Target" << "Output" << "Target Origial" << "Output origial" << "Loss" << fort::endr;
+            << "Target" << "Output" << "Target Original" << "Output original" << "Loss" << fort::endr;
     //--------------------------------------------------------------
     // File pointer
     //--------------------------

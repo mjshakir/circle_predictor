@@ -29,8 +29,8 @@ Timing::~Timing(){
     //--------------------------
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - m_start);
     //--------------------------
-    printf(ANSI_COLOR_GREEN "%s" ANSI_COLOR_RESET " Execution time: [" ANSI_COLOR_RED "%ld " ANSI_COLOR_RESET "nS]\n", 
-            m_function_name.c_str(), duration.count());
+    printf(ANSI_COLOR_GREEN "%s" ANSI_COLOR_RESET " Execution time: [" ANSI_COLOR_RED "%f " ANSI_COLOR_RESET "S]\n", 
+            m_function_name.c_str(), duration.count()/CONVERT_NANO);
     //--------------------------
 }// end Timing::~Timing()
 //--------------------------------------------------------------

@@ -37,5 +37,8 @@ class Timing{
         std::string m_function_name;
         //--------------------------
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
+        //--------------------------  
+        // May move this into its own header file
+        const double CONVERT_NANO = 1e9;
     //--------------------------------------------------------------
 };

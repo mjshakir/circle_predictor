@@ -14,13 +14,20 @@ class TimeIT{
         TimeIT();
         //--------------------------
         uint64_t get_time(void) const;
+        //--------------------------
+        double get_time_seconds(void) const;
         //--------------------------------------------------------------
     protected:
         //--------------------------
         uint64_t nanoseconds_time(void) const;
+        
         //--------------------------------------------------------------
     private:
         //--------------------------
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
+        //--------------------------  
+        // May move this into its own header file
+        const double CONVERT_NANO = 1e9;
     //--------------------------------------------------------------
+
 };

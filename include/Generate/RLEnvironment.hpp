@@ -21,7 +21,7 @@ class RLEnvironment{
         template<typename Functions>
         void set_cost_function(Functions& function){
             //--------------------------
-            m_CostFunction = std::bind(&function, this, std::placeholders::_1, std::placeholders::_2);;
+            m_CostFunction = function(std::forward(Args...));
             //--------------------------
         }// end void set_cost_function(Functions&& function);
         //--------------------------------------------------------------

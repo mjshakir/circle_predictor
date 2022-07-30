@@ -31,6 +31,16 @@ Generate::Generate(const double& radius, const size_t& generated_points, const s
     //--------------------------
 }// end Generate::Generate(const double& radius, const size_t& generated_points)
 //--------------------------------------------------------------
+Generate::Generate(double&& radius, size_t&& generated_points, std::tuple<double, double>&& center) 
+                    :   m_radius(std::move(radius)), 
+                        m_generated_points((generated_points < 200) ? 200 : std::move(generated_points)),
+                        m_center(std::move(center)){
+    //--------------------------
+    full_data = generate_value(radius);
+    validation_data = generate_validation_value(radius);
+    //--------------------------
+}// end Generate::Generate(const double& radius, const size_t& generated_points)
+//--------------------------------------------------------------
 torch::Tensor Generate::get_input(void){
     //--------------------------
     return m_x_value;

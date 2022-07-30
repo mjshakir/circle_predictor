@@ -31,6 +31,16 @@ class Generate{
         Generate(const torch::Tensor& x_value, const double& radius = 1, const size_t& generated_points = 60000, const std::tuple<double, double>& center = {0,0});
         //--------------------------
         /**
+         *  @brief A constructor. Generate Y points given an X point.  
+         *
+         *  @tparam x_value: the x point of the circle.
+         *  @tparam radius: circle raduis default value = 1.
+         *  @tparam generated_points: How many points to generate
+         *  @tparam center: points of the circle. 
+         */
+        Generate(torch::Tensor&& x_value, double&& radius = 1, size_t&& generated_points = 60000, std::tuple<double, double>&& center = {0,0});
+        //--------------------------
+        /**
          *  @brief Getter: the network input data set.  
          *
          *  @return x_value: input data tensor. 

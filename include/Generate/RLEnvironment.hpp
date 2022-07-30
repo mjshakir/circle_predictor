@@ -7,20 +7,21 @@
 //--------------------------------------------------------------
 #include "Generate/Generate.hpp"
 //--------------------------------------------------------------
-template<typename INPUT, typename COST_OUTPUT, typename ...Args>
+// template<typename INPUT, typename COST_OUTPUT, typename ...Args>
+template<typename COST_OUTPUT, typename ...Args>
 class RLEnvironment{
     //--------------------------------------------------------------
     public:
         //--------------------------
-        RLEnvironment(void) = delete;
+        // RLEnvironment(void) = delete;
         //--------------------------
-        RLEnvironment(const INPUT& input) : m_input(input){
-            //--------------------------
-        }// end RLEnvironment(const INPUT& input) : m_input(input)
+        // RLEnvironment(const INPUT& input) : m_input(input){
+        //     //--------------------------
+        // }// end RLEnvironment(const INPUT& input) : m_input(input)
         //--------------------------
-        RLEnvironment(INPUT&& input) : m_input(std::move(input)){
-            //--------------------------
-        }// end RLEnvironment(const INPUT& input) : m_input(input)
+        // RLEnvironment(INPUT&& input) : m_input(std::move(input)){
+        //     //--------------------------
+        // }// end RLEnvironment(const INPUT& input) : m_input(input)
         //--------------------------
         template<typename Functions>
         void set_cost_function(Functions& function){
@@ -45,7 +46,7 @@ class RLEnvironment{
         //--------------------------
     private:
         //--------------------------
-        INPUT m_input;
+        // INPUT m_input;
         std::function<COST_OUTPUT(Args...)> m_CostFunction = nullptr;
         //--------------------------
     //--------------------------------------------------------------

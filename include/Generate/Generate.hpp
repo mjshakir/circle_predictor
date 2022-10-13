@@ -87,13 +87,13 @@ class Generate{
         //--------------------------------------------------------------
         // Functions
         //--------------------------
-        const std::tuple<torch::Tensor, torch::Tensor> generate_value(const double& radius);
+        const std::tuple<torch::Tensor, torch::Tensor> generate_value(void);
         //--------------------------
-        const std::tuple<torch::Tensor, torch::Tensor> generate_validation_value(const double& radius);
+        const std::tuple<torch::Tensor, torch::Tensor> generate_validation_value(void);
         //--------------------------
-        const torch::Tensor generate_value(const torch::Tensor& x_value, const double& radius);
+        const torch::Tensor generate_value(const torch::Tensor& x_value);
         //--------------------------
-        const std::vector<double> generate_value(const std::vector<double>& x_value, const double& radius);
+        const std::vector<double> generate_value(const std::vector<double>& x_value);
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------

@@ -45,14 +45,12 @@ class RLEnvironment : protected Generate{
             return [=](Args... args){ return (instance.*func)(args...); };
         }// end std::function<COST_OUTPUT(Args...)> objectBind(R (C::* func)(Args...), C& instance)
         //--------------------------------------------------------------
-        double internal_cost_function(const double& input, const double& predicted_value);
-        //--------------------------------------------------------------
-        double internal_reward_function(void);
+        const double internal_reward_function(const torch::Tensor& real_value, const torch::Tensor& predicted_value, const long double& tolerance = 5E-2);
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
         INPUT m_input;
-        std::vector<double> m_input_data, m_output_data;
+        std::vector<double> m_output_data;
         std::function<COST_OUTPUT(Args...)> m_CostFunction = nullptr;
         //--------------------------
     //--------------------------------------------------------------

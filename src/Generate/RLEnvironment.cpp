@@ -7,17 +7,17 @@ RLEnvironment::RLEnvironment(   const double& radius,
                                 const size_t& generated_points, 
                                 const std::tuple<double, double>& center) : Generate(std::move(radius), std::move(generated_points), std::move(center)){
     //--------------------------
-    [input, output] = get_data();
-    m_input_data = input.accessor<float, 2>();
-    m_output_data = output.accessor<float, 2>();
-    //--------------------------
 }// end RLEnvironment::RLEnvironment(const double& radius, const size_t& generated_points, const std::tuple<double, double>& center)
 //--------------------------------------------------------------
-double RLEnvironment::internal_cost_function(const double& input, const double& predicted_value){
-    return predicted_value - get_target();
-}// end double RLEnvironment::internal_cost_function(const torch::Tensor& predicted_value)
-//--------------------------------------------------------------
-double RLEnvironment::internal_reward_function(void){
-    
+const double RLEnvironment::internal_reward_function(const torch::Tensor& real_value, const torch::Tensor& predicted_value, const long double& tolerance){
+    //--------------------------
+    auto _difference = torch::abs(real_value - predicted_value) / ((real_value >= predicted_value) ? real_value : predicted_value);
+    //--------------------------
+    if(_difference > tolerance){
+        return _difference*10;
+    }
+    //--------------------------
+    return 100.f;
+    //--------------------------
 }// end double RLEnvironment::internal_reward_function(void)
 //--------------------------------------------------------------

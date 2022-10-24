@@ -31,16 +31,6 @@ Generate::Generate(const double& radius, const size_t& generated_points, const s
     //--------------------------
 }// end Generate::Generate(const double& radius, const size_t& generated_points)
 //--------------------------------------------------------------
-Generate::Generate(double&& radius, size_t&& generated_points, std::tuple<double, double>&& center) 
-                    :   m_radius(std::move(radius)), 
-                        m_generated_points((generated_points < 200) ? 200 : std::move(generated_points)),
-                        m_center(std::move(center)){
-    //--------------------------
-    full_data = generate_value();
-    validation_data = generate_validation_value();
-    //--------------------------
-}// end Generate::Generate(const double& radius, const size_t& generated_points)
-//--------------------------------------------------------------
 torch::Tensor Generate::get_input(void){
     //--------------------------
     return m_x_value;
@@ -128,7 +118,7 @@ const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_value(void){
     } // end for (size_t i = 0; i < m_generated_points; ++i)
     //--------------------------
     m_x_value = torch::tensor(x_location);
-    auto _target = generate_value(x_location, m_radius);
+    auto _target = generate_value(x_location);
     y_value = torch::transpose(torch::cat({torch::tensor(_target), (2*std::get<1>(m_center))-torch::tensor(_target)}).view({2,-1}), 0, 1);
     //--------------------------
     // std::cout << "m_x_value: \n" << m_x_value << " y_value: \n" << y_value << std::endl;
@@ -157,7 +147,7 @@ const std::tuple<torch::Tensor, torch::Tensor> Generate::generate_validation_val
     //--------------------------
     auto _test_input = torch::tensor(x_location);
     //--------------------------
-    auto _target = generate_value(x_location, m_radius);
+    auto _target = generate_value(x_location);
     auto _test_target = torch::transpose(torch::cat({torch::tensor(_target), (2*std::get<1>(m_center))-torch::tensor(_target)}).view({2,-1}), 0, 1);
     //--------------------------
     return {_test_input, _test_target};

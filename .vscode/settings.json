@@ -78,5 +78,6 @@
         "semaphore": "cpp",
         "strstream": "cpp"
     },
-    "C_Cpp.errorSquiggles": "Disabled"
+    // "C_Cpp.errorSquiggles": "Disabled",
+    "cmake.configureOnOpen": true
 }

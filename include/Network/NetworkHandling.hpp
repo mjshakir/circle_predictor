@@ -250,12 +250,12 @@ class NetworkHandling{
                     bar.update();
                     //------------
                     Loss.push_back(network_train_batch(std::move(batch), optimizer, &tensorIsNan));
-                        //--------------------------
-                        if(tensorIsNan){
-                            std::cout << "\n\x1b[33m\033[1mTensor is [nan]\033[0m\x1b[0m" << std::endl;
-                            break;
-                        }// end if(tensorIsNan)
-                        //--------------------------
+                    //--------------------------
+                    if(tensorIsNan){
+                        std::cout << "\n\x1b[33m\033[1mTensor is [nan]\033[0m\x1b[0m" << std::endl;
+                        break;
+                    }// end if(tensorIsNan)
+                    //--------------------------
                 }// end for (const auto& batch : *data_loader)
                 //--------------------------
                 _scheduler.step();

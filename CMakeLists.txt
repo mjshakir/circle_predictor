@@ -83,6 +83,7 @@ add_library(${PROJECT_NAME}_network SHARED
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_data SHARED
   src/Generate/Generate.cpp
+  src/Generate/RLEnvironment.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_timing SHARED

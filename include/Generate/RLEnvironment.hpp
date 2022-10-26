@@ -5,37 +5,36 @@
 //--------------------------------------------------------------
 #include <torch/torch.h>
 //--------------------------------------------------------------
-// User Defined library
-//--------------------------------------------------------------
-#include "Generate/Generate.hpp"
-//--------------------------------------------------------------
 // template<typename INPUT, typename COST_OUTPUT, typename ...Args>
-class RLEnvironment : protected Generate{
+template<typename COST_OUTPUT, typename C, typename... Args>
+class RLEnvironment{
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
         RLEnvironment(void) = delete;
         //--------------------------
-        // RLEnvironment(const INPUT& input) : m_input(input){
-        //     //--------------------------
-        // }// end RLEnvironment(const INPUT& input) : m_input(input)
+        template<typename Dataset>
+        RLEnvironment(Dataset&& data_loader){
+            //--------------------------
+            for (const auto& batch : *data_loader){
+                //--------------------------
+                auto input_data = batch.data, target_data = batch.target;
+                //--------------------------
+                _full_data.push_back({input_data, target_data});
+                //--------------------------
+            } //for (const auto& batch : *data_loader)
+            //--------------------------
+            m_iter = _full_data.begin();
+            m_iter_end = _full_data.end();
+            //--------------------------
+        }// end RLEnvironment(Dataset&& data_loader)
         //--------------------------
-        // RLEnvironment(INPUT&& input) : m_input(std::move(input)){
-        //     //--------------------------
-        // }// end RLEnvironment(const INPUT& input) : m_input(input)
-        //--------------------------
-        RLEnvironment(  const double& radius = 1, 
-                        const size_t& generated_points = 60000, 
-                        const std::tuple<double, double>& center = {0,0}, 
-                        const size_t& batch_size = 20U);
-        //--------------------------
-        // template<typename Functions>
-        // void set_cost_function(Functions& function){
-        //     //--------------------------
-        //     // m_CostFunction = function(std::forward(Args...));
-        //     m_CostFunction = object_bind(&function, this);
-        //     //--------------------------
-        // }// end void set_cost_function(Functions&& function);
+        template<typename Functions>
+        void set_reward_function(Functions& function){
+            //--------------------------
+            m_CostFunction = object_bind(&function, this);
+            //--------------------------
+        }// end void set_reward_function(Functions&& function);
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -43,29 +42,43 @@ class RLEnvironment : protected Generate{
         std::function<R(Args...)> objectBind(R (C::* func)(Args...), C& instance) {
             return [=](Args... args){ return (instance.*func)(args...); };
         }// end std::function<R(Args...)> objectBind(R (C::* func)(Args...), C& instance) 
-        From: https://stackoverflow.com/questions/14803112/short-way-to-stdbind-member-function-to-object-instance-without-binding-param */
+        From: https://stackoverflow.com/questions/14803112/short-way-to-stdbind-member-function-to-object-instance-without-binding-param 
+        and https://stackoverflow.com/questions/70355767/binding-a-class-method-to-a-method-of-another-class */
         //--------------------------------------------------------------
         // template<typename C>
         // std::function<COST_OUTPUT(Args...)> object_bind(COST_OUTPUT (C::* func)(Args...), C& instance){
         //     return [=](Args... args){ return (instance.*func)(args...); };
         // }// end std::function<COST_OUTPUT(Args...)> objectBind(R (C::* func)(Args...), C& instance)
         //--------------------------
-        double internal_reward_function(const torch::Tensor& real_value, const torch::Tensor& predicted_value, const long double& tolerance = 5E-2) const;
+        std::function<COST_OUTPUT(Args...)> objectBind(COST_OUTPUT (C::* func)(Args...), C& instance) {
+            return [=](Args... args){ return (instance.*func)(args...); };
+        }// end std::function<COST_OUTPUT(Args...)> objectBind(COST_OUTPUT (C::* func)(Args...), C& instance)
         //--------------------------
-        /**
-         *  @brief This is a way to step through the problem
-         *
-         *  @tparam predicted_value: A torch Tensor represeting the actions .
-         *  @return A tuple of New states as torch tensor and the reward as a double
-         */
-        std::tuple<torch::Tensor, double, bool> internal_step_function(const torch::Tensor& actions, const long double& tolerance = 5E-2);
+        std::tuple<torch::Tensor, COST_OUTPUT, bool> internal_step(Args... args){
+            //--------------------------
+            auto [_input, _target] = *m_iter;
+            //--------------------------
+            auto _reward = m_CostFunction(args...);
+            //--------------------------
+            if(m_iter == m_iter_end){
+                //--------------------------
+                return {_input, _reward, true};
+                //--------------------------
+            }// if(m_iter.end())
+            //--------------------------
+            ++m_iter;
+            //--------------------------
+            return {_input, _reward, false};
+            //--------------------------
+        }// end void internal_step(const ACTION& actions)
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
-        // INPUT m_input;
+        Dataset m_data_loader;
+        //--------------------------
         std::vector<std::tuple<torch::Tensor, torch::Tensor>>::iterator m_iter, m_iter_end;
-        std::vector<double> m_output_data;
-        // std::function<COST_OUTPUT(Args...)> m_CostFunction = nullptr;
+        //--------------------------
+        std::function<COST_OUTPUT(Args...)> m_CostFunction = nullptr;
         //--------------------------
     //--------------------------------------------------------------
 };// end class RLEnvironment

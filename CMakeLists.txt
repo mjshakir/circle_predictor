@@ -92,12 +92,21 @@ add_library(${PROJECT_NAME}_timing SHARED
   src/Timing/TimeIT.cpp
 )
 #------------------------------------------------------------------------------------------
+# RL Library
+#----------------------------------
+add_library(${PROJECT_NAME}_rl_data SHARED
+  src/Generate/RLGenerate.cpp
+  src/Generate/RLEnvironment.cpp
+)
+#------------------------------------------------------------------------------------------
 if(USE_TTB)
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} tbb fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES} tbb)
+  target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES} tbb)
 else()
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES})
 endif(USE_TTB)
 #------------------------------------------------------------------------------------------
 include_directories(
@@ -110,7 +119,8 @@ add_executable(${PROJECT_NAME} main/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE
   ${PROJECT_NAME}_network 
   ${PROJECT_NAME}_data 
-  ${PROJECT_NAME}_timing 
+  ${PROJECT_NAME}_timing
+  ${PROJECT_NAME}_rl_data 
   ${TORCH_LIBRARIES}
   ${Boost_LIBRARIES}
   )

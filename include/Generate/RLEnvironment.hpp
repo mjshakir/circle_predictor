@@ -1,7 +1,8 @@
 #pragma once
 //--------------------------------------------------------------
 /* From: https://stackoverflow.com/questions/14803112/short-way-to-stdbind-member-function-to-object-instance-without-binding-param 
-    and https://stackoverflow.com/questions/70355767/binding-a-class-method-to-a-method-of-another-class */
+    and https://stackoverflow.com/questions/70355767/binding-a-class-method-to-a-method-of-another-class 
+    and https://stackoverflow.com/questions/28746744/passing-capturing-lambda-as-function-pointer */
 //--------------------------------------------------------------
 // LibTorch library
 //--------------------------------------------------------------
@@ -16,7 +17,10 @@ class RLEnvironment{
         //--------------------------------------------------------------
         RLEnvironment(void) = delete;
         //--------------------------
-        RLEnvironment(std::vector<T>& data) : m_data_iter(data.begin()), m_data_iter_end(data.end()) {
+        using CostFunction = std::function<COST_OUTPUT(Args...)>;
+        RLEnvironment(std::vector<T>& data, CostFunction costFunction) :    m_data_iter(data.begin()), 
+                                                                            m_data_iter_end(data.end()), 
+                                                                            m_CostFunction(std::move(costFunction)){
             //----------------------------
         }// end RLEnvironment(Dataset&& data_loader)
         //--------------------------
@@ -27,12 +31,12 @@ class RLEnvironment{
         //     //--------------------------
         // }// end void set_reward_function(Functions&& function);
         //--------------------------
-        template<typename FUNCTION>
-        void set_reward_function(COST_OUTPUT (FUNCTION::*fun) (Args...), FUNCTION *t){
-            //--------------------------
-            m_CostFunction = [t, fun](Args... args){ return (t->*fun) (args...); };
-            //--------------------------
-        }// end void set_reward_function(Functions&& function);
+        // template<typename FUNCTION>
+        // void set_reward_function(COST_OUTPUT (FUNCTION::*fun) (Args...), FUNCTION *t){
+        //     //--------------------------
+        //     m_CostFunction = [t, fun](Args... args){ return (t->*fun) (args...); };
+        //     //--------------------------
+        // }// end void set_reward_function(Functions&& function);
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -74,7 +78,11 @@ class RLEnvironment{
         //--------------------------------------------------------------
         typename std::vector<T>::iterator m_data_iter, m_data_iter_end;
         //--------------------------
-        std::function<COST_OUTPUT(Args...)> m_CostFunction = nullptr; 
+        // std::function<COST_OUTPUT(Args...)> m_CostFunction = nullptr;
+        //-------------------------- 
+        // using CostFunction = std::function<COST_OUTPUT(Args...)>;
+        // CostFunction m_CostFunction(Args...);
+        CostFunction m_CostFunction;
     //--------------------------------------------------------------
 };// end class RLEnvironment
 //--------------------------------------------------------------

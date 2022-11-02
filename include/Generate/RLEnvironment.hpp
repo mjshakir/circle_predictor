@@ -8,7 +8,7 @@
 #include <torch/torch.h>
 //--------------------------------------------------------------
 // template<typename COST_OUTPUT, typename C, typename... Args>
-template<typename Dataset, typename COST_OUTPUT, typename... Args>
+template<typename T, typename COST_OUTPUT, typename... Args>
 
 class RLEnvironment{
     //--------------------------------------------------------------
@@ -16,7 +16,7 @@ class RLEnvironment{
         //--------------------------------------------------------------
         RLEnvironment(void) = delete;
         //--------------------------
-        RLEnvironment(Dataset&& data_loader) : m_data_loader(std::move{data_loader}){
+        RLEnvironment(std::vector<T>& data) : m_data_iter(data.begin()), m_data_iter_end(data.end()) {
             //----------------------------
         }// end RLEnvironment(Dataset&& data_loader)
         //--------------------------
@@ -28,7 +28,7 @@ class RLEnvironment{
         // }// end void set_reward_function(Functions&& function);
         //--------------------------
         template<typename FUNCTION>
-        void set_reward_function(COST_OUTPUT (FUNCTION::*fun) (), FUNCTION *t){
+        void set_reward_function(COST_OUTPUT (FUNCTION::*fun) (Args...), FUNCTION *t){
             //--------------------------
             m_CostFunction = [t, fun](Args... args){ return (t->*fun) (args...); };
             //--------------------------
@@ -54,25 +54,25 @@ class RLEnvironment{
         //--------------------------
         std::tuple<torch::Tensor, COST_OUTPUT, bool> internal_step(Args... args){
             //--------------------------
-            auto input = m_data_loader->data;
+            T _input = *m_data_iter;
             //--------------------------
             auto _reward = m_CostFunction(args...);
             //--------------------------
-            if(m_data_loader == m_data_loader->end()){
+            if(m_data_iter == m_data_iter_end){
                 //--------------------------
-                return {_input, _reward, true};
+                return {torch::tensor(_input), _reward, true};
                 //--------------------------
             }// if(m_iter.end())
             //--------------------------
-            ++m_data_loader;
+            ++m_data_iter;
             //--------------------------
-            return {_input, _reward, false};
+            return {torch::tensor(_input), _reward, false};
             //--------------------------
         }// end void internal_step(const ACTION& actions)
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
-        Dataset m_data_loader;
+        typename std::vector<T>::iterator m_data_iter, m_data_iter_end;
         //--------------------------
         std::function<COST_OUTPUT(Args...)> m_CostFunction = nullptr; 
     //--------------------------------------------------------------

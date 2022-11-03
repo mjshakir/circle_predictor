@@ -3,98 +3,64 @@
 //--------------------------------------------------------------
 #include "Generate/RLGenerate.hpp"
 //--------------------------------------------------------------
-// Standard cpp library
+// Standard library
 //--------------------------------------------------------------
-#include <algorithm>
-#include <execution>
+#include <random>
 //--------------------------------------------------------------
-// User Defined library
+RLGenerate::RLGenerate(const size_t& generated_points, const double& limiter) : m_generated_points(generated_points), m_limiter(limiter) {
+    //--------------------------
+    m_data = generate_value();
+    //--------------------------
+}// end RLGenerate::RLGenerate(const size_t& generated_points)
 //--------------------------------------------------------------
-#include "Network/Normalize.hpp"
-#include "Network/DataLoader.hpp"
+std::vector<torch::Tensor> RLGenerate::get_data(void){
+    //--------------------------
+    return m_data;
+    //--------------------------
+}// end torch::Tensor RLGenerate::get_data(void)
 //--------------------------------------------------------------
-// Boost library
-//--------------------------------------------------------------
-// #include <boost/generator_iterator.hpp> // https://www.boost.org/doc/libs/1_62_0/libs/utility/generator_iterator.htm
-//--------------------------------------------------------------
-RLGenerate::RLGenerate( const double& radius, 
-                        const size_t& generated_points, 
-                        const std::tuple<double, double>& center,
-                        const size_t& batch_size) : Generate(std::move(radius), std::move(generated_points), std::move(center)){
+std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& column){
     //--------------------------
-    auto [_input, _output] = get_data();
+    // https://stackoverflow.com/questions/66396651/what-is-the-most-efficient-way-of-converting-a-stdvectorstdtuple-to-a-to
     //--------------------------
-    // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
-    // batches into a single tensor.
-    // auto data_set = DataLoader(std::move(std::get<0>(data)), std::move(std::get<1>(data))).map(torch::data::transforms::Normalize<>(0.5, 0.25)).map(torch::data::transforms::Stack<>());
+    std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
+    std::uniform_real_distribution<double> uniform_angle(-m_limiter, m_limiter);
+    std::default_random_engine re;
     //--------------------------
-    auto data_set = DataLoader( Normalize::normalization(_input), 
-                                Normalize::normalization(_output)).map(torch::data::transforms::Stack<>());
+    // std::vector<std::tuple<double, std::tuple<double, double>>> _data;
+    // _data.reserve(m_generated_points);
+    std::vector<torch::Tensor> _data;
+    _data.reserve(m_generated_points);
     //--------------------------
-    // Generate a data loader.
+    std::vector<double> _temp;
+    _temp.reserve(3);
     //--------------------------
-    auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
-                                                                                            torch::data::DataLoaderOptions(batch_size));
-    //--------------------------
-    auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
-    //--------------------------
-    std::vector<std::tuple<torch::Tensor, torch::Tensor>> _full_data;
-    _full_data.reserve(data_loader_size);
-    //--------------------------
-    for (const auto& batch : *data_loader){
+    for (size_t i = 0; i < m_generated_points; ++i){
         //--------------------------
-        auto input_data = batch.data, target_data = batch.target;
+        // std::cout << "tensor generation: " << std::endl;
+        // _data.emplace_back(torch::transpose(torch::cat({torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re))}).view({3,-1}), 0, 1));
+        // auto _radius = uniform_angle(re);
+        // auto _center_x = uniform_angle(re);
+        // auto _center_y = uniform_angle(re);
+        // auto _temp = torch::cat({torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re))});
+        
+        for (size_t i = 0; i < column; ++i){ // end batch
+            //--------------------------
+            _temp.push_back(uniform_angle(re));
+            //--------------------------
+        }// end for (size_t i = 0; i < 20; ++i)
         //--------------------------
-        _full_data.push_back({input_data, target_data});
+        // _data.push_back(torch::transpose(torch::cat({torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re))}).view({-1,3}), 0, 1));
         //--------------------------
-    } //for (const auto& batch : *data_loader)
-    //--------------------------
-    m_iter = _full_data.begin();
-    m_iter_end = _full_data.end();
-    //--------------------------
-}// end RLGenerate::RLGenerate(const double& radius, const size_t& generated_points, const std::tuple<double, double>& center)
-//--------------------------------------------------------------
-double RLGenerate::internal_reward_function(const torch::Tensor& real_value, const torch::Tensor& predicted_value, const long double& tolerance) const{
-    //--------------------------
-    auto _real_value_temp = real_value.cpu();
-    auto _real_value = _real_value_temp.accessor<float, 2>();
-    auto _predicted_value_temp = predicted_value.cpu();
-    auto _predicted_value = _predicted_value_temp.accessor<float, 2>();
-    //--------------------------
-    std::vector<double> _difference;
-    _difference.reserve(_real_value.size(0));
-    //--------------------------
-    for(int64_t i = 0; i < _real_value.size(0); ++i){
-        for(int64_t j = 0; i < _real_value.size(1); ++j){
-            _difference.push_back(std::abs(_real_value[i][j] - _predicted_value[i][j]) / ((_real_value[i][j] >= _predicted_value[i][j]) ? _real_value[i][j] : _predicted_value[i][j]));
-        }// for(int64_t j = 0; i < _real_value.size(1); ++j)
-    }// for(int64_t i = 0; i < _real_value.size(0); ++i)
-    //--------------------------
-    double average_difference = std::reduce(std::execution::par_unseq, _difference.begin(), _difference.end(), 0.L) / _difference.size();
-    //--------------------------
-    if(average_difference > tolerance){
-        return average_difference*10;
-    }
-    //--------------------------
-    return 100.f;
-    //--------------------------
-}// end double RLGenerate::internal_reward_function(void)
-//--------------------------------------------------------------
-std::tuple<torch::Tensor, double, bool> RLGenerate::internal_step_function(const torch::Tensor& actions, const long double& tolerance){
-    //--------------------------
-    auto [_input, _target] = *m_iter;
-    //--------------------------
-    auto _reward = internal_reward_function(_target, actions, tolerance);
-    //--------------------------
-    if(m_iter == m_iter_end){
+        auto _data_temp = torch::tensor(_temp);
+        _temp.clear();
         //--------------------------
-        return {_input, _reward, true};
+        _data.push_back(_data_temp.view({-1,3}));
         //--------------------------
-    }// if(m_iter.end())
+    }// end for (size_t i = 0; i < m_generated_points; i++)
     //--------------------------
-    ++m_iter;
+    return _data;
     //--------------------------
-    return {_input, _reward, false};
-    //--------------------------
-}// end std::vector<std::tuple<torch::Tensor, double>> RLGenerate::internal_step_function()
+}// end torch::Tensor RLGenerate::generate_value(void)
 //--------------------------------------------------------------

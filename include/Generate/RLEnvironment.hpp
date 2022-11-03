@@ -16,7 +16,7 @@ class RLEnvironment{
         //--------------------------------------------------------------
         RLEnvironment(void) = delete;
         //--------------------------
-        RLEnvironment(std::vector<T>&& data, std::function<COST_OUTPUT(Args...)> costFunction) :    m_data(std::move(data)),
+        RLEnvironment(std::vector<T>&& data, std::function<COST_OUTPUT(Args&...)> costFunction) :    m_data(std::move(data)),
                                                                                                     m_data_iter (m_data.begin()), 
                                                                                                     m_CostFunction(std::move(costFunction)){
             //----------------------------
@@ -65,7 +65,7 @@ class RLEnvironment{
         std::vector<T> m_data;
         typename std::vector<T>::iterator m_data_iter;
         //--------------------------
-        std::function<COST_OUTPUT(Args...)> m_CostFunction;
+        std::function<COST_OUTPUT(Args&...)> m_CostFunction;
     //--------------------------------------------------------------
 };// end class RLEnvironment
 //--------------------------------------------------------------

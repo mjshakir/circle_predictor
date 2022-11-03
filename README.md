@@ -21,6 +21,8 @@ git clone https://github.com/mjshakir/circle_predictor.git --recurse-submodules
 - Unziping 
 ```
 sudo apt-get install -y unzip 
+```
+```
 unzip path/to/libtorch.zip
 ```
 - Copy ```libtorch``` to the project folder 
@@ -38,39 +40,43 @@ circle_predictor/
 └── src
 ``` 
 ## Build
-- Create a build folder 
+- Install ```boost``` development and ```TTB``` development:
 ```
-~/path/to/circle_predictor/; mkdir build; cd build
+sudo apt-get install -y libboost-all-dev libtbb-dev
 ```
 - Get Ninja: 
 ```
 sudo apt-get install -y ninja-build
 ```
 ### Build Ninja
+- Enter the project path
+```
+cd ~/path/to/circle_predictor/
+```
 - Build Ninja: 
 ```
-cmake -DCMAKE_BUILD_TYPE=release .. -G Ninja
+cmake -DCMAKE_BUILD_TYPE=release -B build -G Ninja
 ```
   - Build Ninja using ```CLang```:
 ```
-cmake -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=release .. -G Ninja
+cmake -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=release -B build  -G Ninja
 ```  
 - Build the project: 
 ```
-ninja
+cd build/; ninja
 ```
 ### TTB issue
 - Build Ninja: 
 ```
-cmake -DUSE_TTB=OFF -DCMAKE_BUILD_TYPE=release .. -G Ninja
+cmake -DUSE_TTB=OFF -DCMAKE_BUILD_TYPE=release -B build  -G Ninja
 ```
   - Build Ninja using ```CLang```:
 ```
-cmake -DUSE_TTB=OFF -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=release .. -G Ninja
+cmake -DUSE_TTB=OFF -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=release -B build  -G Ninja
 ```  
 - Build the project: 
 ```
-ninja
+cd build/; ninja
 ```
 # Run the program
 - Run: (*Reminder: be in ```~/path/to/circle_predictor/build/```*) 

@@ -28,8 +28,6 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& column){
     std::uniform_real_distribution<double> uniform_angle(-m_limiter, m_limiter);
     std::default_random_engine re;
     //--------------------------
-    // std::vector<std::tuple<double, std::tuple<double, double>>> _data;
-    // _data.reserve(m_generated_points);
     std::vector<torch::Tensor> _data;
     _data.reserve(m_generated_points);
     //--------------------------
@@ -38,27 +36,19 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& column){
     //--------------------------
     for (size_t i = 0; i < m_generated_points; ++i){
         //--------------------------
-        // std::cout << "tensor generation: " << std::endl;
-        // _data.emplace_back(torch::transpose(torch::cat({torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re))}).view({3,-1}), 0, 1));
-        // auto _radius = uniform_angle(re);
-        // auto _center_x = uniform_angle(re);
-        // auto _center_y = uniform_angle(re);
-        // auto _temp = torch::cat({torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re))});
-        
         for (size_t i = 0; i < column; ++i){ // end batch
             //--------------------------
             _temp.push_back(uniform_angle(re));
             //--------------------------
-        }// end for (size_t i = 0; i < 20; ++i)
+        }// end for (size_t i = 0; i < column; ++i)
         //--------------------------
         // _data.push_back(torch::transpose(torch::cat({torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re))}).view({-1,3}), 0, 1));
         //--------------------------
-        auto _data_temp = torch::tensor(_temp);
+        _data.push_back(torch::tensor(_temp).view({-1,3}));
+        //--------------------------
         _temp.clear();
         //--------------------------
-        _data.push_back(_data_temp.view({-1,3}));
-        //--------------------------
-    }// end for (size_t i = 0; i < m_generated_points; i++)
+    }// end for (size_t i = 0; i < m_generated_points; ++i)
     //--------------------------
     return _data;
     //--------------------------

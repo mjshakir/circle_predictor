@@ -43,7 +43,7 @@ int main(void){
     while(!_done){
         //--------------------------
         // std::cout << "loop: " << std::endl;
-        const auto [input, reward, done] = _environment.step(10.f);
+        const auto [input, reward, done] = _environment.step(rand());
         //--------------------------
         _done = done;
         //--------------------------

@@ -50,7 +50,7 @@ class RLEnvironment{
                 //--------------------------
             }// end auto _reward = m_CostFunction(args...)
             //--------------------------
-            if(m_data_iter != m_data.end()){
+            if(m_data_iter != m_data.end()-1){
                 //--------------------------
                 ++m_data_iter;
                 //--------------------------

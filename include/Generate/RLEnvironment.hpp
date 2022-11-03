@@ -18,7 +18,7 @@ class RLEnvironment{
         //--------------------------
         RLEnvironment(std::vector<T>&& data, std::function<COST_OUTPUT(Args...)> costFunction) :    m_data(std::move(data)),
                                                                                                     m_data_iter (m_data.begin()), 
-                                                                                                    m_CostFunction(costFunction){
+                                                                                                    m_CostFunction(std::move(costFunction)){
             //----------------------------
         }// end RLEnvironment(Dataset&& data_loader)
         //--------------------------
@@ -32,23 +32,23 @@ class RLEnvironment{
         //--------------------------------------------------------------
         std::tuple<torch::Tensor, COST_OUTPUT, bool> internal_step(Args... args){
             //--------------------------
-            auto _reward = m_CostFunction(args...);
-            //--------------------------
-            if(m_data_iter == m_data.end()-1){
-                //--------------------------
-                return {*m_data_iter, _reward, true};
-                //--------------------------
-            }// if(m_data_iter == m_data.end())
-            //--------------------------
             if (m_data_iter == m_data.begin()){
                 //--------------------------
                 auto input = *m_data_iter;
                 //--------------------------
                 ++m_data_iter;
                 //--------------------------
-                return {*m_data_iter, _reward, false};
+                return {*m_data_iter, NULL, false};
                 //--------------------------
             }// end auto _reward = m_CostFunction(args...)
+            //--------------------------
+             auto _reward = m_CostFunction(args...);
+            //--------------------------
+             if(m_data_iter == m_data.end()-1){
+                //--------------------------
+                return {*m_data_iter, _reward, true};
+                //--------------------------
+            }// if(m_data_iter == m_data.end())
             //--------------------------
             if(m_data_iter != m_data.end()-1){
                 //--------------------------

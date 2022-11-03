@@ -50,7 +50,7 @@ int main(void){
         std::cout << "[" << i << "] input[" << input << "] reward[" << reward << "] done[" << done << "]" << std::endl;
         //--------------------------
         ++i;
-    }// end for (size_t i = 0; i < 100; ++i
+    }// end while(!_done)
     
     //--------------------------
     // _environment.set_reward_function(func);

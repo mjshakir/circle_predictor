@@ -115,8 +115,17 @@ include_directories(
 )
 #------------------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} main/main.cpp)
+add_executable(${PROJECT_NAME}_rl main/rl_main.cpp)
 #------------------------------------------------------------------------------------------
 target_link_libraries(${PROJECT_NAME} PRIVATE
+  ${PROJECT_NAME}_network 
+  ${PROJECT_NAME}_data 
+  ${PROJECT_NAME}_timing
+  ${TORCH_LIBRARIES}
+  ${Boost_LIBRARIES}
+  )
+#------------------------------------------------------------------------------------------
+target_link_libraries(${PROJECT_NAME}_rl PRIVATE
   ${PROJECT_NAME}_network 
   ${PROJECT_NAME}_data 
   ${PROJECT_NAME}_timing

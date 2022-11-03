@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**" ,
                 "${workspaceFolder}/external_library/**",
                 "${workspaceFolder}/external_library/libtorch/**",
-                "/usr/include/**"
+                "/usr/include/**",
+                "/usr/include/libtorch/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

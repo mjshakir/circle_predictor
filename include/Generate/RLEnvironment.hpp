@@ -16,21 +16,28 @@ class RLEnvironment{
         //--------------------------------------------------------------
         RLEnvironment(void) = delete;
         //--------------------------
-        RLEnvironment(std::vector<T>&& data, std::function<COST_OUTPUT(Args&...)> costFunction) :    m_data(std::move(data)),
-                                                                                                    m_data_iter (m_data.begin()), 
-                                                                                                    m_CostFunction(std::move(costFunction)){
+        RLEnvironment(  std::vector<T>&& data, 
+                        std::function<COST_OUTPUT(Args&...)> costFunction,
+                        const double& egreedy = 0.9,
+                        const double& egreedy_final = 0.02,
+                        const double& egreedy_decay = 500.) :   m_data(std::move(data)),
+                                                                m_data_iter (m_data.begin()), 
+                                                                m_CostFunction(std::move(costFunction)),
+                                                                m_egreedy(egreedy),
+                                                                m_egreedy_final(egreedy_final),
+                                                                m_egreedy_decay(egreedy_decay){
             //----------------------------
         }// end RLEnvironment(Dataset&& data_loader)
         //--------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT, bool> step(Args... args){
+        std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(Args... args){
             //----------------------------
             return internal_step(args...);
             //----------------------------
-        }// std::tuple<torch::Tensor, COST_OUTPUT, bool> step(Args... args)
+        }// std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(Args... args)
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT, bool> internal_step(Args... args){
+        std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args){
             //--------------------------
             if (m_data_iter == m_data.begin()){
                 //--------------------------
@@ -38,15 +45,15 @@ class RLEnvironment{
                 //--------------------------
                 ++m_data_iter;
                 //--------------------------
-                return {*m_data_iter, NULL, false};
+                return {*m_data_iter, NULL, calculate_epsilon(), false};
                 //--------------------------
             }// end auto _reward = m_CostFunction(args...)
             //--------------------------
-             auto _reward = m_CostFunction(args...);
+            auto _reward = m_CostFunction(args...);
             //--------------------------
              if(m_data_iter == m_data.end()-1){
                 //--------------------------
-                return {*m_data_iter, _reward, true};
+                return {*m_data_iter, _reward, calculate_epsilon(), true};
                 //--------------------------
             }// if(m_data_iter == m_data.end())
             //--------------------------
@@ -56,9 +63,15 @@ class RLEnvironment{
                 //--------------------------
             }// if(m_data_iter == m_data.end())
             //--------------------------
-            return {*m_data_iter, _reward, false};
+            return {*m_data_iter, _reward, calculate_epsilon(), false};
             //--------------------------
-        }// end void internal_step(const ACTION& actions)
+        }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args))
+        //--------------------------
+        constexpr double calculate_epsilon(void){
+            //--------------------------
+            return m_egreedy_final + (m_egreedy - m_egreedy_final) * exp(-1. * std::distance(m_data.begin(), m_data_iter) / m_egreedy_decay );
+            //--------------------------
+        }// end double calculate_epsilon()
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
@@ -66,6 +79,8 @@ class RLEnvironment{
         typename std::vector<T>::iterator m_data_iter;
         //--------------------------
         std::function<COST_OUTPUT(Args&...)> m_CostFunction;
+        //--------------------------
+        double m_egreedy, m_egreedy_final, m_egreedy_decay;
     //--------------------------------------------------------------
 };// end class RLEnvironment
 //--------------------------------------------------------------

@@ -43,11 +43,11 @@ int main(void){
     while(!_done){
         //--------------------------
         // std::cout << "loop: " << std::endl;
-        const auto [input, reward, done] = _environment.step(rand());
+        const auto [input, reward, epsilon, done] = _environment.step(rand());
         //--------------------------
         _done = done;
         //--------------------------
-        std::cout << "[" << i << "] input[" << input << "] reward[" << reward << "] done[" << done << "]" << std::endl;
+        std::cout << "[" << i << "] input[" << input << "] reward[" << reward << "] epsilon[" << epsilon << "] done[" << done << "]" << std::endl;
         //--------------------------
         ++i;
     }// end while(!_done)

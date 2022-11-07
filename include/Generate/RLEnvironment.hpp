@@ -42,6 +42,7 @@ class RLEnvironment{
             if (m_data_iter == m_data.begin()){
                 //--------------------------
                 auto input = *m_data_iter;
+                auto epsilon = calculate_epsilon();
                 //--------------------------
                 ++m_data_iter;
                 //--------------------------

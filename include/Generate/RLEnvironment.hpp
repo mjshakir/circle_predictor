@@ -46,7 +46,7 @@ class RLEnvironment{
                 //--------------------------
                 ++m_data_iter;
                 //--------------------------
-                return {*m_data_iter, NULL, calculate_epsilon(), false};
+                return {*m_data_iter, NULL, epsilon, false};
                 //--------------------------
             }// end auto _reward = m_CostFunction(args...)
             //--------------------------

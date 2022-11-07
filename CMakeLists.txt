@@ -99,14 +99,21 @@ add_library(${PROJECT_NAME}_rl_data SHARED
   src/Generate/RLEnvironment.cpp
 )
 #------------------------------------------------------------------------------------------
+add_library(${PROJECT_NAME}_rl_network SHARED
+  src/Network/Networks.cpp
+  src/Network/ReinforcementNetworkHandling.cpp
+)
+#------------------------------------------------------------------------------------------
 if(USE_TTB)
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} tbb fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES} tbb)
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES} tbb)
+  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES})
 else()
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES})
 endif(USE_TTB)
 #------------------------------------------------------------------------------------------
 include_directories(
@@ -129,7 +136,8 @@ target_link_libraries(${PROJECT_NAME}_rl PRIVATE
   ${PROJECT_NAME}_network 
   ${PROJECT_NAME}_data 
   ${PROJECT_NAME}_timing
-  ${PROJECT_NAME}_rl_data 
+  ${PROJECT_NAME}_rl_data
+  ${PROJECT_NAME}_rl_network 
   ${TORCH_LIBRARIES}
   ${Boost_LIBRARIES}
   )

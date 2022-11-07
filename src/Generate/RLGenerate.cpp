@@ -9,17 +9,23 @@
 //--------------------------------------------------------------
 RLGenerate::RLGenerate(const size_t& generated_points, const double& limiter) : m_generated_points(generated_points), m_limiter(limiter) {
     //--------------------------
-    m_data = generate_value();
+    m_data = generate_input(m_generated_points);
     //--------------------------
 }// end RLGenerate::RLGenerate(const size_t& generated_points)
 //--------------------------------------------------------------
-std::vector<torch::Tensor> RLGenerate::get_data(void){
+std::vector<torch::Tensor> RLGenerate::get_input(void){
     //--------------------------
     return m_data;
     //--------------------------
-}// end torch::Tensor RLGenerate::get_data(void)
+}// end torch::Tensor RLGenerate::get_input(void)
 //--------------------------------------------------------------
-std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& column){
+torch::Tensor RLGenerate::get_output(const size_t& generated_points, const size_t& column){
+    //--------------------------
+    return generate_target(generated_points, column);
+    //--------------------------
+}// end std::vector<torch::Tensor> RLGenerate::get_output(const size_t& generated_points, const size_t& column)
+//--------------------------------------------------------------
+std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_points, const size_t& column){
     //--------------------------
     // https://stackoverflow.com/questions/66396651/what-is-the-most-efficient-way-of-converting-a-stdvectorstdtuple-to-a-to
     //--------------------------
@@ -29,14 +35,14 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& column){
     std::default_random_engine re;
     //--------------------------
     std::vector<torch::Tensor> _data;
-    _data.reserve(m_generated_points);
+    _data.reserve(generated_points);
     //--------------------------
     std::vector<double> _temp;
-    _temp.reserve(3);
+    _temp.reserve(column);
     //--------------------------
-    for (size_t i = 0; i < m_generated_points; ++i){
+    for (size_t i = 0; i < generated_points; ++i){
         //--------------------------
-        for (size_t i = 0; i < column; ++i){ // end batch
+        for (size_t j = 0; j < column; ++j){ // end batch
             //--------------------------
             _temp.push_back(uniform_angle(re));
             //--------------------------
@@ -52,5 +58,37 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& column){
     //--------------------------
     return _data;
     //--------------------------
-}// end torch::Tensor RLGenerate::generate_value(void)
+}// end torch::Tensor RLGenerate::generate_input(void)
+//--------------------------------------------------------------
+std::vector<torch::Tensor> RLGenerate::generate_input(const size_t& generated_points, const size_t& column){
+    //--------------------------
+    return generate_value(generated_points, column);
+    //--------------------------
+}// end std::vector<torch::Tensor> RLGenerate::generate_input(const size_t& generated_points, const size_t& column)
+//--------------------------------------------------------------
+torch::Tensor RLGenerate::generate_target(const size_t& generated_points, const size_t& column){
+     //--------------------------
+    // https://stackoverflow.com/questions/66396651/what-is-the-most-efficient-way-of-converting-a-stdvectorstdtuple-to-a-to
+    //--------------------------
+    std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
+    std::uniform_real_distribution<double> uniform_angle(-m_limiter, m_limiter);
+    std::default_random_engine re;
+    //--------------------------
+    std::vector<std::vector<double>> _data;
+    _data.reserve(generated_points);
+    //--------------------------
+    for (size_t i = 0; i < generated_points; ++i){
+        //--------------------------
+        for (size_t j = 0; j < column; ++j){ // end batch
+            //--------------------------
+            _data[i][j] = uniform_angle(re);
+            //--------------------------
+        }// end for (size_t i = 0; i < column; ++i)
+        //--------------------------
+    }// end for (size_t i = 0; i < m_generated_points; ++i)
+    //--------------------------
+    return torch::from_blob(&_data[0][0], {static_cast<long>(_data.size()), static_cast<long>(column)}, torch::TensorOptions().dtype(at::kFloat)).clone();
+    //--------------------------
+}// end std::vector<torch::Tensor> RLGenerate::generate_target(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------

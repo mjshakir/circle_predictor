@@ -9,7 +9,9 @@ struct Net : torch::nn::Module {
   //--------------------------------------------------------------
   public:
     //--------------------------
-    Net(uint64_t batch_size = 20); 
+    Net(const uint64_t& batch_size = 20); 
+    //--------------------------
+    Net(const uint64_t& batch_size, const uint64_t& output_size);
     //--------------------------
     torch::Tensor forward(torch::Tensor& x);
     //--------------------------------------------------------------

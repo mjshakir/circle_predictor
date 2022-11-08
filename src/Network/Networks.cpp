@@ -6,10 +6,22 @@
 //--------------------------------------------------------------
 // Net struct 
 //--------------------------------------------------------------
-Net::Net(uint64_t batch_size) : input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
-                                features(torch::nn::LinearOptions(128, 256).bias(true)), 
-                                features2(torch::nn::LinearOptions((256+batch_size), 1024).bias(true)),
-                                output_layer(torch::nn::LinearOptions(1024, (2*batch_size)).bias(true)){
+Net::Net(const uint64_t& batch_size) :  input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
+                                        features(torch::nn::LinearOptions(128, 256).bias(true)), 
+                                        features2(torch::nn::LinearOptions((256+batch_size), 1024).bias(true)),
+                                        output_layer(torch::nn::LinearOptions(1024, (2*batch_size)).bias(true)){
+    //--------------------------
+    register_module("input_layer", input_layer);
+    register_module("features", features);
+    register_module("features2", features2);
+    register_module("output_layer", output_layer);
+    //--------------------------
+}// end Net()
+//--------------------------------------------------------------
+Net::Net(const uint64_t& batch_size, const uint64_t& output_size) : input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
+                                                                    features(torch::nn::LinearOptions(128, 256).bias(true)), 
+                                                                    features2(torch::nn::LinearOptions((256+batch_size), 1024).bias(true)),
+                                                                    output_layer(torch::nn::LinearOptions(1024, output_size).bias(true)){
     //--------------------------
     register_module("input_layer", input_layer);
     register_module("features", features);

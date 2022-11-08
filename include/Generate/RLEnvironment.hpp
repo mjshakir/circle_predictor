@@ -34,6 +34,12 @@ class RLEnvironment{
             return internal_step(args...);
             //----------------------------
         }// std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(Args... args)
+        //--------------------------
+        std::tuple<torch::Tensor, double> get_first(void){
+            //----------------------------
+            return get_first_internal();
+            //----------------------------
+        }// end torch::Tensor get_first(void)
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -46,7 +52,7 @@ class RLEnvironment{
                 //--------------------------
                 ++m_data_iter;
                 //--------------------------
-                return {*m_data_iter, NULL, epsilon, false};
+                return {input, torch::tensor(NULL), epsilon, false};
                 //--------------------------
             }// end auto _reward = m_CostFunction(args...)
             //--------------------------
@@ -67,6 +73,23 @@ class RLEnvironment{
             return {*m_data_iter, _reward, calculate_epsilon(), false};
             //--------------------------
         }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args))
+        //--------------------------
+        std::tuple<torch::Tensor, double> get_first_internal(void){
+            //--------------------------
+            if (m_data_iter == m_data.begin()){
+                //--------------------------
+                auto input = *m_data_iter;
+                auto epsilon = calculate_epsilon();
+                //--------------------------
+                ++m_data_iter;
+                //--------------------------
+                return {input, epsilon};
+                //--------------------------
+            }// end auto _reward = m_CostFunction(args...)
+            //--------------------------
+            return {torch::tensor(0), 0};
+            //--------------------------
+        }// end torch::Tensor get_first_internal(void)
         //--------------------------
         constexpr double calculate_epsilon(void){
             //--------------------------

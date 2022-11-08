@@ -67,7 +67,7 @@ std::vector<torch::Tensor> RLGenerate::generate_input(const size_t& generated_po
 }// end std::vector<torch::Tensor> RLGenerate::generate_input(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------
 torch::Tensor RLGenerate::generate_target(const size_t& generated_points, const size_t& column){
-     //--------------------------
+    //--------------------------
     // https://stackoverflow.com/questions/66396651/what-is-the-most-efficient-way-of-converting-a-stdvectorstdtuple-to-a-to
     //--------------------------
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
@@ -75,20 +75,16 @@ torch::Tensor RLGenerate::generate_target(const size_t& generated_points, const 
     std::uniform_real_distribution<double> uniform_angle(-m_limiter, m_limiter);
     std::default_random_engine re;
     //--------------------------
-    std::vector<std::vector<double>> _data;
-    _data.reserve(generated_points);
+    std::vector<double> _data;
+    _data.reserve(generated_points*column);
     //--------------------------
-    for (size_t i = 0; i < generated_points; ++i){
+    for (size_t i = 0; i < generated_points*column; ++i){
         //--------------------------
-        for (size_t j = 0; j < column; ++j){ // end batch
-            //--------------------------
-            _data[i][j] = uniform_angle(re);
-            //--------------------------
-        }// end for (size_t i = 0; i < column; ++i)
+        _data.push_back(uniform_angle(re));
         //--------------------------
     }// end for (size_t i = 0; i < m_generated_points; ++i)
     //--------------------------
-    return torch::from_blob(&_data[0][0], {static_cast<long>(_data.size()), static_cast<long>(column)}, torch::TensorOptions().dtype(at::kFloat)).clone();
+    return torch::tensor(_data).view({-1, static_cast<int64_t>(column)});
     //--------------------------
 }// end std::vector<torch::Tensor> RLGenerate::generate_target(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------

@@ -18,18 +18,6 @@ Net::Net(const uint64_t& batch_size) :  input_layer(torch::nn::LinearOptions(bat
     //--------------------------
 }// end Net()
 //--------------------------------------------------------------
-Net::Net(const uint64_t& batch_size, const uint64_t& output_size) : input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
-                                                                    features(torch::nn::LinearOptions(128, 256).bias(true)), 
-                                                                    features2(torch::nn::LinearOptions((256+batch_size), 1024).bias(true)),
-                                                                    output_layer(torch::nn::LinearOptions(1024, output_size).bias(true)){
-    //--------------------------
-    register_module("input_layer", input_layer);
-    register_module("features", features);
-    register_module("features2", features2);
-    register_module("output_layer", output_layer);
-    //--------------------------
-}// end Net()
-//--------------------------------------------------------------
 torch::Tensor Net::forward(torch::Tensor& x){
     //--------------------------
     x = linear_layers(x);
@@ -51,6 +39,42 @@ torch::Tensor Net::linear_layers(const torch::Tensor& x){
     return torch::relu(features2->forward(cat_results));
     //-------------------------
 }// end torch::Tensor Net::linear_layers(torch::Tensor& x)
+//--------------------------------------------------------------
+// RLNet struct 
+//--------------------------------------------------------------
+RLNet::RLNet(const uint64_t& batch_size, const uint64_t& output_size) : input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
+                                                                        features(torch::nn::LinearOptions(128, 256).bias(true)), 
+                                                                        features2(torch::nn::LinearOptions(256, 1024).bias(true)),
+                                                                        output_layer(torch::nn::LinearOptions(1024, output_size).bias(true)){
+    //--------------------------
+    register_module("input_layer", input_layer);
+    register_module("features", features);
+    register_module("features2", features2);
+    register_module("output_layer", output_layer);
+    //--------------------------
+}// end RLNet()
+//--------------------------------------------------------------
+torch::Tensor RLNet::linear_layers(const torch::Tensor& x){
+    //--------------------------
+    auto _results = torch::leaky_relu(input_layer->forward(x), 5E-2);
+    //--------------------------
+    // std::cout << _results << _results.sizes() << std::endl;
+    //--------------------------
+    _results = torch::relu(features->forward(_results));
+    //--------------------------
+    return torch::relu(features2->forward(_results));
+    //-------------------------
+}// end torch::Tensor Net::linear_layers(torch::Tensor& x)
+//--------------------------------------------------------------
+torch::Tensor RLNet::forward(torch::Tensor& x){
+    //--------------------------
+    x = linear_layers(x);
+    //--------------------------
+    torch::dropout(x, /*p=*/0.5, /*training=*/is_training());
+    //-------------------------
+    return torch::transpose(output_layer->forward(x).view({2,-1}), 0, 1);
+    //--------------------------
+}// end torch::Tensor Net::forward(torch::Tensor x)
 //--------------------------------------------------------------
 // LSTMNet struct 
 //--------------------------------------------------------------

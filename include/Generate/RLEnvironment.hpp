@@ -40,6 +40,12 @@ class RLEnvironment{
             return get_first_internal();
             //----------------------------
         }// end torch::Tensor get_first(void)
+        //--------------------------
+        void reset(void){
+            //--------------------------
+            reset_iterator();
+            //--------------------------
+        }// end void reset(void)
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -70,6 +76,10 @@ class RLEnvironment{
                 //--------------------------
             }// if(m_data_iter == m_data.end())
             //--------------------------
+            // auto input = *m_data_iter;
+            //--------------------------
+            // std::cout << "input: " << input.sizes()  << std::endl;
+            //--------------------------
             return {*m_data_iter, _reward, calculate_epsilon(), false};
             //--------------------------
         }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args))
@@ -79,6 +89,9 @@ class RLEnvironment{
             if (m_data_iter == m_data.begin()){
                 //--------------------------
                 auto input = *m_data_iter;
+                //--------------------------
+                // std::cout << "input: " << input.sizes()  << std::endl;
+                //--------------------------
                 auto epsilon = calculate_epsilon();
                 //--------------------------
                 ++m_data_iter;
@@ -90,6 +103,12 @@ class RLEnvironment{
             return {torch::tensor(0), 0};
             //--------------------------
         }// end torch::Tensor get_first_internal(void)
+        //--------------------------
+        void reset_iterator(void){
+            //--------------------------
+            m_data_iter = m_data.begin();
+            //--------------------------
+        }// end void rest_iterator(void)
         //--------------------------
         constexpr double calculate_epsilon(void){
             //--------------------------

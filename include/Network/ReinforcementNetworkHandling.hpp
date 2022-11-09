@@ -38,8 +38,8 @@ class ReinforcementNetworkHandling{
             //--------------------------
         }// end torch::Tensor select(const torch::Tensor& input, const double& epsilon, const Args... args)
         //--------------------------
-        void agent( torch::Tensor& input, 
-                    torch::Tensor& next_input, 
+        void agent( const torch::Tensor& input, 
+                    const torch::Tensor& next_input, 
                     torch::optim::Optimizer& optimizer, 
                     const torch::Tensor& rewards, 
                     const bool& done, 
@@ -65,6 +65,8 @@ class ReinforcementNetworkHandling{
             //--------------------------
             if(_random_egreedy > epsilon){
                 //--------------------------
+                // std::cout << "select_action greedy" << std::endl;
+                //--------------------------
                 return m_model.forward(input);
                 //--------------------------
             } // end if(_random_egreedy > epsilon)     
@@ -76,40 +78,45 @@ class ReinforcementNetworkHandling{
         // template<typename AGENT_OUTPUT, typename... Args>
         // void agent(std::function<AGENT_OUTPUT(Args&...)> agent_function); 
         //--------------------------
-        void agent_optimizer(   torch::Tensor& input, 
-                                torch::Tensor& next_input, 
+        void agent_optimizer(   const torch::Tensor& input, 
+                                const torch::Tensor& next_input, 
                                 torch::optim::Optimizer& optimizer, 
                                 const torch::Tensor& rewards, 
                                 const bool& done, 
                                 const double& gamma){
             //--------------------------
-            torch::Tensor _target_value;
+            torch::Tensor _target_value, _input = input, _next_input = next_input;
             //--------------------------
             m_model.train(true);
             //--------------------------
             if(done){
                 //--------------------------
-                _target_value = rewards;
+                // _target_value = rewards;
+                _target_value = m_model.forward(_next_input).detach();
                 //--------------------------
             }// end if(done)
             else{
                 //--------------------------
-                std::cout << "_state_value: "  << std::endl;
+                // std::cout << "_state_value: "  << std::endl;
                 //--------------------------
-                auto _state_value = m_model.forward(next_input).detach();
+                auto _state_value = m_model.forward(_next_input).detach();
                 _target_value = rewards + gamma * _state_value;
                 //--------------------------
-                std::cout << "_target_value: " << _target_value.sizes()  << std::endl;
+                // std::cout << "_target_value: " << _target_value.sizes()  << std::endl;
                 //--------------------------
             }// end else
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
-            auto _predicted_value = m_model.forward(input);
+            // std::cout << " _predicted_value input: " << input.sizes()  << std::endl;
             //--------------------------
-            std::cout << "_predicted_value: " << _predicted_value.sizes()  << std::endl;
+            auto _predicted_value = m_model.forward(_input);
+            //--------------------------
+            // std::cout << "_predicted_value: " << _predicted_value.sizes()  << std::endl;
             //--------------------------
             torch::Tensor loss = torch::mse_loss(_predicted_value, _target_value);
+            //--------------------------
+            // std::cout << "loss "  << std::endl;
             //--------------------------
             loss.backward({},c10::optional<bool>(true), false);
             optimizer.step();

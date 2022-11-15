@@ -74,47 +74,47 @@ int main(void){
                                 //--------------------------
                                 // std::cout << "_circle: " << _circle.item<double>() << " input[-1][0]: " << input[-1][0].item<double>() << std::endl;
                                 //--------------------------
-                                if( _circle.equal(input[-1][0])){
+                                if( _circle.equal(torch::pow(input[-1][0],2))){
                                     //--------------------------
-                                    std::cout << "_circle.equal" << "_circle: " << _circle.item<double>() << " input[-1][0]: " << input[-1][0].item<double>() << std::endl;
+                                    std::cout << "_circle.equal" << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
                                     //--------------------------
                                     return torch::tensor(10);
                                     //--------------------------
                                 }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
                                 //--------------------------
-                                if(torch::abs(_circle-input[-1][0]).any().item<double>() <= 1E-4){
+                                if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() <= 1E-4){
                                     //--------------------------
-                                    std::cout << "torch::less_equal [1E-4]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << input[-1][0].item<double>() << std::endl;
+                                    std::cout << "torch::less_equal [1E-4]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
                                     //--------------------------
                                     return torch::tensor(5);
                                     //--------------------------
                                 }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
                                 //--------------------------
-                                if(torch::abs(_circle-input[-1][0]).any().item<double>() <  1E-2){
+                                if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() <  1E-2){
                                     //--------------------------
-                                    std::cout << "torch::less_equal [1E-2]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << input[-1][0].item<double>() << std::endl;
+                                    std::cout << "torch::less_equal [1E-2]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
                                     //--------------------------
                                     return torch::tensor(-1);
                                     //--------------------------
                                 }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
                                 //--------------------------
-                                if(torch::abs(_circle-input[-1][0]).any().item<double>() <  1E-1){
+                                if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() <  1E-1){
                                     //--------------------------
-                                    std::cout << "torch::less_equal [1E-1]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << input[-1][0].item<double>() << std::endl;
+                                    std::cout << "torch::less_equal [1E-1]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
                                     //--------------------------
                                     return torch::tensor(-5);
                                     //--------------------------
                                 }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
                                 //--------------------------
-                                if(torch::abs(_circle-input[-1][0]).any().item<double>() >=  1E-1){
+                                if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() >=  1E-1){
                                     //--------------------------
-                                    std::cout << "torch::greater [1E-1]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << input[-1][0].item<double>() << std::endl;
+                                    std::cout << "torch::greater [1E-1]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
                                     //--------------------------
                                     return torch::tensor(-10);
                                     //--------------------------
                                 }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>()  )
                                 // //--------------------------
-                                std::cout << "default: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << input[-1][0].item<double>() << std::endl;
+                                std::cout << "default: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
                                 //--------------------------
                                 return torch::tensor(0);
                                 //--------------------------
@@ -195,9 +195,9 @@ int main(void){
             //--------------------------
             _rewards.push_back(reward);
             //--------------------------
-            if(reward.item<double>() > 40.f){ 
-                std::cout << "reward:[" << reward.item<double>() << "]" << std::endl;
-            }
+            // if(reward.item<double>() > 40.f){ 
+            //     std::cout << "reward:[" << reward.item<double>() << "]" << std::endl;
+            // }
             //--------------------------
             // std::cout << "_input:" << training_input.sizes() << " training_input" << next_input.sizes() << std::endl;
             //--------------------------

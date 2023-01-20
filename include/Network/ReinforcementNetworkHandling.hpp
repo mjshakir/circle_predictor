@@ -131,7 +131,7 @@ class ReinforcementNetworkHandling{
             //--------------------------
             if(torch::isnan(loss).any().item<bool>()){
                 //--------------------------
-                throw std::overflow_error("\x1b[31m" "\033[1m" "NaN is detected" "\033[m" "\x1b[0m");
+                throw std::overflow_error("\x1b[31m" "\033[1m" "NaN Is Detected In The Agent" "\033[m" "\x1b[0m");
                 //--------------------------
             }//end if( torch::isnan(_predicted_value) || torch::isnan(_target_value))
             //--------------------------

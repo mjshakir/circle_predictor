@@ -16,7 +16,7 @@ Normalize::Normalize(const std::vector<torch::Tensor>& input) : m_vinput(input){
     //--------------------------
     torch::Tensor min = torch::tensor(10000), max = torch::tensor(0);
     //--------------------------
-    // std::for_each(std::execution::par_unseq, input.begin(), input.end(), [&](const auto& x){
+    // std::for_each(std::execution::par_unseq, input.begin(), input.end(), [&min, &max](const auto& x){
     //     //--------------------------
     //     torch::Tensor temp_min = torch::min(x), temp_max = torch::max(x);
     //     //--------------------------

@@ -7,9 +7,9 @@
 //--------------------------------------------------------------
 #include <random>
 //--------------------------------------------------------------
-RLGenerate::RLGenerate(const size_t& generated_points, const double& limiter) : m_generated_points(generated_points), m_limiter(limiter) {
+RLGenerate::RLGenerate(const size_t& generated_points, const double& limiter, const size_t& column) : m_generated_points(generated_points), m_column(column), m_limiter(limiter) {
     //--------------------------
-    m_data = generate_input(m_generated_points);
+    m_data = generate_input(m_generated_points, m_column);
     //--------------------------
 }// end RLGenerate::RLGenerate(const size_t& generated_points)
 //--------------------------------------------------------------
@@ -24,6 +24,12 @@ torch::Tensor RLGenerate::get_output(const size_t& generated_points, const size_
     return generate_target(generated_points, column);
     //--------------------------
 }// end std::vector<torch::Tensor> RLGenerate::get_output(const size_t& generated_points, const size_t& column)
+//--------------------------------------------------------------
+torch::Tensor RLGenerate::get_test_output(const size_t& generated_points, const size_t& column){
+    //--------------------------
+    return generate_target(generated_points, column);
+    //--------------------------
+}// end torch::Tensor RLGenerate::get_test_output(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_points, const size_t& column){
     //--------------------------

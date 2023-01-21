@@ -21,14 +21,19 @@
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
+// Progressbar library
+//--------------------------------------------------------------
+#include "progressbar/include/progressbar.hpp"
+//--------------------------------------------------------------
 int main(void){
     //--------------------------
-    RLGenerate _generate(10, 10);
+    RLGenerate _generate(10, 10, 3);
     //--------------------------
     Normalize _normalize(_generate.get_input());
     //--------------------------
     // std::cout << "generation: " << std::endl;
     auto input = _normalize.vnormalization();
+    auto input_test = _normalize.normalization(_generate.get_test_output(4, 3));
     //--------------------------
     // std::cout << "_generate input: " << input << std::endl;
     //--------------------------
@@ -74,75 +79,84 @@ int main(void){
     //                                                                                         torch::data::DataLoaderOptions(20));
     //--------------------------------------------------------------
     // RLEnvironment<decltype((_generate.get_input)()), double> _environment(_generate.get_input());
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //                             //--------------------------
+    //                             // std::cout << "output[0]: " << output[-1][0] << " input[1]: " << input[-1][1] << std::endl;
+    //                             //-------------------------- 
+    //                             auto _circle = torch::pow((output[-1][0]-input[-1][1]),2)+torch::pow((output[-1][1]-input[-1][2]),2);
+    //                             //--------------------------
+    //                             // std::cout << "_circle: " << _circle.item<double>() << " input[-1][0]: " << input[-1][0].item<double>() << std::endl;
+    //                             //--------------------------
+    //                             if( _circle.equal(torch::pow(input[-1][0],2))){
+    //                                 //--------------------------
+    //                                 auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
+    //                                     std::cout << "_circle.equal" << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
+    //                                 });
+    //                                 //--------------------------
+    //                                 return torch::tensor(0);
+    //                                 //--------------------------
+    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
+    //                             //--------------------------
+    //                             if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() <= 1E-4){
+    //                                 //--------------------------
+    //                                 auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
+    //                                     std::cout << "torch::less_equal [1E-4]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
+    //                                 });
+    //                                 //--------------------------
+    //                                 return torch::tensor(0.1);
+    //                                 //--------------------------
+    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
+    //                             //--------------------------
+    //                             if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() <  1E-2){
+    //                                 //--------------------------
+    //                                 auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
+    //                                     std::cout << "torch::less_equal [1E-2]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
+    //                                 });
+    //                                 //--------------------------
+    //                                 return torch::tensor(0.5);
+    //                                 //--------------------------
+    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
+    //                             //--------------------------
+    //                             if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() <  1E-1){
+    //                                 //--------------------------
+    //                                 auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
+    //                                     std::cout << "torch::less_equal [1E-1]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
+    //                                 });
+    //                                 //--------------------------
+    //                                 return torch::tensor(0.2);
+    //                                 //--------------------------
+    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
+    //                             //--------------------------
+    //                             if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() >=  1E-1){
+    //                                 //--------------------------
+    //                                 // auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
+    //                                 //     std::cout << "torch::greater [1E-1]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
+    //                                 // });
+    //                                 //--------------------------
+    //                                 return torch::tensor(0.1);
+    //                                 //--------------------------
+    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>()  )
+    //                             //--------------------------
+    //                             // auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
+    //                             //     std::cout << "default: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
+    //                             // });
+    //                             //--------------------------
+    //                             return torch::tensor(0);
+    //                             //--------------------------
+    //                             };
+    //--------------------------------------------------------------
     auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
-                                //--------------------------
-                                // std::cout << "output[0]: " << output[-1][0] << " input[1]: " << input[-1][1] << std::endl;
-                                //-------------------------- 
-                                auto _circle = torch::pow((output[-1][0]-input[-1][1]),2)+torch::pow((output[-1][1]-input[-1][2]),2);
-                                //--------------------------
-                                // std::cout << "_circle: " << _circle.item<double>() << " input[-1][0]: " << input[-1][0].item<double>() << std::endl;
-                                //--------------------------
-                                if( _circle.equal(torch::pow(input[-1][0],2))){
-                                    //--------------------------
-                                    auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
-                                        std::cout << "_circle.equal" << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
-                                    });
-                                    //--------------------------
-                                    return torch::tensor(0);
-                                    //--------------------------
-                                }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
-                                //--------------------------
-                                if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() <= 1E-4){
-                                    //--------------------------
-                                    auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
-                                        std::cout << "torch::less_equal [1E-4]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
-                                    });
-                                    //--------------------------
-                                    return torch::tensor(0.1);
-                                    //--------------------------
-                                }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
-                                //--------------------------
-                                if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() <  1E-2){
-                                    //--------------------------
-                                    auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
-                                        std::cout << "torch::less_equal [1E-2]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
-                                    });
-                                    //--------------------------
-                                    return torch::tensor(0.5);
-                                    //--------------------------
-                                }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
-                                //--------------------------
-                                if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() <  1E-1){
-                                    //--------------------------
-                                    auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
-                                        std::cout << "torch::less_equal [1E-1]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
-                                    });
-                                    //--------------------------
-                                    return torch::tensor(2);
-                                    //--------------------------
-                                }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
-                                //--------------------------
-                                if(torch::abs(_circle-torch::pow(input[-1][0],2)).any().item<double>() >=  1E-1){
-                                    //--------------------------
-                                    // auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
-                                    //     std::cout << "torch::greater [1E-1]: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
-                                    // });
-                                    //--------------------------
-                                    return torch::tensor(5);
-                                    //--------------------------
-                                }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>()  )
-                                //--------------------------
-                                // auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
-                                //     std::cout << "default: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
-                                // });
-                                //--------------------------
-                                return torch::tensor(10);
-                                //--------------------------
-                                };
+        //--------------------------
+        auto _circle = torch::pow((output[-1][0]-input[-1][1]),2)+torch::pow((output[-1][1]-input[-1][2]),2);
+        //--------------------------
+        return  (_circle - torch::pow(input[-1][0],2))/_circle;
+        //--------------------------
+    };
+    //--------------------------------------------------------------
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward);
     //--------------------------
     RLNet model(3, 2);
-    torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(9E-3L).momentum(0.95).nesterov(true));
+    torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
     ReinforcementNetworkHandling<RLNet, size_t, size_t> handler(    std::move(model), 
                                                                     torch::kCPU, 
@@ -151,7 +165,7 @@ int main(void){
     bool _done = false;
     //--------------------------
     std::vector<float> _rewards;
-    _rewards.reserve( input.size() * 100000);
+    _rewards.reserve( input.size() * 10000);
     torch::Tensor training_input;
     double _epsilon = 0.;
     //--------------------------
@@ -161,8 +175,12 @@ int main(void){
     // auto x = _generate.get_output(1, 2);
     // std::cout<< "Tensor " << x << std::endl;
     //--------------------------
-    for(size_t i = 0; i < 100000; ++i){
+    progressbar bar(10000);
+    //--------------------------
+    for(size_t i = 0; i < 10000; ++i){
         //--------------------------
+        bar.update();
+        //------------
         auto [_input, init_epsilon] = _environment.get_first();
         //--------------------------
         // std::cout << "_environment.get_first()" << std::endl;
@@ -213,12 +231,14 @@ int main(void){
             //--------------------------
             try{
                 //--------------------------
+                // handler.agent(training_input, next_input, optimizer, reward, done);
+                //--------------------------
                 handler.agent(training_input, next_input, optimizer, reward, done);
                 //--------------------------
             }// end try
             catch(std::overflow_error& e) {
                 //--------------------------
-                std::cerr << e.what() << std::endl;
+                std::cerr << "\n" << e.what() << std::endl;
                 //--------------------------
                 std::exit(-1);
                 //--------------------------
@@ -254,11 +274,81 @@ int main(void){
     //     }
     // }// end for(const auto &x : _rewards)
     //--------------------------
-    std::for_each(std::execution::par_unseq , _rewards.begin(), _rewards.end(), [&](const auto& x){ if(x <= 0.5){ 
-                                                                                                        std::cout << "\x1b[33m"<< "["<< x <<  "]\x1b[0m""----" ;
-                                                                                                    }//end if(x <= 0.5)
-                                                                                                    std::cout << "[" << x << "]----" ;
-                                                                                                });
+    // std::for_each(std::execution::par_unseq , _rewards.begin(), _rewards.end(), [&](const auto& x){ //if(x < 0.1f){ 
+    //                                                                                                 //     std::cout << "\x1b[33m"<< "["<< x <<  "]\x1b[0m" << std::endl;
+    //                                                                                                 // }//end if(x <= 0.5)
+    //                                                                                                 std::cout << "[" << x << "]" << std::endl ;
+    //                                                                                             });
+    //--------------------------
+    auto input_test_temp = input_test.data_ptr<float>();
+    std::vector<float> _temp;
+    _temp.reserve(input_test.size(1));
+    std::vector<torch::Tensor> _tests;
+    _tests.reserve(input_test.size(0));
+    std::vector<torch::Tensor> _output_test;
+    _output_test.reserve(input_test.size(0));
+    //--------------------------
+    for (int64_t i = 0; i < input_test.size(0); ++i){
+        //--------------------------
+        for (int64_t j = 0; j < input_test.size(1); ++j){ 
+            //--------------------------
+            _temp.push_back(*input_test_temp++);
+            //--------------------------
+        }// end for (size_t i = 0; i < column; ++i)
+        //--------------------------
+        auto _test_temp = torch::tensor(_temp).view({-1, static_cast<int64_t>(input_test.size(1))});
+        //--------------------------
+        _tests.push_back(_test_temp);
+        //--------------------------
+    }// end for (size_t i = 0; i < m_generated_points; ++i)
+    //--------------------------
+    for(const auto& _test : _tests){
+        //--------------------------
+        _output_test.push_back(_test);
+        //--------------------------
+        std::cout << _test << std::endl;
+        //--------------------------
+    }// end for(const auto& _test : _tests)
+    //--------------------------
+    std::cout << "--------------OUTPUT--------------" << std::endl;
+    //--------------------------
+    for(const auto& x : _output_test){
+        //--------------------------
+        std::cout << x << std::endl;
+        //--------------------------
+    }// end for(const auto& _test : _tests)
+    //--------------------------
+    // std::vector<torch::Tensor> _output_test;
+    // _rewards.reserve(input_test.size(0));
+    // torch::Tensor training_input_test;
+    // _epsilon = 0.;
+    // //--------------------------
+    // for (int64_t i = 0; i < input_test.size(0); ++i){
+    //     //--------------------------
+    //     if(i == 0){
+    //         //--------------------------
+    //         auto [_input, init_epsilon] = _environment.get_first();
+    //         //--------------------------
+    //         auto output = handler.action(_input, init_epsilon, 1, 2);
+    //         //--------------------------
+    //         auto [next_input, reward, epsilon, done] = _environment.step(_input, _normalize.vnormalization(output));
+    //         //--------------------------
+    //         _output_test.push_back(handler.test(_input));
+    //         //--------------------------
+    //         training_input = next_input;
+    //         _epsilon = init_epsilon;
+    //         //--------------------------
+    //     }// end if(i == 0)
+    //     //--------------------------
+    //     auto output = handler.action(training_input, _epsilon, 1, 2);
+    //     //--------------------------
+    //     auto [next_input, reward, epsilon, done] = _environment.step(training_input,  _normalize.vnormalization(output));
+    //     //--------------------------
+    //     _epsilon = epsilon;
+    //     //--------------------------
+    //     _output_test.push_back(handler.test(training_input));
+    //     //--------------------------
+    // }// end for (size_t i = 0; i < input_test.size(0); ++i)
     //--------------------------
     // _environment.set_reward_function(func);
     //--------------------------------------------------------------

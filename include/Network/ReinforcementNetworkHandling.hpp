@@ -59,6 +59,12 @@ class ReinforcementNetworkHandling{
             agent_optimizer(input, optimizer, rewards, done, gamma);
             //--------------------------
         }// end void agent
+        //--------------------------
+        torch::Tensor test(const torch::Tensor& input){
+            //--------------------------
+            return network_test(input);
+            //--------------------------
+        }// end torch::Tensor test(const torch::Tensor& input)
     //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -111,7 +117,10 @@ class ReinforcementNetworkHandling{
                 // std::cout << "_state_value: "  << std::endl;
                 //--------------------------
                 auto _state_value = m_model.forward(_next_input).detach();
-                _target_value = rewards + gamma * _state_value;
+                // _target_value = rewards + gamma * _state_value;
+                _target_value = torch::add(torch::mul(_state_value, gamma), rewards);
+                //--------------------------
+                // std::cout << "rewards: " << rewards << "_state_value: " << _state_value  << "\n _target_value: " << _target_value << std::endl;
                 //--------------------------
                 // std::cout << "_target_value: " << _target_value.sizes()  << std::endl;
                 //--------------------------
@@ -186,8 +195,21 @@ class ReinforcementNetworkHandling{
             //--------------------------
             loss.backward({},c10::optional<bool>(true), false);
             optimizer.step();
-            //-------------------------- 
+            //--------------------------
         }// end void agent(const torch::Tensor& input, const torch::Tensor& next_input, const torch::Tensor& action, const T& rewards, const bool& done)
+        //--------------------------
+        torch::Tensor network_test(const torch::Tensor& input){
+            //--------------------------
+            torch::Tensor _input = input;
+            //--------------------------
+            torch::NoGradGuard no_grad;
+            m_model.eval();
+            //--------------------------
+            auto output = m_model.forward(_input);
+            //--------------------------
+            return output;
+            //--------------------------
+        }// end torch::Tensor network_test(const torch::Tensor& input)
         //--------------------------------------------------------------
     private:
         //--------------------------

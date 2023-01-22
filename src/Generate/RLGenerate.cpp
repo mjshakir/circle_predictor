@@ -7,7 +7,7 @@
 //--------------------------------------------------------------
 #include <random>
 //--------------------------------------------------------------
-RLGenerate::RLGenerate(const size_t& generated_points, const double& limiter, const size_t& column) : m_generated_points(generated_points), m_column(column), m_limiter(limiter) {
+RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter) : m_generated_points(generated_points), m_column(column), m_limiter(limiter) {
     //--------------------------
     m_data = generate_input(m_generated_points, m_column);
     //--------------------------

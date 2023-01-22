@@ -18,7 +18,7 @@ class RLGenerate{
          *  @tparam generated_points: How many points to generate
          *  @tparam center: points of the circle. 
          */
-        RLGenerate(const size_t& generated_points = 60000, const double& limiter = 10.f, const size_t& column = 2);
+        RLGenerate(const size_t& generated_points = 60000, const size_t& column = 2, const double& limiter = 10.f);
         //--------------------------
         /**
          *  @brief Getter: the network input and target data set.  

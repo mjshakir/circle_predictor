@@ -82,9 +82,9 @@ class ReinforcementNetworkHandling{
             //--------------------------
             if(_random_egreedy > epsilon){
                 //--------------------------
-                // std::cout << "select_action greedy" << std::endl;
+                std::cout << "select_action greedy" << std::endl;
                 //--------------------------
-                return m_model.forward(input);
+                return m_model.forward(input) ;
                 //--------------------------
             } // end if(_random_egreedy > epsilon)     
             //--------------------------
@@ -128,11 +128,11 @@ class ReinforcementNetworkHandling{
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
-            // std::cout << " _predicted_value input: " << input.sizes()  << std::endl;
+            // std::cout << " _predicted_value input: " << input.sizes() << " _next_input: " << _next_input.sizes() << std::endl;
             //--------------------------
             auto _predicted_value = m_model.forward(_input);
             //--------------------------
-            // std::cout << "_predicted_value: " << _predicted_value.sizes()  << std::endl;
+            // std::cout << "_predicted_value: " << _predicted_value.sizes()  << "\n _target_value: " << _target_value.sizes() << std::endl;
             //--------------------------
             // std::cout << "_predicted_value: " << _predicted_value  << "\n _target_value: " << _target_value << std::endl;
             //--------------------------

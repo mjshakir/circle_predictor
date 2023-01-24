@@ -33,7 +33,7 @@ int main(void){
     //--------------------------
     // std::cout << "generation: " << std::endl;
     auto input = _normalize.vnormalization();
-    auto input_test = _normalize.normalization(_generate.get_test_output(10, 3));
+    auto input_test = _normalize.normalization(_generate.get_test_output(100, 3));
     //--------------------------
     // std::cout << "_generate input: " << input << std::endl;
     //--------------------------
@@ -138,9 +138,9 @@ int main(void){
                                     //--------------------------
                                 }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>()  )
                                 //--------------------------
-                                // auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
-                                //     std::cout << "default: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
-                                // });
+                                auto printing_threads = std::async(std::launch::async,[&_circle, &input](){
+                                    std::cout << "default: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
+                                });
                                 //--------------------------
                                 return torch::tensor(0);
                                 //--------------------------
@@ -156,17 +156,17 @@ int main(void){
     //--------------------------------------------------------------
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., 10);
     //--------------------------
-    RLNet model(3, 10);
+    RLNetLSTM model(3, 10);
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
-    ReinforcementNetworkHandling<RLNet, size_t, size_t> handler(    std::move(model), 
-                                                                    torch::kCPU, 
-                                                                    [&_generate](size_t size = 1, size_t col = 2){ return  _generate.get_output(size, col);});
+    ReinforcementNetworkHandling<RLNetLSTM, size_t, size_t> handler(    std::move(model), 
+                                                                        torch::kCPU, 
+                                                                        [&_generate](size_t size = 1, size_t col = 2){ return  _generate.get_output(size, col);});
     //--------------------------
     bool _done = false;
     //--------------------------
     std::vector<float> _rewards;
-    _rewards.reserve( input.size() * 1000);
+    _rewards.reserve( input.size() * 10);
     torch::Tensor training_input;
     double _epsilon = 0.;
     //--------------------------
@@ -176,9 +176,9 @@ int main(void){
     // auto x = _generate.get_output(1, 2);
     // std::cout<< "Tensor " << x << std::endl;
     //--------------------------
-    progressbar bar(1000);
+    progressbar bar(10);
     //--------------------------
-    for(size_t i = 0; i < 1000; ++i){
+    for(size_t i = 0; i < 10; ++i){
         //--------------------------
         bar.update();
         //------------
@@ -296,11 +296,13 @@ int main(void){
     //--------------------------
     auto input_test_temp = input_test.data_ptr<float>();
     std::vector<float> _temp;
-    _temp.reserve(input_test.size(1));
+    _temp.reserve(input_test.size(0) * input_test.size(1));
     std::vector<torch::Tensor> _tests;
     _tests.reserve(input_test.size(0));
     std::vector<torch::Tensor> _output_test;
     _output_test.reserve(input_test.size(0));
+    //--------------------------
+    torch::Tensor _batching_output;
     //--------------------------
     for (int64_t i = 0; i < input_test.size(0); ++i){
         //--------------------------
@@ -308,13 +310,28 @@ int main(void){
             //--------------------------
             _temp.push_back(*input_test_temp++);
             //--------------------------
-        }// end for (size_t i = 0; i < column; ++i)
+        }// end for (int64_t j = 0; j < input_test.size(1); ++j)
         //--------------------------
-        auto _test_temp = torch::tensor(_temp).view({-1, static_cast<int64_t>(input_test.size(1))});
+        for (size_t i = 0; i < 10; ++i){
+            //--------------------------
+            auto _test_temp = torch::tensor(_temp).view({-1, static_cast<int64_t>(input_test.size(1))});
+            //--------------------------
+            if (i == 0){
+                //--------------------------
+                _batching_output = _test_temp;
+                //--------------------------
+                continue;
+                //--------------------------
+            }// end if (i == 0)
+            //--------------------------
+            _batching_output = torch::cat({_batching_output, _test_temp});
+        }// end for (size_t i = 0; i < 10; ++i)
         //--------------------------
-        _tests.push_back(_test_temp);
+        _temp.clear();
         //--------------------------
-    }// end for (size_t i = 0; i < m_generated_points; ++i)
+        _tests.push_back(_batching_output);
+        //--------------------------
+    }// end for (int64_t i = 0; i < input_test.size(0); ++i)
     //--------------------------
     std::cout << "--------------INPUT--------------" << std::endl;
     //--------------------------
@@ -325,7 +342,7 @@ int main(void){
         _output_test.push_back(_test_temp);
         //--------------------------
         auto _circle = torch::pow((_test_temp[-1][0]-_test[-1][1]),2)+torch::pow((_test_temp[-1][1]-_test[-1][2]),2);
-        // //--------------------------
+        //--------------------------
         // auto results = torch::abs(_circle - torch::pow(_test[-1][0],2));
         //--------------------------
         auto _lost = torch::mse_loss(_circle, torch::pow(_test[-1][0],2), torch::Reduction::Sum).template item<float>();
@@ -336,7 +353,7 @@ int main(void){
         //--------------------------
     }// end for(const auto& _test : _tests)
     //--------------------------
-    // std::cout << "--------------OUTPUT--------------" << std::endl;
+    std::cout << "--------------OUTPUT--------------" << std::endl;
     // //--------------------------
     // for(const auto& x : _output_test){
     //     //--------------------------

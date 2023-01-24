@@ -180,8 +180,6 @@ int main(void){
     //--------------------------
     for(size_t i = 0; i < 10; ++i){
         //--------------------------
-        bar.update();
-        //------------
         auto [_input, init_epsilon] = _environment.get_first();
         //--------------------------
         // std::cout << "_environment.get_first()" << std::endl;
@@ -276,6 +274,8 @@ int main(void){
             // ++i;
         }// end while(!_done)
         //--------------------------
+        bar.update();
+        //------------
         _environment.reset();
         //--------------------------
     }//end for(size_t i = 0; i < 10000; ++i)

@@ -150,7 +150,7 @@ int main(void){
     //     //--------------------------
     //     auto _circle = torch::pow((output[-1][0]-input[-1][1]),2)+torch::pow((output[-1][1]-input[-1][2]),2);
     //     //--------------------------
-    //     return  (_circle - torch::pow(input[-1][0],2))/_circle;
+    //     return torch::abs(_circle - torch::pow(input[-1][0],2));
     //     //--------------------------
     // };
     //--------------------------------------------------------------
@@ -166,7 +166,7 @@ int main(void){
     bool _done = false;
     //--------------------------
     std::vector<float> _rewards;
-    _rewards.reserve( input.size() * 10);
+    _rewards.reserve( input.size() * 1000);
     torch::Tensor training_input;
     double _epsilon = 0.;
     //--------------------------
@@ -176,9 +176,9 @@ int main(void){
     // auto x = _generate.get_output(1, 2);
     // std::cout<< "Tensor " << x << std::endl;
     //--------------------------
-    progressbar bar(10);
+    progressbar bar(1000);
     //--------------------------
-    for(size_t i = 0; i < 10; ++i){
+    for(size_t i = 0; i < 1000; ++i){
         //--------------------------
         bar.update();
         //------------
@@ -326,9 +326,11 @@ int main(void){
         //--------------------------
         auto _circle = torch::pow((_test_temp[-1][0]-_test[-1][1]),2)+torch::pow((_test_temp[-1][1]-_test[-1][2]),2);
         // //--------------------------
-        auto results = torch::abs(_circle - torch::pow(_test[-1][0],2));
-        // //--------------------------
-        std::cout << "circle: " << _circle.item<float>() << " output: " << torch::pow(_test[-1][0],2).item<float>() << " error: " << results.item<float>()*100 << std::endl;
+        // auto results = torch::abs(_circle - torch::pow(_test[-1][0],2));
+        //--------------------------
+        auto _lost = torch::mse_loss(_circle, torch::pow(_test[-1][0],2), torch::Reduction::Sum).template item<float>();
+        //--------------------------
+        std::cout << "circle: " << _circle.item<float>() << " output: " << torch::pow(_test[-1][0],2).item<float>() << " error: " << _lost*100 << std::endl;
         //--------------------------
         // std::cout << _test << _output_test << std::endl;
         //--------------------------

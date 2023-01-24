@@ -74,6 +74,62 @@ torch::Tensor RLNet::forward(torch::Tensor& x){
     //--------------------------
 }// end torch::Tensor Net::forward(torch::Tensor x)
 //--------------------------------------------------------------
+// RLNetLSTM struct 
+//--------------------------------------------------------------
+RLNetLSTM::RLNetLSTM(const uint64_t& batch_size, const uint64_t& output_size) : 
+                        recurrent_layer(torch::nn::LSTMOptions(batch_size, 1).num_layers(batch_size).batch_first(false).bidirectional(true).dropout(0.5)),
+                        input_layer(torch::nn::LinearOptions(20, 32).bias(true)), 
+                        features(torch::nn::LinearOptions(32, 64).bias(true)), 
+                        features2(torch::nn::LinearOptions(64, 128).bias(true)),
+                        output_layer(torch::nn::LinearOptions(128, output_size).bias(true)){
+    //--------------------------
+    register_module("recurrent_layer", recurrent_layer);
+    //--------------------------
+    register_module("input_layer", input_layer);
+    register_module("features", features);
+    register_module("features2", features2);
+    register_module("output_layer", output_layer);
+    //--------------------------
+    _gates = {h0, c0};
+    //--------------------------
+}// end RLNet()
+//--------------------------------------------------------------
+torch::Tensor RLNetLSTM::lstm_layers(torch::Tensor& x){
+    //--------------------------
+    // std::cout << "lstm_layers input: " << x.sizes() << std::endl;
+    //--------------------------
+    x = x.view({-1, 1, 3});
+    //--------------------------
+    auto x_lstm = recurrent_layer->forward(x, _gates);
+    //--------------------------
+    _gates = {std::get<0>(std::get<1>(x_lstm)), std::get<1>(std::get<1>(x_lstm))};
+    //-------------------------
+    return std::get<0>(x_lstm).view({1, -1});
+    //-------------------------
+}// end torch::Tensor LSTMNet::lstm_layers(const torch::Tensor& x)
+//--------------------------------------------------------------
+torch::Tensor RLNetLSTM::linear_layers(const torch::Tensor& x){
+    //--------------------------
+    auto _results = torch::leaky_relu(input_layer->forward(x), 5E-2);
+    //--------------------------
+    _results = torch::relu(features->forward(_results));
+    //--------------------------
+    return torch::relu(features2->forward(_results));
+    //-------------------------
+}// end torch::Tensor Net::linear_layers(torch::Tensor& x)
+//--------------------------------------------------------------
+torch::Tensor RLNetLSTM::forward(torch::Tensor& x){
+    //--------------------------
+    x = lstm_layers(x);
+    //--------------------------
+    x = linear_layers(x);
+    //--------------------------
+    torch::dropout(x, /*p=*/0.5, /*training=*/is_training());
+    //-------------------------
+    return torch::transpose(output_layer->forward(x).view({2,-1}), 0, 1);
+    //--------------------------
+}// end torch::Tensor Net::forward(torch::Tensor x)
+//--------------------------------------------------------------
 // LSTMNet struct 
 //--------------------------------------------------------------
 LSTMNet::LSTMNet(const torch::Device& device):  m_device(device),

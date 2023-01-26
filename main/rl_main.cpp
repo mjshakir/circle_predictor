@@ -26,6 +26,25 @@
 #include "progressbar/include/progressbar.hpp"
 //--------------------------------------------------------------
 int main(void){
+    //--------------------------------------------------------------
+    // Initiate Torch seed, device type
+    //--------------------------
+    torch::manual_seed(17);
+    //--------------------------
+    torch::DeviceType device_type;
+    //--------------------------
+    if (torch::cuda::is_available()) {
+        std::cout << "CUDA available! Training on GPU." << std::endl;
+        device_type = torch::kCUDA;
+        torch::cuda::manual_seed(7);
+    }// end if (torch::cuda::is_available()) 
+    else {
+        std::cout << "Training on CPU." << std::endl;
+        device_type = torch::kCPU;
+    }// end else
+    //--------------------------
+    torch::Device device(device_type);
+    //--------------------------------------------------------------
     //--------------------------
     RLGenerate _generate(1000, 3, 10);
     //--------------------------
@@ -156,7 +175,7 @@ int main(void){
     //--------------------------------------------------------------
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., 10);
     //--------------------------
-    RLNetLSTM model(3, 10);
+    RLNetLSTM model(device, 3, 10);
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
     ReinforcementNetworkHandling<RLNetLSTM, size_t, size_t> handler(    std::move(model), 
@@ -280,7 +299,7 @@ int main(void){
         //--------------------------
     }//end for(size_t i = 0; i < 10000; ++i)
     //--------------------------
-    std::cout << "_rewards: " << _rewards.size() << std::endl;
+    std::cout << " \n rewards: " << _rewards.size() << std::endl;
     //--------------------------
     // for(const auto &x : _rewards){
     //     if(x.item<float>() <= 0.5){ 
@@ -347,7 +366,7 @@ int main(void){
         //--------------------------
         auto _lost = torch::mse_loss(_circle, torch::pow(_test[-1][0],2), torch::Reduction::Sum).template item<float>();
         //--------------------------
-        std::cout << "circle: " << _circle.item<float>() << " output: " << torch::pow(_test[-1][0],2).item<float>() << " error: " << _lost*100 << std::endl;
+        std::cout << "circle: " << _circle.item().toFloat() << " output: " << torch::pow(_test[-1][0],2).item().toFloat() << " error: " << _lost*100 << std::endl;
         //--------------------------
         // std::cout << _test << _output_test << std::endl;
         //--------------------------

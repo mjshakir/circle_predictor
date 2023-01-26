@@ -53,7 +53,7 @@ struct RLNetLSTM : torch::nn::Module {
   //--------------------------------------------------------------
   public:
     //--------------------------
-    RLNetLSTM(const uint64_t& batch_size, const uint64_t& output_size = 20);
+    RLNetLSTM(const torch::Device& device, const uint64_t& batch_size, const uint64_t& output_size = 20);
     //--------------------------
     torch::Tensor forward(torch::Tensor& x);
     //--------------------------------------------------------------
@@ -65,6 +65,14 @@ struct RLNetLSTM : torch::nn::Module {
     //--------------------------------------------------------------
   private:
     //--------------------------------------------------------------
+    torch::Device m_device;
+    //--------------------------
+    uint64_t m_output_size;
+    //--------------------------
+    torch::Tensor h0, c0;
+    //--------------------------
+    std::tuple<torch::Tensor, torch::Tensor> _gates;
+    //--------------------------
     torch::nn::LSTM recurrent_layer;
     //--------------------------
     torch::nn::Linear input_layer;
@@ -72,10 +80,10 @@ struct RLNetLSTM : torch::nn::Module {
     torch::nn::Linear features2;
     torch::nn::Linear output_layer;
     //--------------------------
-    torch::Tensor h0 = torch::from_blob(std::vector<float>(1*3*2, 0.0).data(), {3*2, 1, 1});
-    torch::Tensor c0 = torch::from_blob(std::vector<float>(1*3*2, 0.0).data(), {3*2, 1, 1});
+    // torch::Tensor h0 = torch::from_blob(std::vector<float>(1*m_output_size*2, 0.0).data(), {m_output_size*2, 1, 1});
+    // torch::Tensor c0 = torch::from_blob(std::vector<float>(1*m_output_size*2, 0.0).data(), {m_output_size*2, 1, 1});
     //--------------------------
-    std::tuple<torch::Tensor, torch::Tensor> _gates;
+    // std::tuple<torch::Tensor, torch::Tensor> _gates;
     std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>> _input;
     //--------------------------------------------------------------
 }; // end struct Net : torch::nn::Module

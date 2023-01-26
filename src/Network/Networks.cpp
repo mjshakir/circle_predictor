@@ -76,9 +76,14 @@ torch::Tensor RLNet::forward(torch::Tensor& x){
 //--------------------------------------------------------------
 // RLNetLSTM struct 
 //--------------------------------------------------------------
-RLNetLSTM::RLNetLSTM(const uint64_t& batch_size, const uint64_t& output_size) : 
+RLNetLSTM::RLNetLSTM(const torch::Device& device, const uint64_t& batch_size, const uint64_t& output_size) : 
+                        m_device(device),
+                        m_output_size(output_size),
+                        h0(torch::from_blob(std::vector<float>(1*output_size*2, 0.0).data(), {static_cast<int64_t>(output_size)*2, 1, 1})),
+                        c0(torch::from_blob(std::vector<float>(1*output_size*2, 0.0).data(), {static_cast<int64_t>(output_size)*2, 1, 1})),
+                        _gates({h0.to(device), c0.to(device)}),
                         recurrent_layer(torch::nn::LSTMOptions(batch_size, 1).num_layers(batch_size).batch_first(false).bidirectional(true).dropout(0.5)),
-                        input_layer(torch::nn::LinearOptions(20, 32).bias(true)), 
+                        input_layer(torch::nn::LinearOptions(batch_size*2, 32).bias(true)), 
                         features(torch::nn::LinearOptions(32, 64).bias(true)), 
                         features2(torch::nn::LinearOptions(64, 128).bias(true)),
                         output_layer(torch::nn::LinearOptions(128, output_size).bias(true)){
@@ -90,15 +95,13 @@ RLNetLSTM::RLNetLSTM(const uint64_t& batch_size, const uint64_t& output_size) :
     register_module("features2", features2);
     register_module("output_layer", output_layer);
     //--------------------------
-    _gates = {h0, c0};
-    //--------------------------
 }// end RLNet()
 //--------------------------------------------------------------
 torch::Tensor RLNetLSTM::lstm_layers(torch::Tensor& x){
     //--------------------------
     // std::cout << "lstm_layers input: " << x.sizes() << std::endl;
     //--------------------------
-    x = x.view({-1, 1, 3});
+    x = x.view({-1, 1, static_cast<int64_t>(m_output_size)});
     //--------------------------
     auto x_lstm = recurrent_layer->forward(x, _gates);
     //--------------------------

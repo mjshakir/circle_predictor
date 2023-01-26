@@ -175,7 +175,7 @@ int main(void){
     //--------------------------------------------------------------
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., 10);
     //--------------------------
-    RLNetLSTM model(device, 3, 10);
+    RLNetLSTM model({3, 10}, 10, device);
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
     ReinforcementNetworkHandling<RLNetLSTM, size_t, size_t> handler(    std::move(model), 

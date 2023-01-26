@@ -53,7 +53,7 @@ struct RLNetLSTM : torch::nn::Module {
   //--------------------------------------------------------------
   public:
     //--------------------------
-    RLNetLSTM(const torch::Device& device, const uint64_t& batch_size, const uint64_t& output_size = 20);
+    RLNetLSTM(const std::tuple<uint64_t, uint64_t>& input_size, const uint64_t& output_size = 20, const torch::Device& device = torch::kCPU);
     //--------------------------
     torch::Tensor forward(torch::Tensor& x);
     //--------------------------------------------------------------
@@ -67,9 +67,9 @@ struct RLNetLSTM : torch::nn::Module {
     //--------------------------------------------------------------
     torch::Device m_device;
     //--------------------------
-    uint64_t m_output_size;
+    std::tuple<uint64_t, uint64_t> m_input_size;
     //--------------------------
-    torch::Tensor h0, c0;
+    // torch::Tensor h0, c0;
     //--------------------------
     std::tuple<torch::Tensor, torch::Tensor> _gates;
     //--------------------------

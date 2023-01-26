@@ -76,14 +76,12 @@ torch::Tensor RLNet::forward(torch::Tensor& x){
 //--------------------------------------------------------------
 // RLNetLSTM struct 
 //--------------------------------------------------------------
-RLNetLSTM::RLNetLSTM(const torch::Device& device, const uint64_t& batch_size, const uint64_t& output_size) : 
+RLNetLSTM::RLNetLSTM(const std::tuple<uint64_t, uint64_t>& input_size, const uint64_t& output_size, const torch::Device& device) : 
                         m_device(device),
-                        m_output_size(output_size),
-                        h0(torch::from_blob(std::vector<float>(1*output_size*2, 0.0).data(), {static_cast<int64_t>(output_size)*2, 1, 1})),
-                        c0(torch::from_blob(std::vector<float>(1*output_size*2, 0.0).data(), {static_cast<int64_t>(output_size)*2, 1, 1})),
-                        _gates({h0.to(device), c0.to(device)}),
-                        recurrent_layer(torch::nn::LSTMOptions(batch_size, 1).num_layers(batch_size).batch_first(false).bidirectional(true).dropout(0.5)),
-                        input_layer(torch::nn::LinearOptions(batch_size*2, 32).bias(true)), 
+                        m_input_size(input_size),
+                        _gates({torch::from_blob(std::vector<float>(1* std::get<0>(input_size)*2, 0.0).data(), {static_cast<int64_t>(std::get<0>(input_size))*2, 1, 1}).to(device), torch::from_blob(std::vector<float>(1*std::get<0>(input_size)*2, 0.0).data(), {static_cast<int64_t>(std::get<0>(input_size))*2, 1, 1}).to(device)}),
+                        recurrent_layer(torch::nn::LSTMOptions(std::get<0>(input_size), 1).num_layers(std::get<0>(input_size)).batch_first(false).bidirectional(true).dropout(0.5)),
+                        input_layer(torch::nn::LinearOptions(std::get<1>(input_size)*2, 32).bias(true)), 
                         features(torch::nn::LinearOptions(32, 64).bias(true)), 
                         features2(torch::nn::LinearOptions(64, 128).bias(true)),
                         output_layer(torch::nn::LinearOptions(128, output_size).bias(true)){
@@ -101,11 +99,13 @@ torch::Tensor RLNetLSTM::lstm_layers(torch::Tensor& x){
     //--------------------------
     // std::cout << "lstm_layers input: " << x.sizes() << std::endl;
     //--------------------------
-    x = x.view({-1, 1, static_cast<int64_t>(m_output_size)});
+    x = x.view({-1, 1, static_cast<int64_t>(std::get<0>(m_input_size))});
     //--------------------------
     auto x_lstm = recurrent_layer->forward(x, _gates);
     //--------------------------
-    _gates = {std::get<0>(std::get<1>(x_lstm)), std::get<1>(std::get<1>(x_lstm))};
+    // _gates = {std::get<0>(std::get<1>(x_lstm)), std::get<1>(std::get<1>(x_lstm))};
+    //-------------------------
+    _gates = std::get<1>(x_lstm);
     //-------------------------
     return std::get<0>(x_lstm).view({1, -1});
     //-------------------------

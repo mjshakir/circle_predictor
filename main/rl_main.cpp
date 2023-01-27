@@ -27,6 +27,13 @@
 //--------------------------------------------------------------
 int main(void){
     //--------------------------------------------------------------
+    // Command line arugments using boost options 
+    //--------------------------
+    // std::string filename;
+    size_t generated_size = 100, test_size = 10, output_size =2, batch_size = 10, epoch = 100;
+    // long double precision;
+    //--------------------------
+    //--------------------------------------------------------------
     // Initiate Torch seed, device type
     //--------------------------
     torch::manual_seed(17);
@@ -46,58 +53,13 @@ int main(void){
     torch::Device device(device_type);
     //--------------------------------------------------------------
     //--------------------------
-    RLGenerate _generate(1000, 3, 10);
+    RLGenerate _generate(generated_size, 3, batch_size);
     //--------------------------
     Normalize _normalize(_generate.get_input());
     //--------------------------
-    // std::cout << "generation: " << std::endl;
     auto input = _normalize.vnormalization();
-    auto input_test = _normalize.normalization(_generate.get_test_output(100, 3));
+    auto input_test = _normalize.normalization(_generate.get_test_input(test_size, 3));
     //--------------------------
-    // std::cout << "_generate input: " << input << std::endl;
-    //--------------------------
-    // std::cout << "_generate input: " << input.size() << " input tensor: " << input[0].sizes() << std::endl;
-    //--------------------------
-    // torch::Tensor min = torch::tensor(10), max = torch::tensor(0);
-    //--------------------------
-    // for(const auto& x : input){  
-    //     torch::Tensor temp_min = torch::min(x), temp_max = torch::max(x);
-    //     if(temp_min.less(min).any().item<bool>()){
-    //         min = temp_min;
-    //     }
-    //     if(max.less(temp_max).any().item<bool>()){
-    //         max = temp_max;
-    //     }
-    // };
-    //--------------------------
-    // std::for_each(std::execution::par_unseq, input.begin(), input.end(), [&](const auto& x){
-    //                 torch::Tensor temp_min = torch::min(x), temp_max = torch::max(x);
-    //                 if(temp_min.less(min).any().item<bool>()){
-    //                     min = temp_min;
-    //                 }
-    //                 if(max.less(temp_max).any().item<bool>()){
-    //                     max = temp_max;
-    //                 }
-    //                 });
-    //--------------------------
-    // std::cout << "it_max: " << max << " it_min: " << min << std::endl;
-    //--------------------------
-    // for(const auto& x : input){
-    //     std::cout << x << std::endl;
-    // }
-    //--------------------------------------------------------------
-    // // Generate your data set. At this point you can add transforms to you data set, e.g. stack your
-    // // batches into a single tensor.
-    // // auto data_set = DataLoader(std::move(std::get<0>(data)), std::move(std::get<1>(data))).map(torch::data::transforms::Normalize<>(0.5, 0.25)).map(torch::data::transforms::Stack<>());
-    // //--------------------------
-    // auto data_set = RLDataLoader(_generate.get_input()).map(torch::data::transforms::Stack<>());
-    // //--------------------------
-    // // Generate a data loader.
-    // //--------------------------
-    // auto data_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>( std::move(data_set), 
-    //                                                                                         torch::data::DataLoaderOptions(20));
-    //--------------------------------------------------------------
-    // RLEnvironment<decltype((_generate.get_input)()), double> _environment(_generate.get_input());
     //--------------------------------------------------------------
     auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
                                 //--------------------------
@@ -175,60 +137,36 @@ int main(void){
     //--------------------------------------------------------------
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., 10);
     //--------------------------
-    RLNetLSTM model({3, 10}, 10, device);
+    RLNetLSTM model({3, batch_size}, output_size, device);
+    // RLNet model(3, output_size);
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
-    ReinforcementNetworkHandling<RLNetLSTM, size_t, size_t> handler(    std::move(model), 
-                                                                        torch::kCPU, 
-                                                                        [&_generate](size_t size = 1, size_t col = 2){ return  _generate.get_output(size, col);});
+    ReinforcementNetworkHandling<decltype(model), size_t, size_t> handler(  std::move(model), 
+                                                                            device_type, 
+                                                                            [&_generate](size_t size = 10, size_t col = 2){ 
+                                                                                return  _generate.get_output(size, col);});
     //--------------------------
     bool _done = false;
     //--------------------------
     std::vector<float> _rewards;
-    _rewards.reserve( input.size() * 10);
+    _rewards.reserve( input.size() * epoch);
     torch::Tensor training_input;
     double _epsilon = 0.;
     //--------------------------
-    // torch::Tensor tensor = torch::rand({10,10});
-    // std::cout<< "Tensor " << tensor[1]<< std::endl;
+    progressbar bar(epoch);
     //--------------------------
-    // auto x = _generate.get_output(1, 2);
-    // std::cout<< "Tensor " << x << std::endl;
-    //--------------------------
-    progressbar bar(10);
-    //--------------------------
-    for(size_t i = 0; i < 10; ++i){
+    for(size_t i = 0; i < epoch; ++i){
         //--------------------------
         auto [_input, init_epsilon] = _environment.get_first();
         //--------------------------
-        // std::cout << "_environment.get_first()" << std::endl;
-        // std::cout << "_input: " << _input.sizes() << std::endl;
-        //--------------------------
-        auto output = handler.action(_input, init_epsilon, 1, 2);
-        //--------------------------
-        // std::cout << "_input: " << _input.sizes() << " handler.action size: " << output.sizes() << std::endl;
-        // std::cout << "_input: " << _input << std::endl;
+        auto output = handler.action(_input, init_epsilon, batch_size, 2);
         //--------------------------
         auto [next_input, reward, epsilon, done] = _environment.step(_input, _normalize.vnormalization(output));
         //--------------------------
-        // std::cout << "_input:" << _input.sizes() << " next_input" << next_input.sizes() << std::endl;
-        //--------------------------
-        // std::cout << "[" << i << "] input[" << next_input << "] reward[" << reward << "] epsilon[" << epsilon << "] done[" << done << "]" << std::endl;
-        //--------------------------
-        // std::cout << "environment.step: " << std::endl;
-        //--------------------------
-        // handler.agent(_input, next_input, optimizer, reward, done);
-        //--------------------------
         handler.agent(_input, optimizer, reward, done);
-        //--------------------------
-        // std::cout << "_input:" << _input.sizes() << " next_input" << next_input.sizes() << std::endl;
         //--------------------------
         training_input = next_input;
         _epsilon = init_epsilon;
-        //--------------------------
-        // std::cout << "_input:" << _input.sizes() << " training_input" << training_input.sizes() << " next_input: " << next_input.sizes() << std::endl;
-        //--------------------------
-        // std::cout << "first loop" << std::endl;
         //--------------------------
         _done = done;
         //--------------------------
@@ -236,26 +174,14 @@ int main(void){
         //--------------------------
         while(!_done){
             //--------------------------
-            // std::cout << "loop" << std::endl;
-            //--------------------------
-            auto output = handler.action(training_input, _epsilon, 1, 2);
-            //--------------------------
-            // std::cout << "output: " << output.sizes() << std::endl;
+            auto output = handler.action(training_input, _epsilon, batch_size, 2);
             //--------------------------
             auto [next_input, reward, epsilon, done] = _environment.step(training_input,  _normalize.vnormalization(output));
-            //--------------------------
-            // std::cout << "training_input: " << training_input.sizes() << " next_input: " << next_input.sizes() << std::endl; 
             //--------------------------
             _epsilon = epsilon;
             _done = done;
             //--------------------------
-            // std::cout   << "[0]" << "\n training_input:" << training_input.sizes() 
-            //             << " next_input: " << next_input.sizes() 
-            //             << " output: "  << output.sizes()  << std::endl;
-            //--------------------------
             try{
-                //--------------------------
-                // handler.agent(training_input, next_input, optimizer, reward, done);
                 //--------------------------
                 handler.agent(training_input, next_input, optimizer, reward, done);
                 //--------------------------
@@ -268,50 +194,19 @@ int main(void){
                 //--------------------------
             }// end catch(std::out_of_range& e)
             //--------------------------
-            // handler.agent(training_input, optimizer, reward, done);
-            //--------------------------
-            // std::cout << "\n [1]" << " training_input: " << training_input.sizes() << " next_input: " << next_input.sizes() << std::endl; 
-            //--------------------------
             training_input = next_input;
-            //--------------------------
-            // std::cout << "[2]" << " training_input: " << training_input.sizes() << " next_input: " << next_input.sizes() << std::endl; 
             //--------------------------
             _rewards.push_back(reward.item<float>());
             //--------------------------
-            // if(reward.item<double>() > 40.f){ 
-            //     std::cout << "reward:[" << reward.item<double>() << "]" << std::endl;
-            // }
-            //--------------------------
-            // std::cout << "_input:" << training_input.sizes() << " training_input" << next_input.sizes() << std::endl;
-            //--------------------------
-            // std::cout << "[" << i << "] input[" << input << "] reward[" << reward << "] epsilon[" << epsilon << "] done[" << done << "]" << std::endl;
-            //--------------------------
-            // std::cout << "reward[" << reward << "]" << std::endl;
-            //--------------------------
-            // std::cout << "done: " << _done << std::endl;
-            //--------------------------
-            // ++i;
         }// end while(!_done)
         //--------------------------
-        bar.update();
-        //------------
         _environment.reset();
+        //------------
+        bar.update();
         //--------------------------
-    }//end for(size_t i = 0; i < 10000; ++i)
+    }//end for(size_t i = 0; i < epoch; ++i)
     //--------------------------
     std::cout << " \n rewards: " << _rewards.size() << std::endl;
-    //--------------------------
-    // for(const auto &x : _rewards){
-    //     if(x.item<float>() <= 0.5){ 
-    //         std::cout << "_rewards:["<< x.item<float>() << "] " ; 
-    //     }
-    // }// end for(const auto &x : _rewards)
-    //--------------------------
-    // std::for_each(std::execution::par_unseq , _rewards.begin(), _rewards.end(), [&](const auto& x){ //if(x < 0.1f){ 
-    //                                                                                                 //     std::cout << "\x1b[33m"<< "["<< x <<  "]\x1b[0m" << std::endl;
-    //                                                                                                 // }//end if(x <= 0.5)
-    //                                                                                                 std::cout << "[" << x << "]" << std::endl ;
-    //                                                                                             });
     //--------------------------
     auto input_test_temp = input_test.data_ptr<float>();
     std::vector<float> _temp;
@@ -372,48 +267,6 @@ int main(void){
         //--------------------------
     }// end for(const auto& _test : _tests)
     //--------------------------
-    std::cout << "--------------OUTPUT--------------" << std::endl;
-    // //--------------------------
-    // for(const auto& x : _output_test){
-    //     //--------------------------
-    //     std::cout << x << std::endl;
-    //     //--------------------------
-    // }// end for(const auto& _test : _tests)
-    // //--------------------------
-    // std::vector<torch::Tensor> _output_test;
-    // _rewards.reserve(input_test.size(0));
-    // torch::Tensor training_input_test;
-    // _epsilon = 0.;
-    // //--------------------------
-    // for (int64_t i = 0; i < input_test.size(0); ++i){
-    //     //--------------------------
-    //     if(i == 0){
-    //         //--------------------------
-    //         auto [_input, init_epsilon] = _environment.get_first();
-    //         //--------------------------
-    //         auto output = handler.action(_input, init_epsilon, 1, 2);
-    //         //--------------------------
-    //         auto [next_input, reward, epsilon, done] = _environment.step(_input, _normalize.vnormalization(output));
-    //         //--------------------------
-    //         _output_test.push_back(handler.test(_input));
-    //         //--------------------------
-    //         training_input = next_input;
-    //         _epsilon = init_epsilon;
-    //         //--------------------------
-    //     }// end if(i == 0)
-    //     //--------------------------
-    //     auto output = handler.action(training_input, _epsilon, 1, 2);
-    //     //--------------------------
-    //     auto [next_input, reward, epsilon, done] = _environment.step(training_input,  _normalize.vnormalization(output));
-    //     //--------------------------
-    //     _epsilon = epsilon;
-    //     //--------------------------
-    //     _output_test.push_back(handler.test(training_input));
-    //     //--------------------------
-    // }// end for (size_t i = 0; i < input_test.size(0); ++i)
-    //--------------------------
-    // _environment.set_reward_function(func);
-    //--------------------------------------------------------------
     return 0;
-    //--------------------------
+    //--------------------------------------------------------------
 }// end int main(void)

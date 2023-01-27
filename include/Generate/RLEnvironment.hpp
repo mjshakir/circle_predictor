@@ -105,10 +105,6 @@ class RLEnvironment{
                 //--------------------------
             }// if(m_data_iter == m_data.end())
             //--------------------------
-            // auto input = *m_data_iter;
-            //--------------------------
-            // std::cout << "input: " << input.sizes()  << std::endl;
-            //--------------------------
             return {*m_data_iter, _reward, calculate_epsilon(), false};
             //--------------------------
         }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args))
@@ -231,7 +227,7 @@ class RLEnvironment{
                 //--------------------------
             }// end if(batch > m_data.size()/2)
             //--------------------------
-            torch::Tensor _data; // = torch::zeros(m_data_iter->sizes());
+            torch::Tensor _data;
             //--------------------------
             if (m_data_iter == m_data.begin()){
                 //--------------------------

@@ -14,6 +14,7 @@
 #include "Generate/RLGenerate.hpp"
 #include "Network/ReinforcementNetworkHandling.hpp"
 #include "Network/Network.hpp"
+#include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
 // Standard cpp library
 //--------------------------------------------------------------
@@ -30,7 +31,7 @@ int main(void){
     // Command line arugments using boost options 
     //--------------------------
     // std::string filename;
-    size_t generated_size = 100, test_size = 10, output_size =2, batch_size = 10, epoch = 100;
+    size_t generated_size = 25000, points_size = 3, test_size = 100, output_size =2, batch_size = 100, epoch = 100;
     // long double precision;
     //--------------------------
     //--------------------------------------------------------------
@@ -53,11 +54,14 @@ int main(void){
     torch::Device device(device_type);
     //--------------------------------------------------------------
     //--------------------------
-    RLGenerate _generate(generated_size, 3, batch_size);
+    TimeIT _timer; 
+    RLGenerate _generate(generated_size, points_size, batch_size);
+    std::cout << "RLGenerate time: " << _timer.get_time_seconds() << std::endl;
     //--------------------------
     Normalize _normalize(_generate.get_input());
     //--------------------------
     auto input = _normalize.vnormalization();
+    //--------------------------
     auto input_test = _normalize.normalization(_generate.get_test_input(test_size, 3));
     //--------------------------
     //--------------------------------------------------------------
@@ -123,7 +127,7 @@ int main(void){
                                     std::cout << "default: " << "_circle: " << _circle.item<double>() << " input[-1][0]: " << torch::pow(input[-1][0],2).item<double>() << std::endl;
                                 });
                                 //--------------------------
-                                return torch::tensor(0);
+                                return torch::tensor(2);
                                 //--------------------------
                                 };
     //--------------------------------------------------------------
@@ -137,8 +141,8 @@ int main(void){
     //--------------------------------------------------------------
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., 10);
     //--------------------------
-    RLNetLSTM model({3, batch_size}, output_size, device);
-    // RLNet model(3, output_size);
+    // RLNetLSTM model({points_size, batch_size}, output_size, device);
+    RLNet model(points_size, output_size);
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
     ReinforcementNetworkHandling<decltype(model), size_t, size_t> handler(  std::move(model), 

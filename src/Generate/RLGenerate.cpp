@@ -7,7 +7,11 @@
 //--------------------------------------------------------------
 #include <random>
 //--------------------------------------------------------------
-RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter) : m_generated_points(generated_points), m_column(column), m_limiter(limiter) {
+RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter, const torch::Device& device) : 
+            m_generated_points(generated_points), 
+            m_column(column), 
+            m_limiter(limiter),
+            m_device(device){
     //--------------------------
     m_data = generate_input(m_generated_points, m_column);
     //--------------------------
@@ -25,11 +29,11 @@ torch::Tensor RLGenerate::get_output(const size_t& generated_points, const size_
     //--------------------------
 }// end std::vector<torch::Tensor> RLGenerate::get_output(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------
-torch::Tensor RLGenerate::get_test_output(const size_t& generated_points, const size_t& column){
+torch::Tensor RLGenerate::get_test_input(const size_t& generated_points, const size_t& column){
     //--------------------------
     return generate_target(generated_points, column);
     //--------------------------
-}// end torch::Tensor RLGenerate::get_test_output(const size_t& generated_points, const size_t& column)
+}// end torch::Tensor RLGenerate::get_test_input(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_points, const size_t& column){
     //--------------------------
@@ -56,11 +60,11 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
         //--------------------------
         // _data.push_back(torch::transpose(torch::cat({torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re))}).view({-1,3}), 0, 1));
         //--------------------------
-        _data.push_back(torch::tensor(_temp).view({-1,3}));
+        _data.push_back(torch::tensor(_temp).view({-1,3}).to(m_device));
         //--------------------------
         _temp.clear();
         //--------------------------
-    }// end for (size_t i = 0; i < m_generated_points; ++i)
+    }// end for (size_t j = 0; j < column; ++j)
     //--------------------------
     return _data;
     //--------------------------
@@ -90,7 +94,7 @@ torch::Tensor RLGenerate::generate_target(const size_t& generated_points, const 
         //--------------------------
     }// end for (size_t i = 0; i < m_generated_points; ++i)
     //--------------------------
-    return torch::tensor(_data).view({-1, static_cast<int64_t>(column)});
+    return torch::tensor(_data).view({-1, static_cast<int64_t>(column)}).to(m_device);
     //--------------------------
 }// end std::vector<torch::Tensor> RLGenerate::generate_target(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------

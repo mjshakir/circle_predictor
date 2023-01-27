@@ -52,7 +52,7 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
     //--------------------------
     for (size_t i = 0; i < generated_points; ++i){
         //--------------------------
-        for (size_t j = 0; j < column; ++j){ // end batch
+        for (size_t j = 0; j < column-1; ++j){ // end batch
             //--------------------------
             _temp.push_back(uniform_angle(re));
             //--------------------------
@@ -60,7 +60,8 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
         //--------------------------
         // _data.push_back(torch::transpose(torch::cat({torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re))}).view({-1,3}), 0, 1));
         //--------------------------
-        _data.push_back(torch::tensor(_temp).view({-1,3}).to(m_device));
+        _temp.push_back((std::pow(_temp.at(0),2) + std::pow(_temp.at(1),2)));
+        _data.push_back(torch::tensor(_temp).view({-1,static_cast<int64_t>(column)}).to(m_device));
         //--------------------------
         _temp.clear();
         //--------------------------

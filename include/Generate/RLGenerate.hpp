@@ -18,7 +18,7 @@ class RLGenerate{
          *  @tparam generated_points: How many points to generate
          *  @tparam center: points of the circle. 
          */
-        RLGenerate(const size_t& generated_points = 60000, const size_t& column = 2, const double& limiter = 10.f);
+        RLGenerate(const size_t& generated_points = 60000, const size_t& column = 2, const double& limiter = 10.f, const torch::Device& device = torch::kCPU);
         //--------------------------
         /**
          *  @brief Getter: the network input and target data set.  
@@ -39,7 +39,7 @@ class RLGenerate{
          *
          *  @return 1) x_value: input data. 2)y_value: target data. 
          */
-        torch::Tensor get_test_output(const size_t& generated_points = 60000, const size_t& column = 2);
+        torch::Tensor get_test_input(const size_t& generated_points = 60000, const size_t& column = 2);
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -53,6 +53,8 @@ class RLGenerate{
         //--------------------------------------------------------------
         size_t m_generated_points, m_column;
         double m_limiter;
+        //--------------------------
+        torch::Device m_device;
         //--------------------------
         std::vector<torch::Tensor> m_data;
         //--------------------------

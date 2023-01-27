@@ -33,7 +33,7 @@ class ReinforcementNetworkHandling{
             //--------------------------
         }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
         //--------------------------
-        torch::Tensor action(torch::Tensor& input, const double& epsilon, Args... args){
+        torch::Tensor action(const torch::Tensor& input, const double& epsilon, Args... args){
             //--------------------------
             return select_action(input, epsilon, args...);
             //--------------------------
@@ -68,7 +68,7 @@ class ReinforcementNetworkHandling{
     //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
-        torch::Tensor select_action(torch::Tensor& input, const double& epsilon, Args... args){
+        torch::Tensor select_action(const torch::Tensor& input, const double& epsilon, Args... args){
             //--------------------------
             std::random_device rd;  // Will be used to obtain a seed for the random number engine
             std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
@@ -77,14 +77,22 @@ class ReinforcementNetworkHandling{
             //--------------------------
             auto _random_egreedy = uniform_angle(re);
             //--------------------------
-            torch::NoGradGuard no_grad;
-            m_model.eval();
-            //--------------------------
             if(_random_egreedy > epsilon){
                 //--------------------------
-                std::cout << "select_action greedy" << std::endl;
+                // std::cout << "select_action greedy" << std::endl;
                 //--------------------------
-                return m_model.forward(input) ;
+                torch::Tensor _input = input;
+                //--------------------------
+                torch::NoGradGuard no_grad;
+                m_model.eval();
+                //--------------------------
+                // auto _results = m_model.forward(input);
+                //--------------------------
+                // std::cout << "_results: " << _results.sizes()  << std::endl;
+                //--------------------------
+                // return _results;
+                //--------------------------
+                return m_model.forward(_input) ;
                 //--------------------------
             } // end if(_random_egreedy > epsilon)     
             //--------------------------
@@ -128,9 +136,20 @@ class ReinforcementNetworkHandling{
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
+            // std::cout << " _predicted_value input: " << input.sizes() << std::endl;
+            //--------------------------
             // std::cout << " _predicted_value input: " << input.sizes() << " _next_input: " << _next_input.sizes() << std::endl;
             //--------------------------
+            // std::cout <<  "_target_value: " << _target_value.sizes() << std::endl;
+            //--------------------------
+            // if(input.sizes() !=  next_input.sizes()){ 
+            //     printf("\x1b[31m" "\033[1m" "Mess mash detected" "\033[m" "\x1b[0m");
+            //     _input = input.view({-1,3});
+            // }
+            //--------------------------
             auto _predicted_value = m_model.forward(_input);
+            //--------------------------
+            // std::cout << "_predicted_value: " << _predicted_value.sizes() << std::endl;
             //--------------------------
             // std::cout << "_predicted_value: " << _predicted_value.sizes()  << "\n _target_value: " << _target_value.sizes() << std::endl;
             //--------------------------

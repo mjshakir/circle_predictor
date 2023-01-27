@@ -58,7 +58,11 @@ torch::Tensor RLNet::linear_layers(const torch::Tensor& x){
     //--------------------------
     auto _results = torch::leaky_relu(input_layer->forward(x), 5E-2);
     //--------------------------
+    // std::cout << "[1]" << " results: " << _results.sizes() << std::endl;
+    //--------------------------
     _results = torch::relu(features->forward(_results));
+    //--------------------------
+    // std::cout << "[2]" << " results: " << _results.sizes() << std::endl;
     //--------------------------
     return torch::relu(features2->forward(_results));
     //-------------------------
@@ -68,9 +72,13 @@ torch::Tensor RLNet::forward(torch::Tensor& x){
     //--------------------------
     x = linear_layers(x);
     //--------------------------
+    // std::cout << "x: " << x.sizes() << std::endl;
+    //--------------------------
     torch::dropout(x, /*p=*/0.5, /*training=*/is_training());
     //-------------------------
-    return torch::transpose(output_layer->forward(x).view({2,-1}), 0, 1);
+    // return torch::transpose(output_layer->forward(x).view({2,-1}), 0, 1);
+    //--------------------------
+    return output_layer->forward(x);
     //--------------------------
 }// end torch::Tensor Net::forward(torch::Tensor x)
 //--------------------------------------------------------------

@@ -80,10 +80,6 @@ struct RLNetLSTM : torch::nn::Module {
     torch::nn::Linear features2;
     torch::nn::Linear output_layer;
     //--------------------------
-    // torch::Tensor h0 = torch::from_blob(std::vector<float>(1*m_output_size*2, 0.0).data(), {m_output_size*2, 1, 1});
-    // torch::Tensor c0 = torch::from_blob(std::vector<float>(1*m_output_size*2, 0.0).data(), {m_output_size*2, 1, 1});
-    //--------------------------
-    // std::tuple<torch::Tensor, torch::Tensor> _gates;
     std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>> _input;
     //--------------------------------------------------------------
 }; // end struct Net : torch::nn::Module

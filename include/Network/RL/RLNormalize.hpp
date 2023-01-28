@@ -67,5 +67,8 @@ class RLNormalize{
         torch::Tensor m_max, m_min;
         //--------------------------
         std::vector<torch::Tensor> m_input;
+        //--------------------------------------------------------------
+        static std::tuple<torch::Tensor, torch::Tensor> find_min_max(std::vector<torch::Tensor> input);
+        //--------------------------------------------------------------
     //--------------------------------------------------------------
 };

@@ -79,18 +79,10 @@ class ReinforcementNetworkHandling{
             //--------------------------
             if(_random_egreedy > epsilon){
                 //--------------------------
-                // std::cout << "select_action greedy" << std::endl;
-                //--------------------------
                 torch::Tensor _input = input;
                 //--------------------------
                 torch::NoGradGuard no_grad;
                 m_model.eval();
-                //--------------------------
-                // auto _results = m_model.forward(input);
-                //--------------------------
-                // std::cout << "_results: " << _results.sizes()  << std::endl;
-                //--------------------------
-                // return _results;
                 //--------------------------
                 return m_model.forward(_input) ;
                 //--------------------------

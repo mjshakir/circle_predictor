@@ -16,22 +16,6 @@ Normalize::Normalize(const std::vector<torch::Tensor>& input) : m_vinput(input){
     //--------------------------
     torch::Tensor min = torch::tensor(10000), max = torch::tensor(0);
     //--------------------------
-    // std::for_each(std::execution::par_unseq, input.begin(), input.end(), [&min, &max](const auto& x){
-    //     //--------------------------
-    //     torch::Tensor temp_min = torch::min(x), temp_max = torch::max(x);
-    //     //--------------------------
-    //     if(temp_min.less(min).any().item<bool>()){
-    //         //--------------------------
-    //         min = temp_min;
-    //         //--------------------------
-    //     }// end if(temp_min.less(min).any().item<bool>())
-    //     if(temp_max.greater(max).any().item<bool>()){
-    //         //--------------------------
-    //         max = temp_max;
-    //         //--------------------------
-    //     }// end if(max.less(temp_max).any().item<bool>())
-    // });
-    //--------------------------
     for(const auto& x : input){  
         //--------------------------
         torch::Tensor temp_min = torch::min(x), temp_max = torch::max(x);
@@ -149,24 +133,6 @@ std::vector<torch::Tensor> Normalize::normalization_data(const std::vector<torch
         }// end if(max.less(temp_max).any().item<bool>())
         //--------------------------
     }; // end for(const auto& x : input)
-    //--------------------------
-    // std::for_each(std::execution::par_unseq, input.begin(), input.end(), [&](const auto& x){
-    //     //--------------------------
-    //     torch::Tensor temp_min = torch::min(x), temp_max = torch::max(x);
-    //     //--------------------------
-    //     if(temp_min.less(min).any().item<bool>()){
-    //         //--------------------------
-    //         min = temp_min;
-    //         //--------------------------
-    //     }// end if(temp_min.less(min).any().item<bool>())
-    //     if(max.less(temp_max).any().item<bool>()){
-    //         //--------------------------
-    //         max = temp_max;
-    //         //--------------------------
-    //     }// end if(max.less(temp_max).any().item<bool>())
-    // });
-    //--------------------------
-    // std::cout << "it_max: " << max << " it_min: " << min << std::endl;
     //--------------------------
     for(const auto& x : input){
         //--------------------------

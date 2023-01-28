@@ -108,9 +108,7 @@ int main(void){
     //--------------------------------------------------------------
     auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
         //--------------------------
-        auto _circle = torch::pow((output[-1][0]-input[-1][0]),2)+torch::pow((output[-1][1]-input[-1][1]),2);
-        //--------------------------
-        return torch::abs(_circle - input[-1][2]);
+        return torch::abs(torch::pow((output[-1][0]-input[-1][0]),2)+torch::pow((output[-1][1]-input[-1][1]),2) - input[-1][2]);
         //--------------------------
     };
     //--------------------------------------------------------------
@@ -184,44 +182,8 @@ int main(void){
     //--------------------------
     auto input_test = input_test_thread.get();
     //--------------------------
-    // auto input_test_temp = input_test.data_ptr<float>();
-    // std::vector<float> _temp;
-    // _temp.reserve(input_test.size(0) * input_test.size(1));
-    // std::vector<torch::Tensor> _tests;
-    // _tests.reserve(input_test.size(0));
     std::vector<torch::Tensor> _output_test;
     _output_test.reserve(input_test.size());
-    //--------------------------
-    // torch::Tensor _batching_output;
-    //--------------------------
-    // for (int64_t i = 0; i < input_test.size(0); ++i){
-    //     //--------------------------
-    //     for (int64_t j = 0; j < input_test.size(1); ++j){ 
-    //         //--------------------------
-    //         _temp.push_back(*input_test_temp++);
-    //         //--------------------------
-    //     }// end for (int64_t j = 0; j < input_test.size(1); ++j)
-    //     //--------------------------
-    //     for (size_t i = 0; i < 10; ++i){
-    //         //--------------------------
-    //         auto _test_temp = torch::tensor(_temp).view({-1, static_cast<int64_t>(input_test.size(1))});
-    //         //--------------------------
-    //         if (i == 0){
-    //             //--------------------------
-    //             _batching_output = _test_temp;
-    //             //--------------------------
-    //             continue;
-    //             //--------------------------
-    //         }// end if (i == 0)
-    //         //--------------------------
-    //         _batching_output = torch::cat({_batching_output, _test_temp});
-    //     }// end for (size_t i = 0; i < 10; ++i)
-    //     //--------------------------
-    //     _temp.clear();
-    //     //--------------------------
-    //     _tests.push_back(_batching_output);
-    //     //--------------------------
-    // }// end for (int64_t i = 0; i < input_test.size(0); ++i)
     //--------------------------
     std::cout << "--------------INPUT--------------" << std::endl;
     //--------------------------
@@ -233,11 +195,9 @@ int main(void){
         //--------------------------
         auto _circle = torch::pow((_test_temp[-1][0]-_test[-1][1]),2)+torch::pow((_test_temp[-1][1]-_test[-1][2]),2);
         //--------------------------
-        // auto results = torch::abs(_circle - torch::pow(_test[-1][0],2));
+        auto _lost = torch::mse_loss(_circle, _test[-1][2], torch::Reduction::Sum).template item<float>();
         //--------------------------
-        auto _lost = torch::mse_loss(_circle, torch::pow(_test[-1][0],2), torch::Reduction::Sum).template item<float>();
-        //--------------------------
-        std::cout << "circle: " << _circle.item().toFloat() << " output: " << torch::pow(_test[-1][2],2).item().toFloat() << " error: " << _lost*100 << std::endl;
+        std::cout << "circle: " << _circle.item().toFloat() << " output: " << _test[-1][2].item().toFloat() << " error: " << _lost*100 << std::endl;
         //--------------------------
         // std::cout << _test << _output_test << std::endl;
         //--------------------------

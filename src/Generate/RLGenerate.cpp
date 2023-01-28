@@ -6,6 +6,14 @@
 // Standard library
 //--------------------------------------------------------------
 #include <random>
+//-------------------
+#include <future>
+#include <algorithm>
+#include <execution>
+//--------------------------------------------------------------
+// User Defined library
+//--------------------------------------------------------------
+#include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
 RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter, const torch::Device& device) : 
             m_generated_points(generated_points), 
@@ -58,9 +66,8 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
             //--------------------------
         }// end for (size_t i = 0; i < column; ++i)
         //--------------------------
-        // _data.push_back(torch::transpose(torch::cat({torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re)), torch::tensor(uniform_angle(re))}).view({-1,3}), 0, 1));
-        //--------------------------
         _temp.push_back((std::pow(_temp.at(0),2) + std::pow(_temp.at(1),2)));
+        //--------------------------
         _data.push_back(torch::tensor(_temp).view({-1,static_cast<int64_t>(column)}).to(m_device));
         //--------------------------
         _temp.clear();
@@ -86,14 +93,9 @@ torch::Tensor RLGenerate::generate_target(const size_t& generated_points, const 
     std::uniform_real_distribution<double> uniform_angle(-m_limiter, m_limiter);
     std::default_random_engine re;
     //--------------------------
-    std::vector<double> _data;
-    _data.reserve(generated_points*column);
+    std::vector<double> _data(generated_points*column);
     //--------------------------
-    for (size_t i = 0; i < generated_points*column; ++i){
-        //--------------------------
-        _data.push_back(uniform_angle(re));
-        //--------------------------
-    }// end for (size_t i = 0; i < m_generated_points; ++i)
+    std::generate(std::execution::par_unseq, _data.begin(), _data.end(),[&uniform_angle, &re]() {return uniform_angle(re);});
     //--------------------------
     return torch::tensor(_data).view({-1, static_cast<int64_t>(column)}).to(m_device);
     //--------------------------

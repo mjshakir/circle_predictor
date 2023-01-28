@@ -22,7 +22,7 @@ endfunction()
 #------------------------------------------------------------------------------------------
 set_with_default(USE_TTB "build application with TTB" BOOL ON)
 #------------------------------------------------------------------------------------------
-add_compile_options(-Wall -Wextra -Wpedantic)
+add_compile_options(-Wall -Wextra -Wpedantic -pedantic-errors -Werror=format-security -fasynchronous-unwind-tables)
 #------------------------------------------------------------------------------------------
 # Set the output folder where your program will be created
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

@@ -32,7 +32,7 @@ int main(void){
     // Command line arugments using boost options 
     //--------------------------
     // std::string filename;
-    size_t generated_size = 100, points_size = 3, test_size = 10, output_size =2, batch_size = 10, epoch = 1000;
+    size_t generated_size = 100, points_size = 3, test_size = 100, output_size =2, batch_size = 10, epoch = 1000;
     // long double precision;
     //--------------------------
     //--------------------------------------------------------------
@@ -63,8 +63,10 @@ int main(void){
     //--------------------------
     auto input = _normalize.normalization();
     //--------------------------
-    auto input_test = _normalize.normalization(_generate.get_test_input(test_size, 3));
+    // auto input_test = _normalize.normalization(_generate.get_test_input(test_size, 3));
     //--------------------------
+    auto input_test_thread = std::async(std::launch::async, [&_normalize, &_generate, &points_size, &test_size](){
+                                    return _normalize.normalization(_generate.get_test_input(test_size, points_size));});
     //--------------------------------------------------------------
     // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
     //                             //--------------------------
@@ -149,7 +151,7 @@ int main(void){
         //--------------------------
         _rewards.push_back(reward.item<float>());
         //--------------------------
-        while(!_done){
+        while(!done){
             //--------------------------
             auto output = handler.action(training_input, _epsilon, batch_size, 2);
             //--------------------------
@@ -184,6 +186,8 @@ int main(void){
     }//end for(size_t i = 0; i < epoch; ++i)
     //--------------------------
     std::cout << " \n rewards: " << _rewards.size() << std::endl;
+    //--------------------------
+    auto input_test = input_test_thread.get();
     //--------------------------
     // auto input_test_temp = input_test.data_ptr<float>();
     // std::vector<float> _temp;

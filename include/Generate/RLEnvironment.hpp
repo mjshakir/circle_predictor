@@ -111,7 +111,7 @@ class RLEnvironment{
         //--------------------------------------------------------------
         std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(size_t batch, Args... args){
             //--------------------------------------------------------------
-            if(batch > m_data.size()/2){
+            if(batch >= m_data.size()/2){
                 //--------------------------
                 throw std::out_of_range("Batch Size Must Be Less Then The data Size");
                 //--------------------------
@@ -119,9 +119,7 @@ class RLEnvironment{
             //--------------------------------------------------------------
             torch::Tensor _data;
             //--------------------------------------------------------------
-            if (m_data_iter == m_data.begin()){
-                //--------------------------
-                std::cout << "m_data.begin()" << std::endl;
+            if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
                 //--------------------------
                 auto epsilon = calculate_epsilon();
                 //--------------------------
@@ -143,7 +141,7 @@ class RLEnvironment{
                         //--------------------------
                     }// end if(i == 0)
                     //--------------------------
-                    if(m_data_iter != m_data.end()-1 && std::next(m_data_iter, batch) != m_data.end()-1){
+                    if(m_data_iter != m_data.end()-1){
                     //--------------------------
                         ++m_data_iter;
                     //--------------------------
@@ -237,7 +235,7 @@ class RLEnvironment{
                 //--------------------------
                 for(size_t i = 1; i < batch; ++i){
                     //--------------------------
-                    if(m_data_iter != m_data.end()-1){
+                    if(m_data_iter != m_data.end()-1 or std::next(m_data_iter, batch) != m_data.end()-1){
                     //--------------------------
                         ++m_data_iter;
                     //--------------------------

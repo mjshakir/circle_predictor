@@ -100,9 +100,6 @@ class ReinforcementNetworkHandling{
             //--------------------------
         }// end torch::Tensor select_action(const torch::Tensor& input, const T& epsilon)
         //--------------------------
-        // template<typename AGENT_OUTPUT, typename... Args>
-        // void agent(std::function<AGENT_OUTPUT(Args&...)> agent_function); 
-        //--------------------------
         void agent_optimizer(   const torch::Tensor& input, 
                                 const torch::Tensor& next_input, 
                                 torch::optim::Optimizer& optimizer, 
@@ -122,38 +119,15 @@ class ReinforcementNetworkHandling{
             }// end if(done)
             else{
                 //--------------------------
-                // std::cout << "_state_value: "  << std::endl;
-                //--------------------------
                 auto _state_value = m_model.forward(_next_input).detach();
-                // _target_value = rewards + gamma * _state_value;
-                _target_value = torch::add(torch::mul(_state_value, gamma), rewards);
-                //--------------------------
-                // std::cout << "rewards: " << rewards << "_state_value: " << _state_value  << "\n _target_value: " << _target_value << std::endl;
-                //--------------------------
-                // std::cout << "_target_value: " << _target_value.sizes()  << std::endl;
+                _target_value = rewards + gamma * _state_value;
+                // _target_value = torch::add(torch::mul(_state_value, gamma), rewards);
                 //--------------------------
             }// end else
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
-            // std::cout << " _predicted_value input: " << input.sizes() << std::endl;
-            //--------------------------
-            // std::cout << " _predicted_value input: " << input.sizes() << " _next_input: " << _next_input.sizes() << std::endl;
-            //--------------------------
-            // std::cout <<  "_target_value: " << _target_value.sizes() << std::endl;
-            //--------------------------
-            // if(input.sizes() !=  next_input.sizes()){ 
-            //     printf("\x1b[31m" "\033[1m" "Mess mash detected" "\033[m" "\x1b[0m");
-            //     _input = input.view({-1,3});
-            // }
-            //--------------------------
             auto _predicted_value = m_model.forward(_input);
-            //--------------------------
-            // std::cout << "_predicted_value: " << _predicted_value.sizes() << std::endl;
-            //--------------------------
-            // std::cout << "_predicted_value: " << _predicted_value.sizes()  << "\n _target_value: " << _target_value.sizes() << std::endl;
-            //--------------------------
-            // std::cout << "_predicted_value: " << _predicted_value  << "\n _target_value: " << _target_value << std::endl;
             //--------------------------
             torch::Tensor loss = torch::mse_loss(_predicted_value, _target_value);
             //--------------------------
@@ -162,8 +136,6 @@ class ReinforcementNetworkHandling{
                 throw std::overflow_error("\x1b[31m" "\033[1m" "NaN Is Detected In The Agent" "\033[m" "\x1b[0m");
                 //--------------------------
             }//end if( torch::isnan(_predicted_value) || torch::isnan(_target_value))
-            //--------------------------
-            // std::cout << "loss "  << std::endl;
             //--------------------------
             loss.backward({},c10::optional<bool>(true), false);
             optimizer.step();
@@ -202,11 +174,7 @@ class ReinforcementNetworkHandling{
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
-            // std::cout << " _predicted_value input: " << input.sizes()  << std::endl;
-            //--------------------------
             auto _predicted_value = m_model.forward(_input);
-            //--------------------------
-            // std::cout << "_predicted_value: " << _predicted_value.sizes()  << std::endl;
             //--------------------------
             torch::Tensor loss = torch::mse_loss(_predicted_value, _target_value);
             //--------------------------
@@ -224,9 +192,7 @@ class ReinforcementNetworkHandling{
             torch::NoGradGuard no_grad;
             m_model.eval();
             //--------------------------
-            auto output = m_model.forward(_input);
-            //--------------------------
-            return output;
+            return m_model.forward(_input);;
             //--------------------------
         }// end torch::Tensor network_test(const torch::Tensor& input)
         //--------------------------------------------------------------

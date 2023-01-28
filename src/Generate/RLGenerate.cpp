@@ -16,10 +16,10 @@
 #include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
 RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter, const torch::Device& device) : 
-            m_generated_points(generated_points), 
-            m_column(column), 
-            m_limiter(limiter),
-            m_device(device){
+                        m_generated_points(generated_points),
+                        m_column(column), 
+                        m_limiter(limiter),
+                        m_device(device){
     //--------------------------
     m_data = generate_input(m_generated_points, m_column);
     //--------------------------
@@ -31,15 +31,21 @@ std::vector<torch::Tensor> RLGenerate::get_input(void){
     //--------------------------
 }// end torch::Tensor RLGenerate::get_input(void)
 //--------------------------------------------------------------
+std::vector<torch::Tensor> RLGenerate::generate_input(const size_t& generated_points, const size_t& column){
+    //--------------------------
+    return generate_value(generated_points, column);
+    //--------------------------
+}// end std::vector<torch::Tensor> RLGenerate::generate_input(const size_t& generated_points, const size_t& column)
+//--------------------------------------------------------------
 torch::Tensor RLGenerate::get_output(const size_t& generated_points, const size_t& column){
     //--------------------------
     return generate_target(generated_points, column);
     //--------------------------
 }// end std::vector<torch::Tensor> RLGenerate::get_output(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------
-torch::Tensor RLGenerate::get_test_input(const size_t& generated_points, const size_t& column){
+std::vector<torch::Tensor> RLGenerate::get_test_input(const size_t& generated_points, const size_t& column){
     //--------------------------
-    return generate_target(generated_points, column);
+    return generate_value(generated_points, column);
     //--------------------------
 }// end torch::Tensor RLGenerate::get_test_input(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------
@@ -77,12 +83,6 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
     return _data;
     //--------------------------
 }// end torch::Tensor RLGenerate::generate_input(void)
-//--------------------------------------------------------------
-std::vector<torch::Tensor> RLGenerate::generate_input(const size_t& generated_points, const size_t& column){
-    //--------------------------
-    return generate_value(generated_points, column);
-    //--------------------------
-}// end std::vector<torch::Tensor> RLGenerate::generate_input(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------
 torch::Tensor RLGenerate::generate_target(const size_t& generated_points, const size_t& column){
     //--------------------------

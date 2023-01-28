@@ -39,7 +39,7 @@ class RLGenerate{
          *
          *  @return 1) x_value: input data. 2)y_value: target data. 
          */
-        torch::Tensor get_test_input(const size_t& generated_points = 60000, const size_t& column = 2);
+        std::vector<torch::Tensor> get_test_input(const size_t& generated_points = 60000, const size_t& column = 3);
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------

@@ -10,12 +10,12 @@
 //--------------------------------------------------------------
 // User Defined library
 //--------------------------------------------------------------
-#include "Generate/RLEnvironment.hpp"
-#include "Generate/RLGenerate.hpp"
-#include "Network/ReinforcementNetworkHandling.hpp"
-#include "Network/Network.hpp"
+#include "Network/Networks.hpp"
+#include "Generate/RL/RLEnvironment.hpp"
+#include "Generate/RL/RLGenerate.hpp"
+#include "Network/RL/ReinforcementNetworkHandling.hpp"
+#include "Network/RL/RLNormalize.hpp"
 #include "Timing/TimeIT.hpp"
-#include "Network/RLNormalize.hpp"
 //--------------------------------------------------------------
 // Standard cpp library
 //--------------------------------------------------------------
@@ -125,12 +125,8 @@ int main(void){
                                                                             [&_generate](size_t size = 10, size_t col = 2){ 
                                                                                 return  _generate.get_output(size, col);});
     //--------------------------
-    bool _done = false;
-    //--------------------------
     std::vector<float> _rewards;
     _rewards.reserve( input.size() * epoch);
-    torch::Tensor training_input;
-    double _epsilon = 0.;
     //--------------------------
     progressbar bar(epoch);
     //--------------------------
@@ -144,14 +140,13 @@ int main(void){
         //--------------------------
         handler.agent(_input, optimizer, reward, done);
         //--------------------------
-        training_input = next_input;
-        _epsilon = init_epsilon;
-        //--------------------------
-        _done = done;
+        torch::Tensor training_input = next_input;
+        double _epsilon = init_epsilon;
+        bool _done = done;
         //--------------------------
         _rewards.push_back(reward.item<float>());
         //--------------------------
-        while(!done){
+        while(!_done){
             //--------------------------
             auto output = handler.action(training_input, _epsilon, batch_size, 2);
             //--------------------------

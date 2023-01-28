@@ -10,8 +10,8 @@
 //--------------------------------------------------------------
 // User Defined library
 //--------------------------------------------------------------
-#include "Network/Network.hpp"
-#include "Generate/Generate.hpp"
+#include "Network/Supervised/Supervised.hpp"
+#include "Generate/Supervised/Generate.hpp"
 #include "Timing/Timing.hpp"
 //--------------------------------------------------------------
 

@@ -74,17 +74,15 @@ LINK_DIRECTORIES( ${LIBRARYPATH} )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_network SHARED
-  src/Network/Network.cpp
   src/Network/Networks.cpp
-  src/Network/NetworkHandling.cpp
-  src/Network/DataLoader.cpp
-  src/Network/Normalize.cpp
+  src/Network/Supervised/Supervised.cpp
+  src/Network/Supervised/NetworkHandling.cpp
+  src/Network/Supervised/DataLoader.cpp
+  src/Network/Supervised/Normalize.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_data SHARED
-  src/Generate/Generate.cpp
-  src/Generate/RLGenerate.cpp
-  src/Generate/RLEnvironment.cpp
+  src/Generate/Supervised/Generate.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_timing SHARED
@@ -95,14 +93,14 @@ add_library(${PROJECT_NAME}_timing SHARED
 # RL Library
 #----------------------------------
 add_library(${PROJECT_NAME}_rl_data SHARED
-  src/Generate/RLGenerate.cpp
-  src/Generate/RLEnvironment.cpp
+  src/Generate/RL/RLGenerate.cpp
+  src/Generate/RL/RLEnvironment.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_rl_network SHARED
   src/Network/Networks.cpp
-  src/Network/ReinforcementNetworkHandling.cpp
-  src/Network/RLNormalize.cpp
+  src/Network/RL/ReinforcementNetworkHandling.cpp
+  src/Network/RL/RLNormalize.cpp
 )
 #------------------------------------------------------------------------------------------
 if(USE_TTB)
@@ -134,8 +132,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   )
 #------------------------------------------------------------------------------------------
 target_link_libraries(${PROJECT_NAME}_rl PRIVATE
-  ${PROJECT_NAME}_network 
-  ${PROJECT_NAME}_data 
   ${PROJECT_NAME}_timing
   ${PROJECT_NAME}_rl_data
   ${PROJECT_NAME}_rl_network 

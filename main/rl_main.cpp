@@ -32,7 +32,7 @@ int main(void){
     // Command line arugments using boost options 
     //--------------------------
     // std::string filename;
-    size_t generated_size = 100, points_size = 3, test_size = 100, output_size =2, batch_size = 10, epoch = 1000;
+    size_t generated_size = 10000, points_size = 3, test_size = 100, output_size =2, batch_size = 100, epoch = 100;
     // long double precision;
     //--------------------------
     //--------------------------------------------------------------
@@ -108,7 +108,7 @@ int main(void){
     //--------------------------------------------------------------
     auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
         //--------------------------
-        return torch::abs(torch::pow((output[-1][0]-input[-1][0]),2)+torch::pow((output[-1][1]-input[-1][1]),2) - input[-1][2]);
+        return torch::abs((torch::pow((output[-1][0]- input[-1][0]),2)+ (torch::pow((output[-1][1]-input[-1][1]),2))) - input[-1][2]);
         //--------------------------
     };
     //--------------------------------------------------------------
@@ -125,6 +125,8 @@ int main(void){
     //--------------------------
     std::vector<float> _rewards;
     _rewards.reserve( input.size() * epoch);
+    //--------------------------
+    // std::mutex _mutex;
     //--------------------------
     progressbar bar(epoch);
     //--------------------------
@@ -143,6 +145,10 @@ int main(void){
         bool _done = done;
         //--------------------------
         _rewards.push_back(reward.item<float>());
+        //--------------------------
+        // const auto log_thread = std::async(std::launch::async, [&_rewards, &reward, &_mutex](){
+        //                                     std::lock_guard<std::mutex> guard(_mutex);
+        //                                     _rewards.push_back(reward.item<float>());});
         //--------------------------
         while(!_done){
             //--------------------------
@@ -170,6 +176,10 @@ int main(void){
             //--------------------------
             _rewards.push_back(reward.item<float>());
             //--------------------------
+            // const auto log_thread = std::async(std::launch::async, [&_rewards, &reward, &_mutex](){
+            //                                 std::lock_guard<std::mutex> guard(_mutex);
+            //                                 _rewards.push_back(reward.item<float>());});
+            //--------------------------
         }// end while(!_done)
         //--------------------------
         _environment.reset();
@@ -185,7 +195,7 @@ int main(void){
     std::vector<torch::Tensor> _output_test;
     _output_test.reserve(input_test.size());
     //--------------------------
-    std::cout << "--------------INPUT--------------" << std::endl;
+    std::cout << "--------------TEST--------------" << std::endl;
     //--------------------------
     for(const auto& _test : input_test){
         //--------------------------
@@ -193,7 +203,9 @@ int main(void){
         //--------------------------
         _output_test.push_back(_test_temp);
         //--------------------------
-        auto _circle = torch::pow((_test_temp[-1][0]-_test[-1][1]),2)+torch::pow((_test_temp[-1][1]-_test[-1][2]),2);
+        auto _circle = torch::pow((_test_temp[-1][0]-_test[-1][0]),2)+torch::pow((_test_temp[-1][1]-_test[-1][1]),2);
+        //--------------------------
+        // auto _circle = (_test_temp[-1][0]-_test[-1][0]) + (_test_temp[-1][0]-_test[-1][0]);
         //--------------------------
         auto _lost = torch::mse_loss(_circle, _test[-1][2], torch::Reduction::Sum).template item<float>();
         //--------------------------

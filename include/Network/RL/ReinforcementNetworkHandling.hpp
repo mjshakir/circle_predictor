@@ -19,7 +19,7 @@ class ReinforcementNetworkHandling{
         //--------------------------
         ReinforcementNetworkHandling(   Network& model, 
                                         const torch::Device& device,
-                                        std::function<torch::Tensor(Args...)> actions):    m_model(model), 
+                                        std::function<torch::Tensor(Args&...)> actions):    m_model(model), 
                                                                                             m_device(device),
                                                                                             m_random_action(std::move(actions)){
             //--------------------------
@@ -27,7 +27,7 @@ class ReinforcementNetworkHandling{
         //--------------------------
         ReinforcementNetworkHandling(   Network&& model, 
                                         const torch::Device& device, 
-                                        std::function<torch::Tensor(Args...)> actions) :   m_model(std::move(model)), 
+                                        std::function<torch::Tensor(Args&...)> actions) :   m_model(std::move(model)), 
                                                                                             m_device(device),
                                                                                             m_random_action(std::move(actions)){
             //--------------------------
@@ -193,7 +193,7 @@ class ReinforcementNetworkHandling{
         Network m_model; 
         torch::Device m_device;
         //--------------------------
-        std::function<torch::Tensor(Args...)> m_random_action;
+        std::function<torch::Tensor(Args&...)> m_random_action;
     //--------------------------------------------------------------
 };// end class ReinforcementNetworkHandling : protected NetworkHandling
 //--------------------------------------------------------------

@@ -32,7 +32,7 @@ int main(void){
     // Command line arugments using boost options 
     //--------------------------
     // std::string filename;
-    size_t generated_size = 60000, points_size = 3, test_size = 1000, output_size =2, batch_size = 100, epoch = 100;
+    size_t generated_size = 10000, points_size = 3, test_size = 100, output_size =2, batch_size = 100, epoch = 1000;
     // long double precision;
     //--------------------------
     //--------------------------------------------------------------
@@ -66,7 +66,7 @@ int main(void){
     // auto input_test = _normalize.normalization(_generate.data(test_size, 3));
     //--------------------------
     auto input_test_thread = std::async(std::launch::async, [&_generate](){
-                                    return RLNormalize::normalization(_generate.get_test_input());});
+                                    return RLNormalize::normalization_min_max(_generate.get_test_input());});
     //--------------------------------------------------------------
     // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
     //                             //--------------------------
@@ -192,7 +192,7 @@ int main(void){
     //--------------------------
     std::cout << " \n rewards: " << _rewards.size() << std::endl;
     //--------------------------
-    auto input_test = input_test_thread.get();
+    auto [input_test, t_min, t_max] = input_test_thread.get();
     //--------------------------
     std::vector<torch::Tensor> _output_test;
     _output_test.reserve(input_test.size());
@@ -211,7 +211,9 @@ int main(void){
         //--------------------------
         auto _lost = torch::mse_loss(_circle, _test[-1][2], torch::Reduction::Sum).template item<float>();
         //--------------------------
-        std::cout << "circle: " << _circle.item().toFloat() << " output: " << _test[-1][2].item().toFloat() << " error: " << _lost*100 << std::endl;
+        std::cout   << "circle: " << RLNormalize::unnormalization(_circle, t_min, t_max).item().toFloat() 
+                    << " output: " << RLNormalize::unnormalization(_test[-1][2], t_min, t_max).item().toFloat() 
+                    << " error: " << _lost*100 << std::endl;
         //--------------------------
         // std::cout << _test << _output_test << std::endl;
         //--------------------------

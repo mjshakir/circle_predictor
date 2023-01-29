@@ -44,11 +44,28 @@ class RLNormalize{
         static std::vector<torch::Tensor> normalization(const std::vector<torch::Tensor>& input);
         //--------------------------
         /**
+         *  @brief  A static Normalizing function. This uses Min-max feature scaling. 
+         *          Warning: cannot use unnormalization.
+         * 
+         *  @warning Cannot use unnormalization since you are using a static function. 
+         *
+         *  @return A normalized a torch tensor
+         */
+        static std::tuple<std::vector<torch::Tensor>, torch::Tensor, torch::Tensor> normalization_min_max(const std::vector<torch::Tensor>& input);
+        //--------------------------
+        /**
          *  @brief  Unnormalize the input tensor. This uses inverse Min-max feature scaling.
          * 
          *  @return A unnormalize a torch tensor
          */
         torch::Tensor unnormalization(const torch::Tensor& input);
+        //--------------------------
+        /**
+         *  @brief  Unnormalize the input tensor. This uses inverse Min-max feature scaling.
+         * 
+         *  @return A unnormalize a torch tensor
+         */
+        static torch::Tensor unnormalization(const torch::Tensor& input, const torch::Tensor min, const torch::Tensor max);
         //--------------------------
         //--------------------------------------------------------------
     protected:
@@ -59,7 +76,11 @@ class RLNormalize{
         //--------------------------
         static std::vector<torch::Tensor> normalization_data(const std::vector<torch::Tensor>& input);
         //--------------------------
+        static std::tuple<std::vector<torch::Tensor>, torch::Tensor, torch::Tensor>  normalization_min_max_data(const std::vector<torch::Tensor>& input);
+        //--------------------------
         torch::Tensor unnormalization_data(const torch::Tensor& input);
+        //--------------------------
+        static torch::Tensor unnormalization_data(const torch::Tensor& input, const torch::Tensor min, const torch::Tensor max);
         //--------------------------
         //--------------------------------------------------------------
     private:

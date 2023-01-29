@@ -32,7 +32,7 @@ int main(void){
     // Command line arugments using boost options 
     //--------------------------
     // std::string filename;
-    size_t generated_size = 10000, points_size = 3, test_size = 100, output_size =2, batch_size = 100, epoch = 100;
+    size_t generated_size = 60000, points_size = 3, test_size = 1000, output_size =2, batch_size = 100, epoch = 100;
     // long double precision;
     //--------------------------
     //--------------------------------------------------------------
@@ -56,17 +56,17 @@ int main(void){
     //--------------------------------------------------------------
     //--------------------------
     // TimeIT _timer; 
-    RLGenerate _generate(generated_size, points_size, batch_size);
+    RLGenerate _generate(generated_size, test_size, points_size, batch_size);
     // std::cout << "RLGenerate time: " << _timer.get_time_seconds() << std::endl;
     //--------------------------
     RLNormalize _normalize(_generate.get_input());
     //--------------------------
     auto input = _normalize.normalization();
     //--------------------------
-    // auto input_test = _normalize.normalization(_generate.get_test_input(test_size, 3));
+    // auto input_test = _normalize.normalization(_generate.data(test_size, 3));
     //--------------------------
-    auto input_test_thread = std::async(std::launch::async, [&_normalize, &_generate, &points_size, &test_size](){
-                                    return _normalize.normalization(_generate.get_test_input(test_size, points_size));});
+    auto input_test_thread = std::async(std::launch::async, [&_generate](){
+                                    return RLNormalize::normalization(_generate.get_test_input());});
     //--------------------------------------------------------------
     // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
     //                             //--------------------------
@@ -108,7 +108,9 @@ int main(void){
     //--------------------------------------------------------------
     auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
         //--------------------------
-        return torch::abs((torch::pow((output[-1][0]- input[-1][0]),2)+ (torch::pow((output[-1][1]-input[-1][1]),2))) - input[-1][2]);
+        // return torch::abs((torch::pow((output[-1][0]- input[-1][0]),2)+ (torch::pow((output[-1][1]-input[-1][1]),2))) - input[-1][2]);
+        //--------------------------
+        return torch::mse_loss((torch::pow((output[-1][0]- input[-1][0]),2)+ (torch::pow((output[-1][1]-input[-1][1]),2))), input[-1][2], torch::Reduction::Sum);
         //--------------------------
     };
     //--------------------------------------------------------------

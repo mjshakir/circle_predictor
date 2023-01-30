@@ -105,8 +105,8 @@ class ReinforcementNetworkHandling{
             //--------------------------
             if(done){
                 //--------------------------
-                // _target_value = rewards;
-                _target_value = m_model.forward(_next_input).detach();
+                _target_value = rewards;
+                // _target_value = m_model.forward(_next_input).detach();
                 //--------------------------
             }// end if(done)
             else{

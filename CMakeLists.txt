@@ -101,6 +101,7 @@ add_library(${PROJECT_NAME}_rl_network SHARED
   src/Network/Networks.cpp
   src/Network/RL/ReinforcementNetworkHandling.cpp
   src/Network/RL/RLNormalize.cpp
+  src/Network/RL/ExperienceReplay.cpp
 )
 #------------------------------------------------------------------------------------------
 if(USE_TTB)

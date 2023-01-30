@@ -15,6 +15,8 @@
 #include "Generate/RL/RLGenerate.hpp"
 #include "Network/RL/ReinforcementNetworkHandling.hpp"
 #include "Network/RL/RLNormalize.hpp"
+#include "Network/RL/ExperienceReplay.hpp"
+//--------------------------
 #include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
 // Standard cpp library
@@ -32,7 +34,7 @@ int main(void){
     // Command line arugments using boost options 
     //--------------------------
     // std::string filename;
-    size_t generated_size = 10000, points_size = 3, test_size = 100, output_size =2, batch_size = 100, epoch = 1000;
+    size_t generated_size = 60000, points_size = 3, test_size = 100, output_size =2, batch_size = 100, epoch = 10, capacity = batch_size*3;
     // long double precision;
     //--------------------------
     //--------------------------------------------------------------
@@ -106,15 +108,23 @@ int main(void){
     //                             //--------------------------
     //                             };
     //--------------------------------------------------------------
-    auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output, const size_t& batch){
         //--------------------------
         // return torch::abs((torch::pow((output[-1][0]- input[-1][0]),2)+ (torch::pow((output[-1][1]-input[-1][1]),2))) - input[-1][2]);
         //--------------------------
-        return torch::mse_loss((torch::pow((output[-1][0]- input[-1][0]),2)+ (torch::pow((output[-1][1]-input[-1][1]),2))), input[-1][2], torch::Reduction::Sum);
+        // return torch::mse_loss((torch::pow((output[-1][0]- input[-1][0]),2)+ (torch::pow((output[-1][1]-input[-1][1]),2))), input[-1][2], torch::Reduction::Sum);
+        //--------------------------
+        // torch::Tensor _input = input, _output = output;
+        //--------------------------
+        // std::cout << "output.slice(1,0,1): " << output.slice(1,0,1).slice(0,0,10) << " input.slice(1,0,1): " << input.slice(1,0,1) << std::endl;
+        //--------------------------
+        // return torch::mse_loss((torch::pow((output.slice(1,0,1).slice(0,0,10)- input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2).slice(0,0,10)-input.slice(1,1,2)),2))), input.slice(1,2,3));
+        //--------------------------
+        return (torch::pow((output.slice(1,0,1).slice(0,0,batch)- input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2).slice(0,0,batch)-input.slice(1,1,2)),2)))- input.slice(1,2,3);
         //--------------------------
     };
     //--------------------------------------------------------------
-    RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., 10);
+    RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, size_t> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., 10);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device);
     RLNet model(points_size, output_size);
@@ -125,7 +135,9 @@ int main(void){
                                                                             [&_generate](size_t size = 10, size_t col = 2){ 
                                                                                 return  _generate.get_output(size, col);});
     //--------------------------
-    std::vector<float> _rewards;
+    ExperienceReplay memory(capacity);
+    //--------------------------
+    std::vector<torch::Tensor> _rewards;
     _rewards.reserve( input.size() * epoch);
     //--------------------------
     // std::mutex _mutex;
@@ -138,15 +150,19 @@ int main(void){
         //--------------------------
         auto output = handler.action(_input, init_epsilon, batch_size, 2);
         //--------------------------
-        auto [next_input, reward, epsilon, done] = _environment.step(_input, _normalize.normalization(output));
+        auto [next_input, reward, epsilon, done] = _environment.step(_input, _normalize.normalization(output), batch_size);
+        //--------------------------
+        // std::cout << "reward: " << reward << std::endl;
         //--------------------------
         handler.agent(_input, optimizer, reward, done);
         //--------------------------
+        memory.push(_input, next_input, reward, done);
+        //--------------------------
         torch::Tensor training_input = next_input;
-        double _epsilon = init_epsilon;
+        double _epsilon = epsilon;
         bool _done = done;
         //--------------------------
-        _rewards.push_back(reward.item<float>());
+        _rewards.push_back(reward);
         //--------------------------
         // const auto log_thread = std::async(std::launch::async, [&_rewards, &reward, &_mutex](){
         //                                     std::lock_guard<std::mutex> guard(_mutex);
@@ -156,14 +172,28 @@ int main(void){
             //--------------------------
             auto output = handler.action(training_input, _epsilon, batch_size, 2);
             //--------------------------
-            auto [next_input, reward, epsilon, done] = _environment.step(training_input,  _normalize.normalization(output));
+            auto [next_input, reward, epsilon, done] = _environment.step(training_input,  _normalize.normalization(output), batch_size);
+            //--------------------------
+            // std::cout << "reward: " << reward << std::endl;
+            //--------------------------
+            memory.push(training_input, next_input, reward, done);
             //--------------------------
             _epsilon = epsilon;
             _done = done;
             //--------------------------
+            if (memory.size() < capacity){
+                //--------------------------
+                training_input = next_input;
+                //--------------------------
+                continue;
+                //--------------------------
+            }// end if (memory.size() < capacity)
+            //--------------------------
             try{
                 //--------------------------
-                handler.agent(training_input, next_input, optimizer, reward, done);
+                auto [_map_input, next_input, reward, done] = memory.sample();
+                //--------------------------
+                handler.agent(_map_input, next_input, optimizer, reward, done);
                 //--------------------------
             }// end try
             catch(std::overflow_error& e) {
@@ -176,7 +206,7 @@ int main(void){
             //--------------------------
             training_input = next_input;
             //--------------------------
-            _rewards.push_back(reward.item<float>());
+            _rewards.push_back(reward);
             //--------------------------
             // const auto log_thread = std::async(std::launch::async, [&_rewards, &reward, &_mutex](){
             //                                 std::lock_guard<std::mutex> guard(_mutex);
@@ -211,8 +241,8 @@ int main(void){
         //--------------------------
         auto _lost = torch::mse_loss(_circle, _test[-1][2], torch::Reduction::Sum).template item<float>();
         //--------------------------
-        std::cout   << "circle: " << RLNormalize::unnormalization(_circle, t_min, t_max).item().toFloat() 
-                    << " output: " << RLNormalize::unnormalization(_test[-1][2], t_min, t_max).item().toFloat() 
+        std::cout   << "circle: " << _circle.item().toFloat()
+                    << " output: " << _test[-1][2].item().toFloat()
                     << " error: " << _lost*100 << std::endl;
         //--------------------------
         // std::cout << _test << _output_test << std::endl;

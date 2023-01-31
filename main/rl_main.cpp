@@ -155,7 +155,7 @@ int main(void){
         //--------------------------
         auto [_input, init_epsilon] = _environment.get_first();
         //--------------------------
-        auto output = handler.action(_input, init_epsilon, batch_size, 2);
+        auto output = handler.action(_input, init_epsilon, batch_size, output_size);
         //--------------------------
         // std::cout << "_input: " << _input.sizes() << "output: " << output.sizes() << std::endl;
         //--------------------------

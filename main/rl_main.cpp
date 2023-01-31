@@ -34,7 +34,7 @@ int main(void){
     // Command line arugments using boost options 
     //--------------------------
     // std::string filename;
-    size_t generated_size = 60000, points_size = 3, test_size = 100, output_size =2, batch_size = 100, epoch = 10, capacity = batch_size*3;
+    size_t generated_size = 60000, points_size = 3, test_size = 100, limiter = 10, output_size =2, batch_size = 100, epoch = 1000, capacity = epoch;
     // long double precision;
     //--------------------------
     //--------------------------------------------------------------
@@ -58,7 +58,7 @@ int main(void){
     //--------------------------------------------------------------
     //--------------------------
     // TimeIT _timer; 
-    RLGenerate _generate(generated_size, test_size, points_size, batch_size);
+    RLGenerate _generate(generated_size, test_size, points_size, limiter);
     // std::cout << "RLGenerate time: " << _timer.get_time_seconds() << std::endl;
     //--------------------------
     RLNormalize _normalize(_generate.get_input());
@@ -68,6 +68,13 @@ int main(void){
     // auto input_test = _normalize.normalization(_generate.data(test_size, 3));
     //--------------------------
     auto input_test_thread = std::async(std::launch::async, [&_generate](){
+                                    // auto x = _generate.get_test_input();
+                                    // std::cout << "_generate.get_test_input(): " << _generate.get_test_input() << std::endl;
+                                    // auto y = RLNormalize::normalization_min_max(_generate.get_test_input());
+                                    // auto [z, mi, ma] = y;
+                                    // for (std::cout << "Normalized: "; const auto& a: z){
+                                    //     std::cout << a << "\n";
+                                    // }
                                     return RLNormalize::normalization_min_max(_generate.get_test_input());});
     //--------------------------------------------------------------
     // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
@@ -116,7 +123,7 @@ int main(void){
         //--------------------------
         // torch::Tensor _input = input, _output = output;
         //--------------------------
-        // std::cout << "output.slice(1,0,1): " << output.slice(1,0,1).slice(0,0,10) << " input.slice(1,0,1): " << input.slice(1,0,1) << std::endl;
+        // std::cout << "output.slice(1,0,1): " << output.slice(1,0,1) << " input.slice(1,0,1): " << input.slice(1,0,1) << std::endl;
         //--------------------------
         // return torch::mse_loss((torch::pow((output.slice(1,0,1).slice(0,0,10)- input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2).slice(0,0,10)-input.slice(1,1,2)),2))), input.slice(1,2,3));
         //--------------------------
@@ -124,7 +131,7 @@ int main(void){
         //--------------------------
     };
     //--------------------------------------------------------------
-    RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, size_t> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., 10);
+    RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, size_t> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device);
     RLNet model(points_size, output_size);
@@ -149,6 +156,8 @@ int main(void){
         auto [_input, init_epsilon] = _environment.get_first();
         //--------------------------
         auto output = handler.action(_input, init_epsilon, batch_size, 2);
+        //--------------------------
+        // std::cout << "_input: " << _input.sizes() << "output: " << output.sizes() << std::endl;
         //--------------------------
         auto [next_input, reward, epsilon, done] = _environment.step(_input, _normalize.normalization(output), batch_size);
         //--------------------------
@@ -191,9 +200,11 @@ int main(void){
             //--------------------------
             try{
                 //--------------------------
-                auto [_map_input, next_input, reward, done] = memory.sample();
+                auto [_memory_input, _memory_next_input, reward, done] = memory.sample();
                 //--------------------------
-                handler.agent(_map_input, next_input, optimizer, reward, done);
+                // std::cout << "done: [" << std::boolalpha << done << "]" << std::endl;
+                //--------------------------
+                handler.agent(_memory_input, _memory_next_input, optimizer, reward, done);
                 //--------------------------
             }// end try
             catch(std::overflow_error& e) {
@@ -242,7 +253,7 @@ int main(void){
         auto _lost = torch::mse_loss(_circle, _test[-1][2], torch::Reduction::Sum).template item<float>();
         //--------------------------
         std::cout   << "circle: " << _circle.item().toFloat()
-                    << " output: " << _test[-1][2].item().toFloat()
+                    << " actual: " << _test[-1][2].item().toFloat()
                     << " error: " << _lost*100 << std::endl;
         //--------------------------
         // std::cout << _test << _output_test << std::endl;

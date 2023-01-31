@@ -217,7 +217,7 @@ class RLEnvironment{
             //--------------------------
         }// end torch::Tensor get_first_internal(void)
         //--------------------------
-        std::tuple<torch::Tensor, double> get_first_internal(size_t batch){
+        std::tuple<torch::Tensor, double> get_first_internal(const size_t& batch){
             //--------------------------
             if(batch > m_data.size()/2){
                 //--------------------------
@@ -245,7 +245,7 @@ class RLEnvironment{
                     //--------------------------
                 }// end for(size_t i = 0; i < batch; ++i)
                 //--------------------------
-                // std::cout << "_data: " << _data << std::endl;
+                // std::cout << "batch: " << batch << " _data: " << _data.sizes() << std::endl;
                 //--------------------------
                 return {_data, epsilon};
                 //--------------------------

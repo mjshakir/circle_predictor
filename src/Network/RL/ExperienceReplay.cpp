@@ -6,7 +6,6 @@
 // Standard library
 //--------------------------------------------------------------
 #include <random>
-#include <unordered_map>
 //--------------------------------------------------------------
 ExperienceReplay::ExperienceReplay(const size_t& capacity) : m_capacity(capacity), m_position(0){
     //--------------------------
@@ -63,7 +62,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, bool> ExperienceReplay::
     std::mt19937 rng(dev());
     std::uniform_int_distribution<std::mt19937::result_type> uniform_position(0, m_memory.size()-1);
     //--------------------------
-    size_t random_ = uniform_position(rng);
+    // size_t random_ = uniform_position(rng);
     //--------------------------
     // std::cout   << "memory size: [" << m_memory.size() 
     //             << "] random_: [" << random_ << "] ";
@@ -71,7 +70,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, bool> ExperienceReplay::
     // auto it = m_memory.begin();
     // std::advance(it, random_);
     // //--------------------------
-    auto it = std::next( m_memory.begin() , random_);
+    auto it = std::next( m_memory.begin() , uniform_position(rng));
     //--------------------------
     // auto it = std::ranges::next( m_memory.begin() , random_, m_memory.end());
     //--------------------------

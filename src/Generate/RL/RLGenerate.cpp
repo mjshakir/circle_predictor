@@ -88,7 +88,7 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
     std::uniform_real_distribution<double> uniform_angle(-m_limiter, m_limiter);
-    std::default_random_engine re;
+    // std::default_random_engine re;
     //--------------------------
     std::vector<torch::Tensor> _data;
     _data.reserve(generated_points);
@@ -107,9 +107,9 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
         //--------------------------
         for (size_t j = 0; j < column-1; ++j){ // end batch
             //--------------------------
-            _temp.push_back(uniform_angle(re));
+            _temp.push_back(uniform_angle(gen));
             //--------------------------
-            _output_data.push_back(uniform_angle(re));
+            _output_data.push_back(uniform_angle(gen));
             //--------------------------
         }// end for (size_t i = 0; i < column-1; ++i)
         //--------------------------
@@ -134,11 +134,11 @@ torch::Tensor RLGenerate::generate_target(const size_t& generated_points, const 
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
     std::uniform_real_distribution<double> uniform_angle(-m_limiter, m_limiter);
-    std::default_random_engine re;
+    // std::default_random_engine re;
     //--------------------------
     std::vector<double> _data(generated_points*column);
     //--------------------------
-    std::generate(std::execution::par_unseq, _data.begin(), _data.end(),[&uniform_angle, &re]() {return uniform_angle(re);});
+    std::generate(std::execution::par_unseq, _data.begin(), _data.end(),[&uniform_angle, &gen]() {return uniform_angle(gen);});
     //--------------------------
     return torch::tensor(_data).view({-1, static_cast<int64_t>(column)}).to(m_device);
     //--------------------------

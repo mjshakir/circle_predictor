@@ -51,6 +51,17 @@ class ReinforcementNetworkHandling{
         }// end void agent
         //--------------------------
         void agent( const torch::Tensor& input, 
+                    const torch::Tensor& next_input, 
+                    torch::optim::Optimizer& optimizer, 
+                    const torch::Tensor& rewards, 
+                    const torch::Tensor& done, 
+                    const double& gamma = 0.5){
+            //--------------------------
+            agent_optimizer(input, next_input, optimizer, rewards, done, gamma);
+            //--------------------------
+        }// end void agent
+        //--------------------------
+        void agent( const torch::Tensor& input, 
                     torch::optim::Optimizer& optimizer, 
                     const torch::Tensor& rewards, 
                     const bool& done, 
@@ -91,7 +102,7 @@ class ReinforcementNetworkHandling{
             return m_random_action(args...);
             //--------------------------
         }// end torch::Tensor select_action(const torch::Tensor& input, const T& epsilon)
-        //--------------------------
+        //--------------------------------------------------------------
         void agent_optimizer(   const torch::Tensor& input, 
                                 const torch::Tensor& next_input, 
                                 torch::optim::Optimizer& optimizer, 
@@ -133,7 +144,39 @@ class ReinforcementNetworkHandling{
             optimizer.step();
             //-------------------------- 
         }// end void agent(const torch::Tensor& input, const torch::Tensor& next_input, const torch::Tensor& action, const T& rewards, const bool& done)
-        //--------------------------
+        //--------------------------------------------------------------
+        void agent_optimizer(   const torch::Tensor& input, 
+                                const torch::Tensor& next_input, 
+                                torch::optim::Optimizer& optimizer, 
+                                const torch::Tensor& rewards, 
+                                const torch::Tensor& done, 
+                                const double& gamma){
+            //--------------------------
+            torch::Tensor _target_value, _input = input, _next_input = next_input;
+            //--------------------------
+            m_model.train(true);
+            //--------------------------
+            auto _state_value = m_model.forward(_next_input).detach();
+            _target_value = rewards + (1 - done.to(torch::kByte)) * gamma * _state_value;
+            // _target_value = torch::add(torch::mul(_state_value, gamma), rewards);
+            //--------------------------
+            optimizer.zero_grad();
+            //--------------------------
+            auto _predicted_value = m_model.forward(_input);
+            //--------------------------
+            torch::Tensor loss = torch::mse_loss(_predicted_value, _target_value);
+            //--------------------------
+            if(torch::isnan(loss).any().item<bool>()){
+                //--------------------------
+                throw std::overflow_error("\x1b[31m" "\033[1m" "NaN Is Detected In The Agent" "\033[m" "\x1b[0m");
+                //--------------------------
+            }//end if( torch::isnan(_predicted_value) || torch::isnan(_target_value))
+            //--------------------------
+            loss.backward({},c10::optional<bool>(true), false);
+            optimizer.step();
+            //-------------------------- 
+        }// end void agent(const torch::Tensor& input, const torch::Tensor& next_input, const torch::Tensor& action, const T& rewards, const bool& done)
+        //--------------------------------------------------------------
         void agent_optimizer(   const torch::Tensor& input, 
                                 torch::optim::Optimizer& optimizer, 
                                 const torch::Tensor& rewards, 
@@ -176,7 +219,7 @@ class ReinforcementNetworkHandling{
             optimizer.step();
             //--------------------------
         }// end void agent(const torch::Tensor& input, const torch::Tensor& next_input, const torch::Tensor& action, const T& rewards, const bool& done)
-        //--------------------------
+        //--------------------------------------------------------------
         torch::Tensor network_test(const torch::Tensor& input){
             //--------------------------
             torch::Tensor _input = input;

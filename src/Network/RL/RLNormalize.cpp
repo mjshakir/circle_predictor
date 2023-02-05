@@ -90,17 +90,9 @@ std::tuple<std::vector<torch::Tensor>, torch::Tensor, torch::Tensor>  RLNormaliz
     //--------------------------
     const auto [t_min, t_max] = find_min_max(input);
     //--------------------------
-    // std::cout << "t_min: " << t_min <<  " t_max: " << t_max << std::endl;
-    //--------------------------
     for(const auto& x : input){
         //--------------------------
-        auto z = ((x-t_min)/(t_max-t_min));
-        //--------------------------
-        // std::cout << "normlized: " << z << std::endl;
-        //--------------------------
-        _data.push_back(z);
-        //--------------------------
-        // _data.push_back(((x-t_min)/(t_max-t_min)));
+        _data.push_back(((x-t_min)/(t_max-t_min)));
         //--------------------------
     }// for(const auto& x : input)
     //--------------------------

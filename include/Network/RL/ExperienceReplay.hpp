@@ -18,6 +18,10 @@ class ExperienceReplay{
         //--------------------------
         std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, bool> sample(void);
         //--------------------------
+        std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> sample(bool& done);
+        //--------------------------
+        std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> sample(const size_t& batch, bool& done);
+        //--------------------------
         size_t size(void) const;
         //--------------------------------------------------------------
     protected:
@@ -25,6 +29,10 @@ class ExperienceReplay{
         void push_data(const torch::Tensor& input, const torch::Tensor& next_input, const torch::Tensor& reward, const bool& done);
         //--------------------------
         std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, bool> sample_data(void);
+        //--------------------------
+        std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> sample_data(bool& done);
+        //--------------------------
+        std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> sample_data(const size_t& batch, bool& done);
         //--------------------------
         size_t map_size(void) const;
         //--------------------------------------------------------------

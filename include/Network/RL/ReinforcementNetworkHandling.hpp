@@ -39,6 +39,14 @@ class ReinforcementNetworkHandling{
             //--------------------------
         }// end torch::Tensor select(const torch::Tensor& input, const double& epsilon, const Args... args)
         //--------------------------
+        virtual void agent( const torch::Tensor& input, 
+                            const torch::Tensor& next_input, 
+                            torch::optim::Optimizer& optimizer, 
+                            const torch::Tensor& rewards, 
+                            const bool& done, 
+                            const double& gamma = 0.5,
+                            const size_t& update_frequency = 100) = 0;
+        //--------------------------
         void agent( const torch::Tensor& input, 
                     const torch::Tensor& next_input, 
                     torch::optim::Optimizer& optimizer, 
@@ -102,6 +110,14 @@ class ReinforcementNetworkHandling{
             return m_random_action(args...);
             //--------------------------
         }// end torch::Tensor select_action(const torch::Tensor& input, const T& epsilon)
+        //--------------------------------------------------------------
+        virtual void agent_optimizer(   const torch::Tensor& input, 
+                                        const torch::Tensor& next_input, 
+                                        torch::optim::Optimizer& optimizer, 
+                                        const torch::Tensor& rewards, 
+                                        const bool& done, 
+                                        const double& gamma,
+                                        const size_t& update_frequency) = 0;
         //--------------------------------------------------------------
         void agent_optimizer(   const torch::Tensor& input, 
                                 const torch::Tensor& next_input, 
@@ -230,6 +246,12 @@ class ReinforcementNetworkHandling{
             return m_model.forward(_input);;
             //--------------------------
         }// end torch::Tensor network_test(const torch::Tensor& input)
+        //--------------------------------------------------------------
+         Network& get_model(void){
+            //--------------------------
+            return m_model;
+            //--------------------------
+        }// end Network& get_model(void)
         //--------------------------------------------------------------
     private:
         //--------------------------

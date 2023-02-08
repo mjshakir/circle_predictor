@@ -14,6 +14,9 @@
 #include "Generate/RL/RLEnvironment.hpp"
 #include "Generate/RL/RLGenerate.hpp"
 #include "Network/RL/ReinforcementNetworkHandling.hpp"
+//--------------------------
+#include "Network/RL/ReinforcementNetworkHandlingDQN.hpp"
+//--------------------------
 #include "Network/RL/RLNormalize.hpp"
 #include "Network/RL/ExperienceReplay.hpp"
 //--------------------------
@@ -34,8 +37,16 @@ int main(void){
     // Command line arugments using boost options 
     //--------------------------
     // std::string filename;
-    size_t generated_size = 60000, points_size = 3, test_size = 100, limiter = 10, output_size =2, batch_size = 100, epoch = 1000, capacity = 3*batch_size;
-    // long double precision;
+    size_t  generated_size = 60000, 
+            points_size = 3, 
+            test_size = 100, 
+            limiter = 10, 
+            output_size =2, 
+            batch_size = 100, 
+            epoch = 1000, 
+            capacity = 3*batch_size;
+    //--------------------------
+    double memory_percentage = 0.3;
     //--------------------------
     //--------------------------------------------------------------
     // Initiate Torch seed, device type
@@ -145,29 +156,99 @@ int main(void){
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device);
     RLNet model(points_size, output_size);
+    RLNet target_model(points_size, output_size);
+    //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
-    ReinforcementNetworkHandling<decltype(model), size_t, size_t> handler(  std::move(model), 
-                                                                            device_type, 
-                                                                            [&_generate](size_t size = 10, size_t col = 2){ 
-                                                                                return  _generate.get_output(size, col);});
+    // ReinforcementNetworkHandling<decltype(model), size_t, size_t> handler(  std::move(model), 
+    //                                                                         device_type, 
+    //                                                                         [&_generate](const size_t& size, const size_t& col = 2){ 
+    //                                                                             return  _generate.get_output(size, col);});
+    //--------------------------
+    ReinforcementNetworkHandlingDQN<decltype(model), size_t, size_t> handler(   std::move(model), 
+                                                                                std::move(target_model),
+                                                                                device_type, 
+                                                                                [&_generate](const size_t& size, const size_t& col = 2){ 
+                                                                                    return  _generate.get_output(size, col);});
     //--------------------------
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::bernoulli_distribution memory_activation(0.50);
+    std::bernoulli_distribution memory_activation(memory_percentage);
     //--------------------------
     ExperienceReplay memory(capacity);
     //--------------------------
     std::vector<torch::Tensor> _rewards;
     _rewards.reserve( input.size() * epoch);
     //--------------------------
-    // auto done = std::make_unique<bool>(false);
-    // auto epsilon = std::make_unique<double>(0.);
-    //--------------------------
-    // bool *done = nullptr;
-    // double *epsilon = nullptr;
+    // std::mutex memory_guard;
     //--------------------------
     progressbar bar(epoch);
+    //--------------------------
+    // for(size_t i = 0; i < epoch; ++i){
+    //     //--------------------------
+    //     bool done = false;
+    //     double epsilon = 0.;
+    //     //--------------------------
+    //     auto _input = _environment.get_first(epsilon);
+    //     //--------------------------
+    //     auto output = handler.action(_input, epsilon, batch_size, output_size);
+    //     //--------------------------
+    //     // auto [next_input, reward] = _environment.step(epsilon, done, _input, _normalize.normalization(output), batch_size);
+    //     //--------------------------
+    //     auto [next_input, reward] = _environment.step(epsilon, done, _input, _normalize.normalization(output));
+    //     //--------------------------
+    //     // std::cout << "reward: " << reward << std::endl;
+    //     //--------------------------
+    //     handler.agent(_input, optimizer, reward, done);
+    //     //--------------------------
+    //     memory.push(_input, next_input, reward, done);
+    //     //--------------------------
+    //     torch::Tensor training_input = next_input;
+    //     //--------------------------
+    //     _rewards.push_back(reward);
+    //     //--------------------------
+    //     while(!done){
+    //         //--------------------------
+    //         auto output = handler.action(training_input, epsilon, batch_size, output_size);
+    //         //--------------------------
+    //         auto [next_input, reward] = _environment.step(epsilon, done, training_input,  _normalize.normalization(output));
+    //         //--------------------------
+    //         memory.push(training_input, next_input, reward, done);
+    //         //--------------------------
+    //         try{
+    //             //--------------------------
+    //             if(memory_activation(gen)){
+    //                 //--------------------------
+    //                 auto [_memory_input, _memory_next_input, _memory_reward, _done] = memory.sample();
+    //                 //--------------------------
+    //                 handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
+    //                 //--------------------------
+    //             }//end if(memory_activation(gen))
+    //             else{
+    //                 //--------------------------
+    //                 handler.agent(training_input, next_input, optimizer, reward, done);
+    //                 //--------------------------
+    //             }// end else
+    //         }// end try
+    //         catch(std::overflow_error& e) {
+    //             //--------------------------
+    //             std::cerr << "\n" << e.what() << std::endl;
+    //             //--------------------------
+    //             std::exit(-1);
+    //             //--------------------------
+    //         }// end catch(std::out_of_range& e)
+    //         // //--------------------------
+    //         training_input = next_input;
+    //         //--------------------------
+    //         _rewards.push_back(reward);
+    //         //--------------------------
+    //     }// end while(!_done)
+    //     //--------------------------
+    //     _environment.reset();
+    //     //------------
+    //     bar.update();
+    //     //--------------------------
+    // }//end for(size_t i = 0; i < epoch; ++i)
     //--------------------------
     for(size_t i = 0; i < epoch; ++i){
         //--------------------------
@@ -184,7 +265,7 @@ int main(void){
         //--------------------------
         // std::cout << "reward: " << reward << std::endl;
         //--------------------------
-        handler.agent(_input, optimizer, reward, done);
+        handler.agent(_input, next_input, optimizer, reward, done);
         //--------------------------
         memory.push(_input, next_input, reward, done);
         //--------------------------
@@ -192,29 +273,13 @@ int main(void){
         //--------------------------
         _rewards.push_back(reward);
         //--------------------------
-        // const auto log_thread = std::async(std::launch::async, [&_rewards, &reward, &_mutex](){
-        //                                     std::lock_guard<std::mutex> guard(_mutex);
-        //                                     _rewards.push_back(reward.item<float>());});
-        //--------------------------
         while(!done){
             //--------------------------
             auto output = handler.action(training_input, epsilon, batch_size, output_size);
             //--------------------------
-            // auto [next_input, reward] = _environment.step(epsilon, done, training_input,  _normalize.normalization(output), batch_size);
-            //--------------------------
             auto [next_input, reward] = _environment.step(epsilon, done, training_input,  _normalize.normalization(output));
             //--------------------------
-            // std::cout << "reward: " << reward << std::endl;
-            //--------------------------
             memory.push(training_input, next_input, reward, done);
-            //--------------------------
-            // if (memory.size() < capacity){
-            //     //--------------------------
-            //     training_input = next_input;
-            //     //--------------------------
-            //     continue;
-            //     //--------------------------
-            // }// end if (memory.size() < capacity)
             //--------------------------
             try{
                 //--------------------------
@@ -242,10 +307,6 @@ int main(void){
             training_input = next_input;
             //--------------------------
             _rewards.push_back(reward);
-            //--------------------------
-            // const auto log_thread = std::async(std::launch::async, [&_rewards, &reward, &_mutex](){
-            //                                 std::lock_guard<std::mutex> guard(_mutex);
-            //                                 _rewards.push_back(reward.item<float>());});
             //--------------------------
         }// end while(!_done)
         //--------------------------

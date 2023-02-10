@@ -155,7 +155,7 @@ class RLEnvironment{
                 //--------------------------
                 ++m_data_iter;
                 //--------------------------
-                return {input, torch::tensor(NULL)};
+                return {input, torch::tensor(0)};
                 //--------------------------
             }// end if (m_data_iter == m_data.begin())
             //--------------------------
@@ -314,7 +314,7 @@ class RLEnvironment{
                     //--------------------------
                 }// end for(size_t i = 0; i < batch; ++i)
                 //--------------------------
-                return {_data, torch::tensor(NULL)};
+                return {_data, torch::tensor(0)};
                 //--------------------------
             }// end if (m_data_iter == m_data.begin())
             //--------------------------------------------------------------

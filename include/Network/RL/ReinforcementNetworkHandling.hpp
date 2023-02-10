@@ -126,27 +126,13 @@ class ReinforcementNetworkHandling{
                                 const bool& done, 
                                 const double& gamma){
             //--------------------------
-            torch::Tensor _target_value, _input = input, _next_input = next_input;
-            //--------------------------
             m_model.train(true);
             //--------------------------
-            if(done){
-                //--------------------------
-                _target_value = rewards;
-                // _target_value = m_model.forward(_next_input).detach();
-                //--------------------------
-            }// end if(done)
-            else{
-                //--------------------------
-                auto _state_value = m_model.forward(_next_input).detach();
-                _target_value = rewards + gamma * _state_value;
-                // _target_value = torch::add(torch::mul(_state_value, gamma), rewards);
-                //--------------------------
-            }// end else
+            auto _target_value = rewards + (1 - done) * gamma * m_model.forward(next_input).detach();
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
-            auto _predicted_value = m_model.forward(_input);
+            auto _predicted_value = m_model.forward(input);
             //--------------------------
             torch::Tensor loss = torch::mse_loss(_predicted_value, _target_value);
             //--------------------------
@@ -168,17 +154,13 @@ class ReinforcementNetworkHandling{
                                 const torch::Tensor& done, 
                                 const double& gamma){
             //--------------------------
-            torch::Tensor _target_value, _input = input, _next_input = next_input;
-            //--------------------------
             m_model.train(true);
             //--------------------------
-            auto _state_value = m_model.forward(_next_input).detach();
-            _target_value = rewards + (1 - done.to(torch::kByte)) * gamma * _state_value;
-            // _target_value = torch::add(torch::mul(_state_value, gamma), rewards);
+            auto _target_value = rewards + (1 - done.to(torch::kByte)) * gamma * m_model.forward(next_input).detach();
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
-            auto _predicted_value = m_model.forward(_input);
+            auto _predicted_value = m_model.forward(input);
             //--------------------------
             torch::Tensor loss = torch::mse_loss(_predicted_value, _target_value);
             //--------------------------

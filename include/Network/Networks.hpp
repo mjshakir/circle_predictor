@@ -34,7 +34,7 @@ struct RLNet : torch::nn::Module {
     //--------------------------
     RLNet(const uint64_t& batch_size, const uint64_t& output_size = 20);
     //--------------------------
-    torch::Tensor forward(torch::Tensor& x);
+    torch::Tensor forward(const torch::Tensor& x);
     //--------------------------------------------------------------
   protected:
     //--------------------------------------------------------------
@@ -46,6 +46,28 @@ struct RLNet : torch::nn::Module {
     torch::nn::Linear features;
     torch::nn::Linear features2;
     torch::nn::Linear output_layer;
+    //--------------------------------------------------------------
+}; // end struct Net : torch::nn::Module
+//--------------------------------------------------------------
+struct DuelNet : torch::nn::Module {
+  //--------------------------------------------------------------
+  public:
+    //--------------------------
+    DuelNet(const uint64_t& batch_size, const uint64_t& output_size = 20);
+    //--------------------------
+    torch::Tensor forward(const torch::Tensor& x);
+    //--------------------------------------------------------------
+  protected:
+    //--------------------------------------------------------------
+    torch::Tensor linear_layers(const torch::Tensor& x);
+    //--------------------------------------------------------------
+  private:
+    //--------------------------------------------------------------
+    torch::nn::Linear input_layer;
+    torch::nn::Linear features;
+    torch::nn::Linear features2;
+    torch::nn::Linear value_layer;
+    torch::nn::Linear advantage_layer;
     //--------------------------------------------------------------
 }; // end struct Net : torch::nn::Module
 //--------------------------------------------------------------

@@ -2,7 +2,6 @@
 // Main Header 
 //--------------------------------------------------------------
 #include "Network/Networks.hpp"
-
 //--------------------------------------------------------------
 // Net struct 
 //--------------------------------------------------------------
@@ -68,17 +67,65 @@ torch::Tensor RLNet::linear_layers(const torch::Tensor& x){
     //-------------------------
 }// end torch::Tensor Net::linear_layers(torch::Tensor& x)
 //--------------------------------------------------------------
-torch::Tensor RLNet::forward(torch::Tensor& x){
+torch::Tensor RLNet::forward(const torch::Tensor& x){
     //--------------------------
-    x = linear_layers(x);
+    auto _results = linear_layers(x);
     //--------------------------
     // std::cout << "x: " << x.sizes() << std::endl;
     //--------------------------
-    torch::dropout(x, /*p=*/0.5, /*training=*/is_training());
+    torch::dropout(_results, /*p=*/0.5, /*training=*/is_training());
     //-------------------------
     // return torch::transpose(output_layer->forward(x).view({2,-1}), 0, 1);
     //--------------------------
-    return output_layer->forward(x);
+    return output_layer->forward(_results);
+    //--------------------------
+}// end torch::Tensor Net::forward(torch::Tensor x)
+//--------------------------------------------------------------
+// RLNet struct 
+//--------------------------------------------------------------
+DuelNet::DuelNet(const uint64_t& batch_size, const uint64_t& output_size) : input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
+                                                                            features(torch::nn::LinearOptions(128, 256).bias(true)), 
+                                                                            features2(torch::nn::LinearOptions(256, 512).bias(true)),
+                                                                            value_layer(torch::nn::LinearOptions(512, 1).bias(true)),
+                                                                            advantage_layer(torch::nn::LinearOptions(512, output_size).bias(true)){
+    //--------------------------
+    register_module("input_layer", input_layer);
+    register_module("features", features);
+    register_module("features2", features2);
+    register_module("value_layer", value_layer);
+    register_module("advantage_layer", advantage_layer);
+    //--------------------------
+}// end RLNet()
+//--------------------------------------------------------------
+torch::Tensor DuelNet::linear_layers(const torch::Tensor& x){
+    //--------------------------
+    auto _results = torch::leaky_relu(input_layer->forward(x), 5E-2);
+    //--------------------------
+    _results = torch::relu(features->forward(_results));
+    //--------------------------
+    return torch::relu(features2->forward(_results));
+    //-------------------------
+}// end torch::Tensor DuelNet::linear_layers(torch::Tensor& x)
+//--------------------------------------------------------------
+torch::Tensor DuelNet::forward(const torch::Tensor& x){
+    //--------------------------
+    auto _results = linear_layers(x);
+    //--------------------------
+    torch::dropout(_results, /*p=*/0.5, /*training=*/is_training());
+    //-------------------------
+    auto value = value_layer->forward(_results);
+    //--------------------------
+    auto advantage = advantage_layer->forward(_results);
+    //--------------------------
+    // auto value_thread = std::async(std::launch::async, [this, &_results]{return value_layer->forward(_results);});
+    // //--------------------------
+    // auto advantage_thread = std::async(std::launch::async, [this, &_results]{return advantage_layer->forward(_results);});
+    // //--------------------------
+    // auto value = value_thread.get();
+    // //--------------------------
+    // auto advantage = advantage_thread.get();
+    //--------------------------
+    return (value + (advantage - advantage.mean()));
     //--------------------------
 }// end torch::Tensor Net::forward(torch::Tensor x)
 //--------------------------------------------------------------

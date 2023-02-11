@@ -15,39 +15,26 @@
 //--------------------------------------------------------------
 #include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
-RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter, const torch::Device& device) : 
-                        m_generated_points(generated_points),
-                        m_column(column), 
-                        m_limiter(limiter),
-                        m_device(device){
+RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter) :   m_generated_points(generated_points),
+                                                                                                        m_column(column), 
+                                                                                                        m_limiter(limiter){
     //--------------------------
-    auto data_test_thread = std::async(std::launch::async, &RLGenerate::generate_input, this, m_generated_points*0.2, m_column);
+    auto data_thread = std::async(std::launch::async, [this]{ m_data = generate_input(m_generated_points, m_column);});
     //--------------------------
-    auto data_thread = std::async(std::launch::async, &RLGenerate::generate_input, this, m_generated_points, m_column);
-    //--------------------------
-    m_data_test = data_test_thread.get();
-    //--------------------------
-    m_data = data_thread.get();
+    auto data_test_thread = std::async(std::launch::async, [this]{ m_data_test = generate_input(m_generated_points*0.2, m_column);});
     //--------------------------
 }// end RLGenerate::RLGenerate(const size_t& generated_points)
 //--------------------------------------------------------------
 RLGenerate::RLGenerate( const size_t& generated_points, 
                         const size_t& generated_points_test, 
                         const size_t& column, 
-                        const double& limiter, 
-                        const torch::Device& device) : 
-                            m_generated_points(generated_points),
-                            m_column(column), 
-                            m_limiter(limiter),
-                            m_device(device){
+                        const double& limiter) :    m_generated_points(generated_points),
+                                                    m_column(column), 
+                                                    m_limiter(limiter){
     //--------------------------
-    auto data_test_thread = std::async(std::launch::async, &RLGenerate::generate_input, this, generated_points_test, m_column);
+    auto data_thread = std::async(std::launch::async, [this]{ m_data = generate_input(m_generated_points, m_column);});
     //--------------------------
-    auto data_thread = std::async(std::launch::async, &RLGenerate::generate_input, this, m_generated_points, m_column);
-    //--------------------------
-    m_data_test = data_test_thread.get();
-    //--------------------------
-    m_data = data_thread.get();
+    auto data_test_thread = std::async(std::launch::async, [this, &generated_points_test]{ m_data_test = generate_input(generated_points_test, m_column);});
     //--------------------------
 }// end RLGenerate::RLGenerate(const size_t& generated_points)
 //--------------------------------------------------------------
@@ -88,7 +75,6 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
     std::uniform_real_distribution<double> uniform_angle(-m_limiter, m_limiter);
-    // std::default_random_engine re;
     //--------------------------
     std::vector<torch::Tensor> _data;
     _data.reserve(generated_points);
@@ -99,13 +85,9 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
     std::vector<double> _output_data;
     _output_data.reserve(column-1);
     //--------------------------
-    for (size_t i = 0; i < generated_points; ++i){
+    for (size_t i{0}; i < generated_points; ++i){
         //--------------------------
-        // std::generate(std::execution::par_unseq, _temp.begin(), _temp.end(),[&uniform_angle, &re]() {return uniform_angle(re);});
-        //--------------------------
-        // std::generate(std::execution::par_unseq, _output_data.begin(), _output_data.end(),[&uniform_angle, &re]() {return uniform_angle(re);});
-        //--------------------------
-        for (size_t j = 0; j < column-1; ++j){ // end batch
+        for (size_t j{0}; j < column-1; ++j){
             //--------------------------
             _temp.push_back(uniform_angle(gen));
             //--------------------------
@@ -115,7 +97,7 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
         //--------------------------
         _temp.push_back((std::pow((_output_data.at(0) - _temp.at(0)),2) + std::pow(( _output_data.at(1) - _temp.at(1)),2)));
         //--------------------------
-        _data.push_back(torch::tensor(_temp).view({-1,static_cast<int64_t>(column)}).to(m_device));
+        _data.push_back(torch::tensor(_temp).view({-1,static_cast<int64_t>(column)}));
         //--------------------------
         _temp.clear();
         //-----------
@@ -140,7 +122,7 @@ torch::Tensor RLGenerate::generate_target(const size_t& generated_points, const 
     //--------------------------
     std::generate(std::execution::par_unseq, _data.begin(), _data.end(),[&uniform_angle, &gen]() {return uniform_angle(gen);});
     //--------------------------
-    return torch::tensor(_data).view({-1, static_cast<int64_t>(column)}).to(m_device);
+    return torch::tensor(_data).view({-1, static_cast<int64_t>(column)});
     //--------------------------
 }// end std::vector<torch::Tensor> RLGenerate::generate_target(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------

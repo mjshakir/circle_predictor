@@ -67,6 +67,8 @@ class RLGenerate{
         std::vector<torch::Tensor> generate_input(const size_t& generated_points = 60000, const size_t& column = 2);
         //--------------------------
         torch::Tensor generate_target(const size_t& generated_points = 60000, const size_t& column = 2);
+        //--------------------------
+        torch::Tensor inner_generation(const size_t& column = 2);
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------

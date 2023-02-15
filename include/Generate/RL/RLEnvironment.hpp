@@ -15,20 +15,6 @@ class RLEnvironment{
     public:
         //--------------------------------------------------------------
         RLEnvironment(void) = delete;
-        //--------------------------
-        // RLEnvironment(  std::vector<T>&& data, 
-        //                 std::function<COST_OUTPUT(Args&...)> costFunction,
-        //                 const double& egreedy = 0.9,
-        //                 const double& egreedy_final = 0.02,
-        //                 const double& egreedy_decay = 500.) :   m_data(std::move(data)),
-        //                                                         m_data_iter (m_data.begin()), 
-        //                                                         m_CostFunction(std::move(costFunction)),
-        //                                                         m_egreedy(egreedy),
-        //                                                         m_egreedy_final(egreedy_final),
-        //                                                         m_egreedy_decay(egreedy_decay),
-        //                                                         m_enable_batch(false){
-        //     //----------------------------
-        // }// end RLEnvironment(Dataset&& data_loader)
         //--------------------------------------------------------------
         RLEnvironment(  std::vector<T>&& data, 
                         std::function<COST_OUTPUT(Args&...)> costFunction,
@@ -43,6 +29,12 @@ class RLEnvironment{
                                                     m_egreedy_decay(egreedy_decay),
                                                     m_enable_batch((batch > 1) ? true : false),
                                                     m_batch(batch){
+            //----------------------------
+            if(m_enable_batch and batch >= m_data.size()/2){
+                //--------------------------
+                throw std::out_of_range("Batch Size Must Be Less Then The data Size");
+                //--------------------------
+            }// end if(batch > m_data.size()/2)
             //----------------------------
         }// end RLEnvironment(Dataset&& data_loader)
         //--------------------------------------------------------------
@@ -116,6 +108,12 @@ class RLEnvironment{
         //--------------------------------------------------------------
         std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args){
             //--------------------------
+            if (m_data_iter == m_data.end()){
+                //--------------------------
+                throw std::out_of_range("End Of The Data Iterator");
+                //--------------------------
+            }// end if (m_data_iter == m_data.end())
+            //--------------------------
             if (m_data_iter == m_data.begin()){
                 //--------------------------
                 auto input = *m_data_iter;
@@ -146,6 +144,12 @@ class RLEnvironment{
         }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args))
         //--------------------------------------------------------------
         std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, Args... args){
+            //--------------------------
+            if (m_data_iter == m_data.end()){
+                //--------------------------
+                throw std::out_of_range("End Of The Data Iterator");
+                //--------------------------
+            }// end if (m_data_iter == m_data.end())
             //--------------------------
             if (m_data_iter == m_data.begin()){
                 //--------------------------
@@ -185,12 +189,6 @@ class RLEnvironment{
         //--------------------------------------------------------------
         std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args){
             //--------------------------------------------------------------
-            if(batch >= m_data.size()/2){
-                //--------------------------
-                throw std::out_of_range("Batch Size Must Be Less Then The data Size");
-                //--------------------------
-            }// end if(batch > m_data.size()/2)
-            //--------------------------------------------------------------
             torch::Tensor _data;
             //--------------------------------------------------------------
             if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
@@ -201,25 +199,7 @@ class RLEnvironment{
                 //--------------------------
                 for(size_t i = 0; i < batch; ++i){
                     //--------------------------
-                    if(i == 0) {
-                        //--------------------------
-                        if(m_data_iter != m_data.end()-1){
-                        //--------------------------
-                            ++m_data_iter;
-                        //--------------------------
-                        }// if(m_data_iter == m_data.end())
-                        //--------------------------
-                        _data = torch::cat({_data, *m_data_iter});
-                        //--------------------------
-                        continue;
-                        //--------------------------
-                    }// end if(i == 0)
-                    //--------------------------
-                    if(m_data_iter != m_data.end()-1){
-                    //--------------------------
-                        ++m_data_iter;
-                    //--------------------------
-                    }// if(m_data_iter != m_data.end()-1 && std::next(m_data_iter, batch) != m_data.end()-1)
+                    ++m_data_iter;
                     //--------------------------
                     _data = torch::cat({_data, *m_data_iter});
                     //--------------------------
@@ -247,19 +227,15 @@ class RLEnvironment{
                 //--------------------------
             }// if(m_data_iter == m_data.end())
             //--------------------------------------------------------------
-            if(m_data_iter != m_data.end()-1 && std::next(m_data_iter, batch) != m_data.end()-1){
+            if(m_data_iter != m_data.end()-1 and std::next(m_data_iter, batch) != m_data.end()-1){
                 //--------------------------
-                for(size_t i = 0; i < batch; ++i){
+                ++m_data_iter;
+                //--------------------------
+                _data = *m_data_iter;
+                //--------------------------
+                for(size_t i = 1; i < batch; ++i){
                     //--------------------------
                     ++m_data_iter;
-                    //--------------------------
-                    if(i == 0){
-                        //--------------------------
-                        _data = *m_data_iter;
-                        //--------------------------
-                        continue;
-                        //--------------------------
-                    }// end if(i == 0)
                     //--------------------------
                     _data = torch::cat({_data, *m_data_iter});
                     //--------------------------
@@ -273,12 +249,6 @@ class RLEnvironment{
         //--------------------------------------------------------------
         std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, Args... args){
             //--------------------------------------------------------------
-            if(batch >= m_data.size()/2){
-                //--------------------------
-                throw std::out_of_range("Batch Size Must Be Less Then The data Size");
-                //--------------------------
-            }// end if(batch > m_data.size()/2)
-            //--------------------------------------------------------------
             torch::Tensor _data;
             //--------------------------------------------------------------
             if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
@@ -290,25 +260,7 @@ class RLEnvironment{
                 //--------------------------
                 for(size_t i = 0; i < batch; ++i){
                     //--------------------------
-                    if(i == 0) {
-                        //--------------------------
-                        if(m_data_iter != m_data.end()-1){
-                        //--------------------------
-                            ++m_data_iter;
-                        //--------------------------
-                        }// if(m_data_iter == m_data.end())
-                        //--------------------------
-                        _data = torch::cat({_data, *m_data_iter});
-                        //--------------------------
-                        continue;
-                        //--------------------------
-                    }// end if(i == 0)
-                    //--------------------------
-                    if(m_data_iter != m_data.end()-1){
-                    //--------------------------
-                        ++m_data_iter;
-                    //--------------------------
-                    }// if(m_data_iter != m_data.end()-1 && std::next(m_data_iter, batch) != m_data.end()-1)
+                    ++m_data_iter;
                     //--------------------------
                     _data = torch::cat({_data, *m_data_iter});
                     //--------------------------
@@ -339,19 +291,15 @@ class RLEnvironment{
                 //--------------------------
             }// if(m_data_iter == m_data.end())
             //--------------------------------------------------------------
-            if(m_data_iter != m_data.end()-1 && std::next(m_data_iter, batch) != m_data.end()-1){
+            if(m_data_iter != m_data.end()-1 and std::next(m_data_iter, batch) != m_data.end()-1){
                 //--------------------------
-                for(size_t i = 0; i < batch; ++i){
+                ++m_data_iter;
+                //--------------------------
+                _data = *m_data_iter;
+                //--------------------------
+                for(size_t i = 1; i < batch; ++i){
                     //--------------------------
                     ++m_data_iter;
-                    //--------------------------
-                    if(i == 0){
-                        //--------------------------
-                        _data = *m_data_iter;
-                        //--------------------------
-                        continue;
-                        //--------------------------
-                    }// end if(i == 0)
                     //--------------------------
                     _data = torch::cat({_data, *m_data_iter});
                     //--------------------------
@@ -392,8 +340,6 @@ class RLEnvironment{
                 //--------------------------
                 auto input = *m_data_iter;
                 //--------------------------
-                // std::cout << "input: " << input.sizes()  << std::endl;
-                //--------------------------
                 epsilon = calculate_epsilon();
                 //--------------------------
                 ++m_data_iter;
@@ -410,15 +356,9 @@ class RLEnvironment{
         //--------------------------------------------------------------
         std::tuple<torch::Tensor, double> get_first_internal(const size_t& batch){
             //--------------------------
-            if(batch > m_data.size()/2){
-                //--------------------------
-                throw std::out_of_range("Batch Size Must Be Less Then The data Size");
-                //--------------------------
-            }// end if(batch > m_data.size()/2)
-            //--------------------------
             torch::Tensor _data;
             //--------------------------
-            if (m_data_iter == m_data.begin()){
+            if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
                 //--------------------------
                 auto epsilon = calculate_epsilon();
                 //--------------------------
@@ -426,11 +366,7 @@ class RLEnvironment{
                 //--------------------------
                 for(size_t i = 1; i < batch; ++i){
                     //--------------------------
-                    if(m_data_iter != m_data.end()-1 or std::next(m_data_iter, batch) != m_data.end()-1){
-                    //--------------------------
-                        ++m_data_iter;
-                    //--------------------------
-                    }// if(m_data_iter == m_data.end())
+                    ++m_data_iter;
                     //--------------------------
                     _data = torch::cat({ _data, *m_data_iter});
                     //--------------------------
@@ -448,15 +384,9 @@ class RLEnvironment{
         //--------------------------------------------------------------
         torch::Tensor get_first_internal(double& epsilon, const size_t& batch){
             //--------------------------
-            if(batch > m_data.size()/2){
-                //--------------------------
-                throw std::out_of_range("Batch Size Must Be Less Then The data Size");
-                //--------------------------
-            }// end if(batch > m_data.size()/2)
-            //--------------------------
             torch::Tensor _data;
             //--------------------------
-            if (m_data_iter == m_data.begin()){
+            if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
                 //--------------------------
                 epsilon = calculate_epsilon();
                 //--------------------------
@@ -464,17 +394,11 @@ class RLEnvironment{
                 //--------------------------
                 for(size_t i = 1; i < batch; ++i){
                     //--------------------------
-                    if(m_data_iter != m_data.end()-1 or std::next(m_data_iter, batch) != m_data.end()-1){
-                    //--------------------------
-                        ++m_data_iter;
-                    //--------------------------
-                    }// if(m_data_iter == m_data.end())
+                    ++m_data_iter;
                     //--------------------------
                     _data = torch::cat({ _data, *m_data_iter});
                     //--------------------------
                 }// end for(size_t i = 0; i < batch; ++i)
-                //--------------------------
-                // std::cout << "batch: " << batch << " _data: " << _data.sizes() << std::endl;
                 //--------------------------
                 return _data;
                 //--------------------------
@@ -494,7 +418,7 @@ class RLEnvironment{
         //--------------------------------------------------------------
         constexpr double calculate_epsilon(void){
             //--------------------------
-            return m_egreedy_final + (m_egreedy - m_egreedy_final) * exp(-1. * std::distance(m_data.begin(), m_data_iter) / m_egreedy_decay );
+            return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * std::distance(m_data.begin(), m_data_iter) / m_egreedy_decay );
             //--------------------------
         }// end double calculate_epsilon()
         //--------------------------------------------------------------

@@ -115,7 +115,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             //--------------------------
             optimizer.step();
             //-------------------------- 
-            if(m_update_target_counter % update_frequency == 0){
+            if(++m_update_target_counter % update_frequency == 0){
                 //--------------------------
                 torch::NoGradGuard no_grad;
                 //--------------------------
@@ -123,7 +123,11 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                 //--------------------------
             }// end if(m_update_target_counter % update_frequency == 0)
             //--------------------------
-            ++m_update_target_counter;
+            if(m_update_target_counter == SIZE_MAX){
+                //--------------------------
+                m_update_target_counter = 0;
+                //--------------------------
+            }// end if(m_update_target_counter == SIZE_MAX)
             //--------------------------
         }// end void agent(const torch::Tensor& input, const torch::Tensor& next_input, const torch::Tensor& action, const T& rewards, const bool& done)
         //--------------------------------------------------------------

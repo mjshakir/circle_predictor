@@ -8,7 +8,6 @@
 // Standard library
 //--------------------------------------------------------------
 #include <random>
-#include <math.h>
 //--------------------------------------------------------------
 template<typename Network, typename... Args>
 class ReinforcementNetworkHandling{
@@ -91,10 +90,9 @@ class ReinforcementNetworkHandling{
             //--------------------------
             std::random_device rd;  // Will be used to obtain a seed for the random number engine
             std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
-            std::uniform_real_distribution<double> uniform_angle(0., 1.);
-            std::default_random_engine re;
+            std::uniform_real_distribution<double> uniform_egreedy(0., 1.);
             //--------------------------
-            auto _random_egreedy = uniform_angle(re);
+            auto _random_egreedy = uniform_egreedy(gen);
             //--------------------------
             if(_random_egreedy > epsilon){
                 //--------------------------
@@ -220,12 +218,10 @@ class ReinforcementNetworkHandling{
         //--------------------------------------------------------------
         torch::Tensor network_test(const torch::Tensor& input){
             //--------------------------
-            torch::Tensor _input = input;
-            //--------------------------
             torch::NoGradGuard no_grad;
             m_model.eval();
             //--------------------------
-            return m_model.forward(_input);;
+            return m_model.forward(input);;
             //--------------------------
         }// end torch::Tensor network_test(const torch::Tensor& input)
         //--------------------------------------------------------------

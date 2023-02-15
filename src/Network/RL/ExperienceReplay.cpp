@@ -61,9 +61,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, bool> ExperienceReplay::
     std::mt19937 rng(dev());
     std::uniform_int_distribution<std::mt19937::result_type> uniform_position(0, m_memory.size()-1);
     //--------------------------
-    auto it = std::next( m_memory.begin() , uniform_position(rng));
-    //--------------------------
-    return it->second;
+    return std::next( m_memory.begin() , uniform_position(rng))->second;
     //--------------------------
 }// end std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, bool> ExperienceReplay::sample_data(void)
 //--------------------------------------------------------------
@@ -77,7 +75,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> ExperienceReplay::sample
     //--------------------------
     auto [input, next_input, reward, _done] = it->second;
     //--------------------------
-    done = _done ? true : false;
+    done = _done;
     //--------------------------
     return {input, next_input, reward};
     //--------------------------

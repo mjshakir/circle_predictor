@@ -32,7 +32,11 @@ class RLEnvironment{
             //----------------------------
             if(m_enable_batch and batch >= m_data.size()/2){
                 //--------------------------
-                throw std::out_of_range("Batch Size Must Be Less Then The data Size");
+                // std::string _error = "Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(m_data.size()/2) + "]";
+                //--------------------------
+                // throw std::out_of_range(_error.c_str());
+                //--------------------------
+                throw std::out_of_range("Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(m_data.size()/2) + "]");
                 //--------------------------
             }// end if(batch > m_data.size()/2)
             //----------------------------
@@ -331,8 +335,6 @@ class RLEnvironment{
             if (m_data_iter == m_data.begin()){
                 //--------------------------
                 auto input = *m_data_iter;
-                //--------------------------
-                // std::cout << "input: " << input.sizes()  << std::endl;
                 //--------------------------
                 auto epsilon = calculate_epsilon();
                 //--------------------------

@@ -10,7 +10,7 @@ class ExperienceReplay{
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
-        ExperienceReplay() = delete;
+        ExperienceReplay(void) = delete;
         //--------------------------
         ExperienceReplay(const size_t& capacity = 500);
         //--------------------------

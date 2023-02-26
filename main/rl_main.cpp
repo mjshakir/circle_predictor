@@ -25,6 +25,7 @@
 // Standard cpp library
 //--------------------------------------------------------------
 #include <future>
+#include <thread>
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
@@ -37,13 +38,13 @@ int main(void){
     // Command line arugments using boost options 
     //--------------------------
     // std::string filename;
-    size_t  generated_size = 60000, 
+    size_t  generated_size = 1000, 
             points_size = 3, 
-            test_size = 100, 
+            test_size = 1000, 
             limiter = 10, 
             output_size =2, 
-            batch_size = 100, 
-            epoch = 1000, 
+            batch_size = 10, 
+            epoch = 100, 
             capacity = 3*batch_size;
     //--------------------------
     double memory_percentage = 0.3;
@@ -71,6 +72,7 @@ int main(void){
     // TimeIT _timer; 
     RLGenerate _generate(generated_size, test_size, points_size, limiter);
     // std::cout << "RLGenerate time: " << _timer.get_time_seconds() << std::endl;
+    // std::exit(1);
     //--------------------------
     RLNormalize _normalize(_generate.get_input());
     //--------------------------
@@ -155,6 +157,8 @@ int main(void){
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device);
+    // RLNetLSTM target_model({points_size, batch_size}, output_size, device);
+    //--------------------------
     // RLNet model(points_size, output_size);
     // RLNet target_model(points_size, output_size);
     //--------------------------
@@ -163,14 +167,15 @@ int main(void){
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
+    // torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
+    //--------------------------
     // ReinforcementNetworkHandling<decltype(model), size_t, size_t> handler(  std::move(model), 
-    //                                                                         device_type, 
-    //                                                                         [&_generate](const size_t& size, const size_t& col = 2){ 
+    //                                                                         [&_generate](const size_t& size = 1, const size_t& col = 2){ 
     //                                                                             return  _generate.get_output(size, col);});
     //--------------------------
     ReinforcementNetworkHandlingDQN<decltype(model), size_t, size_t> handler(   std::move(model), 
                                                                                 std::move(target_model),
-                                                                                device_type,
+                                                                                100,
                                                                                 true,
                                                                                 true, 
                                                                                 [&_generate](const size_t& size = 1, const size_t& col = 2){ 
@@ -180,15 +185,102 @@ int main(void){
     std::mt19937 gen(rd());
     std::bernoulli_distribution memory_activation(memory_percentage);
     //--------------------------
+    // thread_local std::random_device rd;
+    // thread_local std::mt19937 gen(rd());
+    // thread_local std::bernoulli_distribution memory_activation(memory_percentage);
+    //--------------------------
     ExperienceReplay memory(capacity);
     //--------------------------
     std::vector<torch::Tensor> _rewards;
     _rewards.reserve( input.size() * epoch);
     //--------------------------
+    /*
+    auto train = [&](){
+        //--------------------------
+        // _environment.reset();
+        //--------------------------
+        thread_local auto _temp_input = input;
+        //--------------------------
+        thread_local RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(_temp_input), _circle_reward, 0.9, 0.02, 500., batch_size);
+        //--------------------------
+        thread_local ExperienceReplay memory(capacity);
+        //--------------------------
+        thread_local bool done = false;
+        thread_local double epsilon = 0.;
+        //--------------------------
+        torch::Tensor _input;
+        //--------------------------
+        try{
+            _input = _environment.get_first(epsilon).to(device);
+        }//end try
+        catch(std::out_of_range& e){
+            //--------------------------
+            std::cerr << "\n" << e.what() << std::endl;
+            //--------------------------
+            std::exit(-1);
+            //--------------------------
+        }// end catch(std::out_of_range& e)
+        //--------------------------
+        auto output = handler.action(_input, epsilon, batch_size, output_size).to(device);
+        //--------------------------
+        auto [next_input, reward] = _environment.step(epsilon, done, _input, _normalize.normalization(output));
+        //--------------------------
+        handler.agent(_input, next_input.to(device), optimizer, reward, done);
+        //--------------------------
+        memory.push(_input, next_input, reward, done);
+        //--------------------------
+        torch::Tensor training_input = next_input;
+        //--------------------------
+        _rewards.push_back(reward);
+        //--------------------------
+        while(!done){
+            //--------------------------
+            auto output = handler.action(training_input, epsilon, batch_size, output_size);
+            //--------------------------
+            auto [next_input, reward] = _environment.step(epsilon, done, training_input,  _normalize.normalization(output));
+            //--------------------------
+            // std::cout << "next_input: " << next_input << std::endl;
+            //--------------------------
+            memory.push(training_input, next_input.to(device), reward, done);
+            //--------------------------
+            try{
+                //--------------------------
+                if(memory_activation(gen)){
+                    //--------------------------
+                    auto [_memory_input, _memory_next_input, _memory_reward, _done] = memory.sample();
+                    //--------------------------
+                    handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
+                    //--------------------------
+                }//end if(memory_activation(gen))
+                else{
+                    //--------------------------
+                    handler.agent(training_input, next_input, optimizer, reward, done);
+                    //--------------------------
+                }// end else
+            }// end try
+            catch(std::overflow_error& e) {
+                //--------------------------
+                std::cerr << "\n" << e.what() << std::endl;
+                //--------------------------
+                std::exit(-1);
+                //--------------------------
+            }// end catch(std::out_of_range& e)
+            //--------------------------
+            training_input = next_input;
+            //--------------------------
+            _rewards.push_back(reward);
+            //--------------------------
+        }// end while(!_done)
+        //--------------------------
+        _environment.reset();
+        //--------------------------
+    };
+    */
+    //--------------------------
     // std::mutex memory_guard;
     //--------------------------
     progressbar bar(epoch);
-    //--------------------------
+    //--------------------------------------------------------------
     // for(size_t i = 0; i < epoch; ++i){
     //     //--------------------------
     //     bool done = false;
@@ -254,19 +346,21 @@ int main(void){
     //     bar.update();
     //     //--------------------------
     // }//end for(size_t i = 0; i < epoch; ++i)
+    //--------------------------------------------------------------
+    TimeIT _timer;
     //--------------------------
     for(size_t i = 0; i < epoch; ++i){
         //--------------------------
         bool done = false;
         double epsilon = 0.;
         //--------------------------
-        auto _input = _environment.get_first(epsilon);
+        auto _input = _environment.get_first(epsilon).to(device);
         //--------------------------
-        auto output = handler.action(_input, epsilon, batch_size, output_size);
+        auto output = handler.action(_input, epsilon, batch_size, output_size).to(device);
         //--------------------------
         auto [next_input, reward] = _environment.step(epsilon, done, _input, _normalize.normalization(output));
         //--------------------------
-        handler.agent(_input, next_input, optimizer, reward, done);
+        handler.agent(_input, next_input.to(device), optimizer, reward, done);
         //--------------------------
         memory.push(_input, next_input, reward, done);
         //--------------------------
@@ -280,7 +374,7 @@ int main(void){
             //--------------------------
             auto [next_input, reward] = _environment.step(epsilon, done, training_input,  _normalize.normalization(output));
             //--------------------------
-            memory.push(training_input, next_input, reward, done);
+            memory.push(training_input, next_input.to(device), reward, done);
             //--------------------------
             try{
                 //--------------------------
@@ -317,7 +411,36 @@ int main(void){
         //--------------------------
     }//end for(size_t i = 0; i < epoch; ++i)
     //--------------------------
-    std::cout << " \n rewards: " << _rewards.size() << std::endl;
+    //--------------------------------------------------------------
+    // std::vector<std::thread> _threads(epoch);
+    // _threads.reserve(std::thread::hardware_concurrency() - 1);
+    //--------------------------
+    // TimeIT _timer;
+    //--------------------------
+    /*
+    for (size_t i = 0; i < epoch; ++i){
+        //--------------------------
+        for(size_t j = 0; j < std::thread::hardware_concurrency() - 1; ++j){
+            //--------------------------
+            _threads.emplace_back(std::move(train));
+            //--------------------------
+        }// end for(size_t j = 0; j < std::thread::hardware_concurrency() - 1; ++j)
+        //--------------------------
+        std::for_each(std::execution::par_unseq, _threads.begin(), _threads.end(), [](auto& _thread){_thread.join();});
+        //--------------------------
+        _threads.clear();
+        //--------------------------
+        bar.update();
+        //--------------------------
+    }// end for (size_t i = 0; i < epoch; ++i)
+    */
+    //--------------------------
+    // std::generate(std::execution::par_unseq, _threads.begin(), _threads.end(), [&](){return std::thread(train);});
+    // std::for_each(std::execution::par_unseq, _threads.begin(), _threads.end(), [](auto& _thread){_thread.join();});
+    //--------------------------------------------------------------
+    std::cout << "\n" << "Thread timer: " << _timer.get_time_seconds() << std::endl;
+    //--------------------------
+    std::cout << "\n" << "rewards: " << _rewards.size() << std::endl;
     //--------------------------
     auto [input_test, t_min, t_max] = input_test_thread.get();
     //--------------------------
@@ -346,7 +469,7 @@ int main(void){
         //--------------------------
         auto _circle = torch::pow((_test_temp.slice(1,0,1) - _test.slice(1,0,1)),2)+ (torch::pow((_test_temp.slice(1,1,2)-_test.slice(1,1,2)),2));
         //--------------------------
-        auto _lost = torch::mse_loss(_circle, _test.slice(1,2,3), torch::Reduction::Sum).template item<float>();
+        auto _lost = torch::mse_loss(_circle, _test.slice(1,2,3), torch::Reduction::Sum).item<float>();
         //--------------------------
         std::cout  << " error: " << _lost*100 << std::endl;
         //--------------------------

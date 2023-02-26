@@ -10,14 +10,15 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
-        ReinforcementNetworkHandlingDQN() = delete;
+        ReinforcementNetworkHandlingDQN(void) = delete;
         //--------------------------------------------------------------
         ReinforcementNetworkHandlingDQN(    Network&& model,
-                                            Network&& target_model, 
-                                            const torch::Device& device, 
-                                            std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), device, std::move(actions)),
+                                            Network&& target_model,
+                                            const size_t& update_frequency,
+                                            std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
                                                                                                 m_model(this->get_model()),
                                                                                                 m_target_model(std::move(target_model)),
+                                                                                                m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
                                                                                                 m_clamp(false),
                                                                                                 m_mode(false){
@@ -25,12 +26,13 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
         //--------------------------------------------------------------
         ReinforcementNetworkHandlingDQN(    Network&& model,
-                                            Network&& target_model, 
-                                            const torch::Device& device,
-                                            const bool& clamp, 
-                                            std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), device, std::move(actions)),
+                                            Network&& target_model,
+                                            const size_t& update_frequency,
+                                            const bool& clamp,
+                                            std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
                                                                                                 m_model(this->get_model()),
                                                                                                 m_target_model(std::move(target_model)),
+                                                                                                m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
                                                                                                 m_clamp(clamp),
                                                                                                 m_mode(false){
@@ -38,13 +40,14 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
         //--------------------------------------------------------------
         ReinforcementNetworkHandlingDQN(    Network&& model,
-                                            Network&& target_model, 
-                                            const torch::Device& device,
+                                            Network&& target_model,
+                                            const size_t& update_frequency,
                                             const bool& clamp,
-                                            const bool& mode, 
-                                            std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), device, std::move(actions)),
+                                            const bool& mode,
+                                            std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
                                                                                                 m_model(this->get_model()),
                                                                                                 m_target_model(std::move(target_model)),
+                                                                                                m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
                                                                                                 m_clamp(clamp),
                                                                                                 m_mode(mode){
@@ -56,10 +59,9 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                             torch::optim::Optimizer& optimizer, 
                             const torch::Tensor& rewards, 
                             const bool& done, 
-                            const double& gamma = 0.5,
-                            const size_t& update_frequency = 100) override {
+                            const double& gamma = 0.5) override {
             //--------------------------
-            agent_optimizer(input, next_input, optimizer, rewards, done, gamma, update_frequency);
+            agent_optimizer(input, next_input, optimizer, rewards, done, gamma);
             //--------------------------
         }// end void agent
         //--------------------------------------------------------------
@@ -74,6 +76,12 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             m_mode = mode;
             //--------------------------
         }// end void set_mode(const bool& mode)
+        //--------------------------------------------------------------
+        void set_update_frequency(const size_t& update_frequency){
+            //--------------------------
+            m_update_frequency = update_frequency;
+            //--------------------------
+        }// end void set_update_frequency(const size_t& update_frequency)
     //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -82,8 +90,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                         torch::optim::Optimizer& optimizer, 
                                         const torch::Tensor& rewards, 
                                         const bool& done, 
-                                        const double& gamma,
-                                        const size_t& update_frequency) override {
+                                        const double& gamma) override {
             //--------------------------
             m_model.train(true);
             //--------------------------
@@ -115,7 +122,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             //--------------------------
             optimizer.step();
             //-------------------------- 
-            if(++m_update_target_counter % update_frequency == 0){
+            if(++m_update_target_counter % m_update_frequency == 0){
                 //--------------------------
                 torch::NoGradGuard no_grad;
                 //--------------------------
@@ -135,7 +142,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------
         Network &m_model, m_target_model; 
         //--------------------------
-        size_t m_update_target_counter;
+        size_t m_update_frequency, m_update_target_counter;
         //--------------------------
         bool m_clamp, m_mode;
         //--------------------------

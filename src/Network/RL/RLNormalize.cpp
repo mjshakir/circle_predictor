@@ -5,7 +5,6 @@
 //--------------------------------------------------------------
 // Standard library
 //--------------------------------------------------------------
-#include <future>
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
@@ -116,7 +115,7 @@ torch::Tensor RLNormalize::unnormalization_data(const torch::Tensor& input, cons
     //--------------------------
 }// end torch::Tensor RLNormalize::unnormalization_data(const torch::Tensor& input)
 //--------------------------------------------------------------
-std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(std::vector<torch::Tensor> input){
+std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(const std::vector<torch::Tensor>& input){
     //--------------------------
     torch::Tensor t_min = torch::tensor(10000), t_max = torch::tensor(0);
     //--------------------------
@@ -137,24 +136,6 @@ std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(std::vector<t
         }// end if(max.less(temp_max).any().item<bool>())
         //--------------------------
     } // end for(const auto& x : input)
-    //--------------------------
-    // std::for_each(std::execution::par_unseq, input.begin(), input.end(), [&t_min, &t_max](const auto& x){
-    //     //--------------------------
-    //     torch::Tensor temp_min = torch::min(x), temp_max = torch::max(x);
-    //     //--------------------------
-    //     if(temp_min.less(t_min).any().item<bool>()){
-    //         //--------------------------
-    //         t_min = temp_min;
-    //         //--------------------------
-    //     }// end if(temp_min.less(min).any().item<bool>())
-    //     //--------------------------
-    //     if(temp_max.greater(t_max).any().item<bool>()){
-    //         //--------------------------
-    //         t_max = temp_max;
-    //         //--------------------------
-    //     }// end if(max.less(temp_max).any().item<bool>())
-    //     //--------------------------
-    //                 });
     //--------------------------
     return {t_min, t_max};
     //--------------------------

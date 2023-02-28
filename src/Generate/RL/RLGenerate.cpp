@@ -7,7 +7,7 @@
 //--------------------------------------------------------------
 #include <random>
 //-------------------
-#include <future>
+#include <thread>
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
@@ -15,9 +15,9 @@ RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, con
                                                                                                         m_column(column), 
                                                                                                         m_limiter(limiter){
     //--------------------------
-    auto data_thread = std::async(std::launch::async, [this]{ m_data = generate_input(m_generated_points, m_column);});
+    std::jthread data_thread([this]{ m_data = generate_input(m_generated_points, m_column);});
     //--------------------------
-    auto data_test_thread = std::async(std::launch::async, [this]{ m_data_test = generate_input(m_generated_points*0.2, m_column);});
+    std::jthread data_test_thread([this]{ m_data_test = generate_input(m_generated_points*0.2, m_column);});
     //--------------------------
 }// end RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter)
 //--------------------------------------------------------------
@@ -28,9 +28,9 @@ RLGenerate::RLGenerate( const size_t& generated_points,
                                                     m_column(column), 
                                                     m_limiter(limiter){
     //--------------------------
-    auto data_thread = std::async(std::launch::async, [this]{ m_data = generate_input(m_generated_points, m_column);});
+    std::jthread data_thread([this]{ m_data = generate_input(m_generated_points, m_column);});
     //--------------------------
-    auto data_test_thread = std::async(std::launch::async, [this, &generated_points_test]{ m_data_test = generate_input(generated_points_test, m_column);});
+    std::jthread data_test_thread([this, &generated_points_test]{ m_data_test = generate_input(generated_points_test, m_column);});
     //--------------------------
 }// end RLGenerate::RLGenerate( const size_t& generated_points, const size_t& generated_points_test, const size_t& column, const double& limiter)
 //--------------------------------------------------------------

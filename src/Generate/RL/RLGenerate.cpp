@@ -15,9 +15,15 @@ RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, con
                                                                                                         m_column(column), 
                                                                                                         m_limiter(limiter){
     //--------------------------
-    std::jthread data_thread([this]{ m_data = generate_input(m_generated_points, m_column);});
+    std::jthread data_thread([this]{ 
+                                    m_data = generate_input(m_generated_points, m_column);
+                                    m_data_sem.release();
+                                    });
     //--------------------------
-    std::jthread data_test_thread([this]{ m_data_test = generate_input(m_generated_points*0.2, m_column);});
+    std::jthread data_test_thread([this]{ 
+                                            m_data_test = generate_input(m_generated_points*0.2, m_column);
+                                            m_data_test_sem.release();
+                                        });
     //--------------------------
 }// end RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter)
 //--------------------------------------------------------------
@@ -28,19 +34,29 @@ RLGenerate::RLGenerate( const size_t& generated_points,
                                                     m_column(column), 
                                                     m_limiter(limiter){
     //--------------------------
-    std::jthread data_thread([this]{ m_data = generate_input(m_generated_points, m_column);});
+    std::jthread data_thread([this]{    
+                                    m_data = generate_input(m_generated_points, m_column);
+                                    m_data_sem.release();
+                                    });
     //--------------------------
-    std::jthread data_test_thread([this, &generated_points_test]{ m_data_test = generate_input(generated_points_test, m_column);});
+    std::jthread data_test_thread([this, &generated_points_test]{ 
+                                                                m_data_test = generate_input(generated_points_test, m_column);
+                                                                m_data_test_sem.release();
+                                                                });
     //--------------------------
 }// end RLGenerate::RLGenerate( const size_t& generated_points, const size_t& generated_points_test, const size_t& column, const double& limiter)
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLGenerate::get_input(void){
+    //--------------------------
+    m_data_sem.acquire();
     //--------------------------
     return m_data;
     //--------------------------
 }// end torch::Tensor RLGenerate::get_input(void)
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLGenerate::get_test_input(void){
+    //--------------------------
+    m_data_test_sem.acquire();
     //--------------------------
     return m_data_test;
     //--------------------------

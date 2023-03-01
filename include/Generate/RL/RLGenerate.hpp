@@ -75,6 +75,8 @@ class RLGenerate{
         size_t m_generated_points, m_column;
         double m_limiter;
         //--------------------------
+        std::binary_semaphore m_data_sem{0}, m_data_test_sem{0};
+        //--------------------------
         std::vector<torch::Tensor> m_data, m_data_test;
     //--------------------------------------------------------------
 };// end class RLGenerate

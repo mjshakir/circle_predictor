@@ -5,6 +5,7 @@
 //--------------------------------------------------------------
 // Standard library
 //--------------------------------------------------------------
+#include <thread>
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
@@ -119,23 +120,46 @@ std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(const std::ve
     //--------------------------
     torch::Tensor t_min = torch::tensor(10000), t_max = torch::tensor(0);
     //--------------------------
-    for(const auto& x : input){  
+    std::binary_semaphore _min_sem{0}, _max_sem{0};
+    //--------------------------
+    std::jthread _min_thread([&input, &t_min, &_min_sem](){
         //--------------------------
-        torch::Tensor temp_min = torch::min(x), temp_max = torch::max(x);
+        for(const auto& x : input){  
+            //--------------------------
+            torch::Tensor temp_min = torch::min(x);
+            //--------------------------
+            if(temp_min.less(t_min).any().item<bool>()){
+                //--------------------------
+                t_min = temp_min;
+                //--------------------------
+            }// end if(temp_min.less(min).any().item<bool>())
+            //--------------------------
+        } // end for(const auto& x : input)
         //--------------------------
-        if(temp_min.less(t_min).any().item<bool>()){
-            //--------------------------
-            t_min = temp_min;
-            //--------------------------
-        }// end if(temp_min.less(min).any().item<bool>())
+        _min_sem.release();
         //--------------------------
-        if(temp_max.greater(t_max).any().item<bool>()){
-            //--------------------------
-            t_max = temp_max;
-            //--------------------------
-        }// end if(max.less(temp_max).any().item<bool>())
+    });
+    //--------------------------
+    std::jthread _max_thread([&input, &t_max, &_max_sem](){
         //--------------------------
-    } // end for(const auto& x : input)
+        for(const auto& x : input){  
+            //--------------------------
+            torch::Tensor temp_max = torch::max(x);
+            //--------------------------
+            if(temp_max.greater(t_max).any().item<bool>()){
+                //--------------------------
+                t_max = temp_max;
+                //--------------------------
+            }// end if(max.less(temp_max).any().item<bool>())
+            //--------------------------
+        } // end for(const auto& x : input)
+        //--------------------------
+        _max_sem.release();
+        //--------------------------
+    });
+    //--------------------------
+    _min_sem.acquire();
+    _max_sem.acquire();
     //--------------------------
     return {t_min, t_max};
     //--------------------------

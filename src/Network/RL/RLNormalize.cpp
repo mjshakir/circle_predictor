@@ -45,7 +45,7 @@ torch::Tensor RLNormalize::unnormalization(const torch::Tensor& input){
     //--------------------------
 }// end torch::Tensor RLNormalize::unnormalization(const torch::Tensor& input)
 //--------------------------------------------------------------
-torch::Tensor RLNormalize::unnormalization(const torch::Tensor& input, const torch::Tensor t_min, const torch::Tensor t_max){
+torch::Tensor RLNormalize::unnormalization(const torch::Tensor& input, const torch::Tensor& t_min, const torch::Tensor& t_max){
     //--------------------------
     return unnormalization_data(input, t_min, t_max);
     //--------------------------
@@ -110,7 +110,7 @@ torch::Tensor RLNormalize::unnormalization_data(const torch::Tensor& input){
     //--------------------------
 }// end torch::Tensor RLNormalize::unnormalization_data(const torch::Tensor& input)
 //--------------------------------------------------------------
-torch::Tensor RLNormalize::unnormalization_data(const torch::Tensor& input, const torch::Tensor t_min, const torch::Tensor t_max){
+torch::Tensor RLNormalize::unnormalization_data(const torch::Tensor& input, const torch::Tensor& t_min, const torch::Tensor& t_max){
     //--------------------------
     return (input*(t_max-t_min))+t_max;
     //--------------------------

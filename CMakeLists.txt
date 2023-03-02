@@ -149,6 +149,7 @@ target_link_libraries(${PROJECT_NAME}_rl PRIVATE
   ${PROJECT_NAME}_rl_network 
   ${TORCH_LIBRARIES}
   ${Boost_LIBRARIES}
+  fort
   )
 #------------------------------------------------------------------------------------------
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)

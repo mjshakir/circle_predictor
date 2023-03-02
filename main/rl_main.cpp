@@ -33,22 +33,117 @@
 //--------------------------------------------------------------
 #include "progressbar/include/progressbar.hpp"
 //--------------------------------------------------------------
-int main(void){
+// LibFort library (enable table printing)
+//--------------------------------------------------------------
+#include "fort.hpp"
+//--------------------------------------------------------------
+int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // Command line arugments using boost options 
     //--------------------------
-    // std::string filename;
-    size_t  generated_size = 1000, 
-            points_size = 3, 
-            test_size = 1000, 
-            limiter = 10, 
-            output_size =2, 
-            batch_size = 10, 
-            epoch = 100, 
-            capacity = 3*batch_size;
+    std::string filename;
     //--------------------------
-    double memory_percentage = 0.3;
+    size_t  generated_size,
+            batch_size,
+            test_size,
+            epoch,
+            points_size,
+            output_size,
+            capacity,
+            limiter,
+            update_frequency;
     //--------------------------
+    double memory_percentage;
+    //--------------------------
+    bool clamp, double_mode;
+    //--------------------------
+    boost::program_options::options_description description("Allowed options:");
+    //--------------------------
+    description.add_options()
+    ("help,h", "Display this help message")
+    ("filename,s", boost::program_options::value<std::string>(&filename)->default_value("test_results"), "Name of the file saved")
+    ("generated_size,g", boost::program_options::value<size_t>(&generated_size)->default_value(100000), "How many different points to train. Accepts an integer x > 0")
+    ("batch_size,b", boost::program_options::value<size_t>(&batch_size)->default_value(1000), "Batch the generated data to train. Limitations: - Must be less then the generated_size - Must be less the 1000 this a libtorch limitation")
+    ("test_size,t", boost::program_options::value<size_t>(&test_size)->default_value(3000), "How many points generated. Accepts an integer x >= 100")
+    ("epoch,e", boost::program_options::value<size_t>(&epoch)->default_value(5000), "How many iterations to train")
+    ("points_size,p", boost::program_options::value<size_t>(&points_size)->default_value(3), "Determine when to stop the training. This uses a validation set")
+    ("output_size,o", boost::program_options::value<size_t>(&output_size)->default_value(2), "Determine when to stop the training. This uses a validation set")
+    ("capacity,c", boost::program_options::value<size_t>(&capacity)->default_value(3000), "Determine when to stop the training. This uses a validation set")
+    ("limiter,l", boost::program_options::value<size_t>(&limiter)->default_value(10), "Determine when to stop the training. This uses a validation set")
+    ("update_frequency,f", boost::program_options::value<size_t>(&update_frequency)->default_value(100), "Determine when to stop the training. This uses a validation set")
+    ("memory_percentage,m", boost::program_options::value<double>(&memory_percentage)->default_value(0.3), "Determine when to stop the training. This uses a validation set")
+    ("double_mode,d", boost::program_options::value<bool>(&double_mode)->default_value(true), "false: validation precision or true: Train with an epoch iteration")
+    ("clamp,u", boost::program_options::value<bool>(&clamp)->default_value(true), "false: validation precision or true: Train with an epoch iteration");
+    //--------------------------
+    boost::program_options::variables_map vm;
+    boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(description).run(), vm);
+    boost::program_options::notify(vm);
+    //--------------------------
+    // Add protection to the values
+    //-----------
+    if (vm.count("help")){
+        //--------------------------
+        std::cout << description;
+        //--------------------------
+        std::exit(0);
+        //--------------------------
+    }// end if (vm.count("help"))
+    //-----------
+    if (vm.count("filename")){
+        filename = vm["filename"].as<std::string>() + std::string(".csv");
+    }// end if (vm.count("filename"))
+    //-----------
+    if (vm["generated_size"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("training_size") < 0)
+    //-----------
+    if (vm["batch_size"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("generated_size") < 100)
+    //-----------
+    if (vm["batch_size"].as<size_t>() > (vm["generated_size"].as<size_t>()/2)){
+        throw std::out_of_range("Batch size must be less then half of the generated size");
+    }// end if (vm.count("generated_size") < 100)
+    //-----------
+    if (vm["test_size"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive or less then generated size or less then 1000 (x <= 1000)");
+    }// end  if (vm.count("batch_size") < 0 and vm.count("batch_size") > static_cast<int>(generated_size) and vm.count("batch_size") > 1000)
+    //-----------
+    if (vm["epoch"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("epoch") < 0)
+    //-----------
+    if (vm["points_size"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("epoch") < 0)
+    //-----------
+    if (vm["output_size"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("epoch") < 0)
+    //-----------
+    if (vm["capacity"].as<size_t>() < vm["batch_size"].as<size_t>()){
+        throw std::out_of_range("Must higher or equal to the batch size[" + vm["batch_size"].as<std::string>() + "]");
+    }// end if (vm.count("epoch") < 0)
+    //-----------
+    if (vm["limiter"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("epoch") < 0)
+    //-----------
+    if (vm["update_frequency"].as<size_t>() < 0){
+        throw std::out_of_range("Must be at least postive");
+    }// end if (vm.count("epoch") < 0)
+    //-----------
+    if (vm["memory_percentage"].as<double>() < 0. and vm["memory_percentage"].as<double>() > 1.){
+        throw std::out_of_range("Must between 0 and 1");
+    }// end if (vm.count("precision") < 0)
+    //--------------------------------------------------------------
+    std::cout   << "filename:       " << filename << "\n" 
+                << "generated size: " << generated_size << "\n"  
+                << "test size:      " << test_size << "\n"
+                << "batch size:     " << batch_size << "\n"
+                << "epoch:          " << epoch << "\n"
+                << "clamp:          " << std::boolalpha << clamp << "\n"
+                << "double_mode:    " << std::boolalpha << double_mode << std::endl;
     //--------------------------------------------------------------
     // Initiate Torch seed, device type
     //--------------------------
@@ -68,81 +163,20 @@ int main(void){
     //--------------------------
     torch::Device device(device_type);
     //--------------------------------------------------------------
-    //--------------------------
     // TimeIT _timer; 
     RLGenerate _generate(generated_size, test_size, points_size, limiter);
     // std::cout << "RLGenerate time: " << _timer.get_time_seconds() << std::endl;
     // std::exit(1);
     //--------------------------
     RLNormalize _normalize(_generate.get_input());
+    // std::cout << "RLGenerate and RLNormalize time: " << _timer.get_time_seconds() << std::endl;
+    // std::exit(1);
     //--------------------------
     auto input = _normalize.normalization();
+    // std::cout << "Input RLNormalize time: " << _timer.get_time_seconds() << std::endl;
+    // std::exit(1);
     //--------------------------
-    // auto input_test = _normalize.normalization(_generate.data(test_size, 3));
-    //--------------------------
-    auto input_test_thread = std::async(std::launch::async, [&_generate](){
-                                    // auto x = _generate.get_test_input();
-                                    // std::cout << "_generate.get_test_input(): " << _generate.get_test_input() << std::endl;
-                                    // auto y = RLNormalize::normalization_min_max(_generate.get_test_input());
-                                    // auto [z, mi, ma] = y;
-                                    // for (std::cout << "Normalized: "; const auto& a: z){
-                                    //     std::cout << a << "\n";
-                                    // }
-                                    return RLNormalize::normalization_min_max(_generate.get_test_input());});
-    //--------------------------------------------------------------
-    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
-    //                             //--------------------------
-    //                             auto _circle = torch::pow((output[-1][0]-input[-1][0]),2)+torch::pow((output[-1][1]-input[-1][1]),2);
-    //                             //--------------------------
-    //                             if( _circle.equal(torch::pow(input[-1][2],2))){
-    //                                 //--------------------------
-    //                                 return torch::tensor(0);
-    //                                 //--------------------------
-    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
-    //                             //--------------------------
-    //                             if(torch::abs(_circle-torch::pow(input[-1][2],2)).any().item<double>() <= 1E-4){
-    //                                 //--------------------------
-    //                                 return torch::tensor(0.1);
-    //                                 //--------------------------
-    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
-    //                             //--------------------------
-    //                             if(torch::abs(_circle-torch::pow(input[-1][2],2)).any().item<double>() <  1E-2){
-    //                                 //--------------------------
-    //                                 return torch::tensor(0.5);
-    //                                 //--------------------------
-    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
-    //                             //--------------------------
-    //                             if(torch::abs(_circle-torch::pow(input[-1][2],2)).any().item<double>() <  1E-1){
-    //                                 //--------------------------
-    //                                 return torch::tensor(0.2);
-    //                                 //--------------------------
-    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>() )
-    //                             //--------------------------
-    //                             if(torch::abs(_circle-torch::pow(input[-1][2],2)).any().item<double>() >=  1E-1){
-    //                                 //--------------------------
-    //                                 return torch::tensor(0.1);
-    //                                 //--------------------------
-    //                             }// end if( _circle.equal(input[0]) or torch::less_equal(torch::abs(_circle-input[0]), 1E-1).any().item<bool>()  )
-    //                             //--------------------------
-    //                             return torch::tensor(2);
-    //                             //--------------------------
-    //                             };
-    //--------------------------------------------------------------
-    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output, const size_t& batch){
-    //     //--------------------------
-    //     // return torch::abs((torch::pow((output[-1][0]- input[-1][0]),2)+ (torch::pow((output[-1][1]-input[-1][1]),2))) - input[-1][2]);
-    //     //--------------------------
-    //     // return torch::mse_loss((torch::pow((output[-1][0]- input[-1][0]),2)+ (torch::pow((output[-1][1]-input[-1][1]),2))), input[-1][2], torch::Reduction::Sum);
-    //     //--------------------------
-    //     // torch::Tensor _input = input, _output = output;
-    //     //--------------------------
-    //     // std::cout << "output.slice(1,0,1): " << output.slice(1,0,1) << " input.slice(1,0,1): " << input.slice(1,0,1) << std::endl;
-    //     //--------------------------
-    //     // return torch::mse_loss((torch::pow((output.slice(1,0,1).slice(0,0,10)- input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2).slice(0,0,10)-input.slice(1,1,2)),2))), input.slice(1,2,3));
-    //     //--------------------------
-    //     return (torch::pow((output.slice(1,0,1).slice(0,0,batch)- input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2).slice(0,0,batch)-input.slice(1,1,2)),2)))- input.slice(1,2,3);
-    //     //--------------------------
-    // };
+    auto input_test_thread = std::async(std::launch::async, [&_generate](){return RLNormalize::normalization_min_max(_generate.get_test_input());});
     //--------------------------------------------------------------
     auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
         //--------------------------
@@ -150,10 +184,6 @@ int main(void){
         //--------------------------
     };
     //--------------------------------------------------------------
-    // RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, size_t> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
-    //--------------------------
-    // RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., 0);
-    //--------------------------
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device);
@@ -167,17 +197,15 @@ int main(void){
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
-    // torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
-    //--------------------------
     // ReinforcementNetworkHandling<decltype(model), size_t, size_t> handler(  std::move(model), 
     //                                                                         [&_generate](const size_t& size = 1, const size_t& col = 2){ 
     //                                                                             return  _generate.get_output(size, col);});
     //--------------------------
     ReinforcementNetworkHandlingDQN<decltype(model), size_t, size_t> handler(   std::move(model), 
                                                                                 std::move(target_model),
-                                                                                100,
-                                                                                true,
-                                                                                true, 
+                                                                                update_frequency,
+                                                                                clamp,
+                                                                                double_mode, 
                                                                                 [&_generate](const size_t& size = 1, const size_t& col = 2){ 
                                                                                     return  _generate.get_output(size, col);});
     //--------------------------
@@ -185,99 +213,10 @@ int main(void){
     std::mt19937 gen(rd());
     std::bernoulli_distribution memory_activation(memory_percentage);
     //--------------------------
-    // thread_local std::random_device rd;
-    // thread_local std::mt19937 gen(rd());
-    // thread_local std::bernoulli_distribution memory_activation(memory_percentage);
-    //--------------------------
     ExperienceReplay memory(capacity);
     //--------------------------
     std::vector<torch::Tensor> _rewards;
     _rewards.reserve( input.size() * epoch);
-    //--------------------------
-    /*
-    auto train = [&](){
-        //--------------------------
-        // _environment.reset();
-        //--------------------------
-        thread_local auto _temp_input = input;
-        //--------------------------
-        thread_local RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(_temp_input), _circle_reward, 0.9, 0.02, 500., batch_size);
-        //--------------------------
-        thread_local ExperienceReplay memory(capacity);
-        //--------------------------
-        thread_local bool done = false;
-        thread_local double epsilon = 0.;
-        //--------------------------
-        torch::Tensor _input;
-        //--------------------------
-        try{
-            _input = _environment.get_first(epsilon).to(device);
-        }//end try
-        catch(std::out_of_range& e){
-            //--------------------------
-            std::cerr << "\n" << e.what() << std::endl;
-            //--------------------------
-            std::exit(-1);
-            //--------------------------
-        }// end catch(std::out_of_range& e)
-        //--------------------------
-        auto output = handler.action(_input, epsilon, batch_size, output_size).to(device);
-        //--------------------------
-        auto [next_input, reward] = _environment.step(epsilon, done, _input, _normalize.normalization(output));
-        //--------------------------
-        handler.agent(_input, next_input.to(device), optimizer, reward, done);
-        //--------------------------
-        memory.push(_input, next_input, reward, done);
-        //--------------------------
-        torch::Tensor training_input = next_input;
-        //--------------------------
-        _rewards.push_back(reward);
-        //--------------------------
-        while(!done){
-            //--------------------------
-            auto output = handler.action(training_input, epsilon, batch_size, output_size);
-            //--------------------------
-            auto [next_input, reward] = _environment.step(epsilon, done, training_input,  _normalize.normalization(output));
-            //--------------------------
-            // std::cout << "next_input: " << next_input << std::endl;
-            //--------------------------
-            memory.push(training_input, next_input.to(device), reward, done);
-            //--------------------------
-            try{
-                //--------------------------
-                if(memory_activation(gen)){
-                    //--------------------------
-                    auto [_memory_input, _memory_next_input, _memory_reward, _done] = memory.sample();
-                    //--------------------------
-                    handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
-                    //--------------------------
-                }//end if(memory_activation(gen))
-                else{
-                    //--------------------------
-                    handler.agent(training_input, next_input, optimizer, reward, done);
-                    //--------------------------
-                }// end else
-            }// end try
-            catch(std::overflow_error& e) {
-                //--------------------------
-                std::cerr << "\n" << e.what() << std::endl;
-                //--------------------------
-                std::exit(-1);
-                //--------------------------
-            }// end catch(std::out_of_range& e)
-            //--------------------------
-            training_input = next_input;
-            //--------------------------
-            _rewards.push_back(reward);
-            //--------------------------
-        }// end while(!_done)
-        //--------------------------
-        _environment.reset();
-        //--------------------------
-    };
-    */
-    //--------------------------
-    // std::mutex memory_guard;
     //--------------------------
     progressbar bar(epoch);
     //--------------------------------------------------------------
@@ -444,37 +383,100 @@ int main(void){
     //--------------------------
     auto [input_test, t_min, t_max] = input_test_thread.get();
     //--------------------------
-    std::vector<torch::Tensor> _output_test;
-    _output_test.reserve(input_test.size());
+    // std::vector<torch::Tensor> _output_test;
+    // _output_test.reserve(input_test.size());
     //--------------------------
     std::cout << "--------------TEST--------------" << std::endl;
     //--------------------------
-    for(const auto& _test : input_test){
-        //--------------------------
-        auto _test_temp = handler.test(_test);
-        //--------------------------
-        _output_test.push_back(_test_temp);
-        //--------------------------
-        // auto _circle = torch::pow((_test_temp[-1][0]-_test[-1][0]),2)+torch::pow((_test_temp[-1][1]-_test[-1][1]),2);
-        //--------------------------
-        // auto _circle = (_test_temp[-1][0]-_test[-1][0]) + (_test_temp[-1][0]-_test[-1][0]);
-        //--------------------------
-        // auto _lost = torch::mse_loss(_circle, _test[-1][2], torch::Reduction::Sum).template item<float>();
-        //--------------------------
-        // std::cout   << "circle: " << _circle.item().toFloat()
-        //             << " actual: " << _test[-1][2].item().toFloat()
-        //             << " error: " << _lost*100 << std::endl;
-        //--------------------------
-        // std::cout << _test << _output_test << std::endl;
-        //--------------------------
-        auto _circle = torch::pow((_test_temp.slice(1,0,1) - _test.slice(1,0,1)),2)+ (torch::pow((_test_temp.slice(1,1,2)-_test.slice(1,1,2)),2));
-        //--------------------------
-        auto _lost = torch::mse_loss(_circle, _test.slice(1,2,3), torch::Reduction::Sum).item<float>();
-        //--------------------------
-        std::cout  << " error: " << _lost*100 << std::endl;
-        //--------------------------
-    }// end for(const auto& _test : _tests)
+    // for(const auto& _test : input_test){
+    //     //--------------------------
+    //     auto _test_temp = handler.test(_test);
+    //     //--------------------------
+    //     _output_test.push_back(_test_temp);
+    //     //--------------------------
+    //     // auto _circle = torch::pow((_test_temp[-1][0]-_test[-1][0]),2)+torch::pow((_test_temp[-1][1]-_test[-1][1]),2);
+    //     //--------------------------
+    //     // auto _circle = (_test_temp[-1][0]-_test[-1][0]) + (_test_temp[-1][0]-_test[-1][0]);
+    //     //--------------------------
+    //     // auto _lost = torch::mse_loss(_circle, _test[-1][2], torch::Reduction::Sum).template item<float>();
+    //     //--------------------------
+    //     // std::cout   << "circle: " << _circle.item().toFloat()
+    //     //             << " actual: " << _test[-1][2].item().toFloat()
+    //     //             << " error: " << _lost*100 << std::endl;
+    //     //--------------------------
+    //     // std::cout << _test << _output_test << std::endl;
+    //     //--------------------------
+    //     auto _circle = torch::pow((_test_temp.slice(1,0,1) - _test.slice(1,0,1)),2)+ (torch::pow((_test_temp.slice(1,1,2)-_test.slice(1,1,2)),2));
+    //     //--------------------------
+    //     auto _lost = torch::mse_loss(_circle, _test.slice(1,2,3), torch::Reduction::Sum).item<float>();
+    //     //--------------------------
+    //     std::cout  << " error: " << _lost*100 << std::endl;
+    //     //--------------------------
+    // }// end for(const auto& _test : _tests)
+    //--------------------------------------------------------------
+    //--------------------------------------------------------------
+    // Print table settup
     //--------------------------
+    fort::char_table table;
+    //--------------------------
+    // Change border style
+    //--------------------------
+    table.set_border_style(FT_BASIC2_STYLE);
+    //--------------------------
+    // Set color
+    //--------------------------
+    table.row(0).set_cell_content_fg_color(fort::color::light_blue);
+    //--------------------------
+    // Set center alignment for the all columns
+    //--------------------------
+    table.column(0).set_cell_text_align(fort::text_align::center);
+    table.column(1).set_cell_text_align(fort::text_align::center);
+    table.column(2).set_cell_text_align(fort::text_align::center);
+    table.column(3).set_cell_text_align(fort::text_align::center);
+    table.column(4).set_cell_text_align(fort::text_align::center);
+    table.column(5).set_cell_text_align(fort::text_align::center);
+    //--------------------------
+    table   << fort::header
+            << "X_1" << "X" << "Y_1" << "Y" << "Original Target" << "Output" << "Loss" << fort::endr;
+    //--------------------------------------------------------------
+    RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor> _environment_test(std::move(input_test), batch_size);
+    //--------------------------
+    bool done{false};
+    //--------------------------
+    while (!done){
+        //--------------------------
+        auto _test = _environment_test.step(done);
+        //--------------------------
+        auto _test_result = handler.test(_test);
+        //--------------------------
+        auto _circle = torch::pow((_test_result.slice(1,0,1) - _test.slice(1,0,1)),2)+ (torch::pow((_test_result.slice(1,1,2)-_test.slice(1,1,2)),2));
+        //--------------------------
+        // auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3), torch::Reduction::Sum).item().toFloat();
+        //--------------------------
+        // std::cout << "done: " << std::boolalpha << done << " error: " << _loss*100 << std::endl;
+        //--------------------------
+        auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3));
+        //--------------------------
+        // table   << RLNormalize::unnormalization(_test_result.slice(1,0,1), t_min, t_max) 
+        //         << RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
+        //         << RLNormalize::unnormalization(_test_result.slice(1,1,2), t_min, t_max) 
+        //         << RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
+        //         << RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
+        //         << RLNormalize::unnormalization(_circle, t_min, t_max)
+        //         << _loss << fort::endr;
+        //--------------------------
+        table   << _test_result.slice(1,0,1)
+                << _test.slice(1,0,1)
+                << _test_result.slice(1,1,2)
+                << _test.slice(1,1,2)
+                << _test.slice(1,2,3)
+                << _circle
+                << _loss*100 << fort::endr;
+        //--------------------------
+    }// end while (!done)
+    //--------------------------
+    std::cout << "\n" << table.to_string() << std::endl;
+    //--------------------------------------------------------------
     return 0;
     //--------------------------------------------------------------
 }// end int main(void)

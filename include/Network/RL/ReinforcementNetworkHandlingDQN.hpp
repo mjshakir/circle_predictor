@@ -21,7 +21,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
                                                                                                 m_clamp(false),
-                                                                                                m_mode(false){
+                                                                                                m_double_mode(false){
             //--------------------------
         }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
         //--------------------------------------------------------------
@@ -35,7 +35,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
                                                                                                 m_clamp(clamp),
-                                                                                                m_mode(false){
+                                                                                                m_double_mode(false){
             //--------------------------
         }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
         //--------------------------------------------------------------
@@ -43,14 +43,14 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                             Network&& target_model,
                                             const size_t& update_frequency,
                                             const bool& clamp,
-                                            const bool& mode,
+                                            const bool& double_mode,
                                             std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
                                                                                                 m_model(this->get_model()),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
                                                                                                 m_clamp(clamp),
-                                                                                                m_mode(mode){
+                                                                                                m_double_mode(double_mode){
             //--------------------------
         }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
         //--------------------------------------------------------------
@@ -71,11 +71,11 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             //--------------------------
         }// end void set_clamp(const bool& clamp)
         //--------------------------------------------------------------
-        void set_mode(const bool& mode){
+        void set_mode(const bool& double_mode){
             //--------------------------
-            m_mode = mode;
+            m_double_mode = double_mode;
             //--------------------------
-        }// end void set_mode(const bool& mode)
+        }// end void set_mode(const bool& double_mode)
         //--------------------------------------------------------------
         void set_update_frequency(const size_t& update_frequency){
             //--------------------------
@@ -144,21 +144,21 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------
         size_t m_update_frequency, m_update_target_counter;
         //--------------------------
-        bool m_clamp, m_mode;
+        bool m_clamp, m_double_mode;
         //--------------------------
         torch::Tensor dqn_agent(const torch::Tensor& next_input, 
                                 const torch::Tensor& rewards, 
                                 const bool& done,
                                 const double& gamma){
             //--------------------------
-            if(m_mode){
+            if(m_double_mode){
                 //--------------------------
                 torch::Tensor _state_value;
                 std::tie(std::ignore, _state_value) = torch::max(m_model.forward(next_input).detach(), 1);
                 //--------------------------
                 return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1));
                 //--------------------------
-            }// end if(m_mode)
+            }// end if(m_double_mode)
             //--------------------------
             return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach();
             //--------------------------

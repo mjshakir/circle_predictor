@@ -168,7 +168,7 @@ class ReinforcementNetworkHandling{
             //--------------------------
         }// end torch::Tensor network_test(const torch::Tensor& input)
         //--------------------------------------------------------------
-         Network& get_model(void){
+        Network& get_model(void){
             //--------------------------
             return m_model;
             //--------------------------

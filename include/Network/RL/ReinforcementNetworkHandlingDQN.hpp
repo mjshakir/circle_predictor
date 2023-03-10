@@ -140,7 +140,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------------------------------------------
     private:
         //--------------------------
-        Network &m_model, m_target_model; 
+        Network m_model, m_target_model; 
         //--------------------------
         size_t m_update_frequency, m_update_target_counter;
         //--------------------------

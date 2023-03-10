@@ -65,19 +65,19 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             //--------------------------
         }// end void agent
         //--------------------------------------------------------------
-        void set_clamp(const bool& clamp){
+        inline void set_clamp(const bool& clamp = true){
             //--------------------------
             m_clamp = clamp;
             //--------------------------
         }// end void set_clamp(const bool& clamp)
         //--------------------------------------------------------------
-        void set_mode(const bool& double_mode){
+        inline void set_mode(const bool& double_mode = true){
             //--------------------------
             m_double_mode = double_mode;
             //--------------------------
         }// end void set_mode(const bool& double_mode)
         //--------------------------------------------------------------
-        void set_update_frequency(const size_t& update_frequency){
+        inline void set_update_frequency(const size_t& update_frequency = 100ul){
             //--------------------------
             m_update_frequency = update_frequency;
             //--------------------------
@@ -159,6 +159,11 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                 return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1));
                 //--------------------------
             }// end if(m_double_mode)
+            //--------------------------
+            // torch::Tensor _state_value;
+            // std::tie(_state_value, std::ignore) = torch::max(m_target_model.forward(next_input).detach(), 1);
+            // //--------------------------
+            // return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1)).squeeze(1);
             //--------------------------
             return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach();
             //--------------------------

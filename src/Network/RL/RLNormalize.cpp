@@ -13,6 +13,9 @@ RLNormalize::RLNormalize(const std::vector<torch::Tensor>& input) : m_input(inpu
     //--------------------------
     std::tie(m_min, m_max) = find_min_max(input);
     //--------------------------
+    // std::cout << "m_min: " << m_min.item().toFloat() << " m_max: " << m_max.item().toFloat() <<
+    // "\n-----------------------------------------------------------" << std::endl;
+    //--------------------------
 }// end RLNormalize::RLNormalize(const torch::Tensor& input)
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLNormalize::normalization(void){
@@ -118,7 +121,7 @@ torch::Tensor RLNormalize::unnormalization_data(const torch::Tensor& input, cons
 //--------------------------------------------------------------
 std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(const std::vector<torch::Tensor>& input){
     //--------------------------
-    torch::Tensor t_min = torch::tensor(10000), t_max = torch::tensor(0);
+    torch::Tensor t_min = torch::tensor(10000), t_max = torch::tensor(1);
     //--------------------------
     std::binary_semaphore _min_sem{0}, _max_sem{0};
     //--------------------------

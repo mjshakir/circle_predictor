@@ -16,7 +16,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                             Network&& target_model,
                                             const size_t& update_frequency,
                                             std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
-                                                                                                m_model(this->get_model()),
+                                                                                                m_model(std::move(this->get_model())),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
@@ -30,7 +30,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                             const size_t& update_frequency,
                                             const bool& clamp,
                                             std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
-                                                                                                m_model(this->get_model()),
+                                                                                                m_model(std::move(this->get_model())),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
@@ -45,7 +45,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                             const bool& clamp,
                                             const bool& double_mode,
                                             std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
-                                                                                                m_model(this->get_model()),
+                                                                                                m_model(std::move(this->get_model())),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
@@ -92,13 +92,13 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                         const bool& done, 
                                         const double& gamma) override {
             //--------------------------
-            m_model.train(true);
+            m_model->train(true);
             //--------------------------
             auto _target_value = dqn_agent(next_input, rewards, done, gamma);
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
-            auto _predicted_value = m_model.forward(input);
+            auto _predicted_value = m_model->forward(input);
             //--------------------------
             torch::Tensor loss = torch::mse_loss(_predicted_value, _target_value);
             //--------------------------
@@ -112,11 +112,11 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             //-------------------------- 
             if(m_clamp){
                 //--------------------------
-                for(auto& param : m_model.parameters()){
+                for(auto& param : m_model->parameters()){
                     //--------------------------
                     param.grad().data().clamp(-1,1);
                     //--------------------------
-                }// end for(auto& param : m_model.parameters())
+                }// end for(auto& param : m_model->parameters())
                 //--------------------------
             }// end if(m_clamp)
             //--------------------------
@@ -126,7 +126,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                 //--------------------------
                 torch::NoGradGuard no_grad;
                 //--------------------------
-                m_target_model.parameters() = m_model.parameters();
+                m_target_model.parameters() = m_model->parameters();
                 //--------------------------
             }// end if(m_update_target_counter % update_frequency == 0)
             //--------------------------
@@ -140,7 +140,9 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------------------------------------------
     private:
         //--------------------------
-        Network m_model, m_target_model; 
+        std::shared_ptr<Network> m_model;
+        //--------------------------
+        Network m_target_model; 
         //--------------------------
         size_t m_update_frequency, m_update_target_counter;
         //--------------------------
@@ -154,7 +156,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             if(m_double_mode){
                 //--------------------------
                 torch::Tensor _state_value;
-                std::tie(std::ignore, _state_value) = torch::max(m_model.forward(next_input).detach(), 1);
+                std::tie(std::ignore, _state_value) = torch::max(m_model->forward(next_input).detach(), 1);
                 //--------------------------
                 return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1));
                 //--------------------------

@@ -164,13 +164,13 @@ class ReinforcementNetworkHandling{
             torch::NoGradGuard no_grad;
             m_model.eval();
             //--------------------------
-            return m_model.forward(input);;
+            return m_model.forward(input);
             //--------------------------
         }// end torch::Tensor network_test(const torch::Tensor& input)
         //--------------------------------------------------------------
-        Network& get_model(void){
+        std::unique_ptr<Network> get_model(void){
             //--------------------------
-            return m_model;
+            return std::make_unique<Network>(m_model);
             //--------------------------
         }// end Network& get_model(void)
         //--------------------------------------------------------------

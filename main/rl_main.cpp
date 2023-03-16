@@ -12,6 +12,7 @@
 //--------------------------------------------------------------
 #include "Network/Networks.hpp"
 #include "Generate/RL/RLEnvironment.hpp"
+#include "Generate/RL/TestEnvironment.hpp"
 #include "Generate/RL/RLGenerate.hpp"
 // #include "Network/RL/ReinforcementNetworkHandling.hpp"
 //--------------------------
@@ -166,6 +167,11 @@ int main(int argc, char const *argv[]){
     // TimeIT _timer; 
     RLGenerate _generate(generated_size, test_size, points_size, limiter);
     // std::cout << "RLGenerate time: " << _timer.get_time_seconds() << std::endl;
+    // auto _temp = _generate.get_input();
+    // for(const auto& x : _temp){
+    //     std::cout << "data: " << x << std::endl;
+    // }
+    // std::cout << "---------------end data------------ " << std::endl;
     // std::exit(1);
     //--------------------------
     RLNormalize _normalize(_generate.get_input());
@@ -173,6 +179,9 @@ int main(int argc, char const *argv[]){
     // std::exit(1);
     //--------------------------
     auto input = _normalize.normalization();
+    // for(const auto& x : input){
+    //     std::cout << "normalize data: " << _normalize.unnormalization(x) << std::endl;
+    // }
     // std::cout << "Input RLNormalize time: " << _timer.get_time_seconds() << std::endl;
     // std::exit(1);
     //--------------------------
@@ -439,9 +448,11 @@ int main(int argc, char const *argv[]){
     table   << fort::header
             << "X_1" << "X" << "Y_1" << "Y" << "Original Target" << "Output" << "Loss" << fort::endr;
     //--------------------------------------------------------------
-    RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor> _environment_test(std::move(input_test), batch_size);
+    TestEnvironment<torch::Tensor> _environment_test(std::move(input_test), batch_size);
     //--------------------------
     bool done{false};
+    //--------------------------
+    TimeIT _test_timer;
     //--------------------------
     while (!done){
         //--------------------------
@@ -475,7 +486,13 @@ int main(int argc, char const *argv[]){
         //--------------------------
     }// end while (!done)
     //--------------------------
+    // std::for_each(std::execution::par_unseq, _test_threads.begin(), _test_threads.end(), [](auto& _thread){_thread.join();});
+    //--------------------------
+    TimeIT _print_timer;
+    //--------------------------
     std::cout << "\n" << table.to_string() << std::endl;
+    //--------------------------
+    std::cout << "test time: " << _test_timer.get_time_seconds() << " print time: " << _print_timer.get_time_seconds() << std::endl;
     //--------------------------------------------------------------
     return 0;
     //--------------------------------------------------------------

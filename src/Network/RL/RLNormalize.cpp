@@ -54,11 +54,7 @@ std::vector<torch::Tensor> RLNormalize::normalization_data(void){
     //--------------------------
     std::vector<torch::Tensor> _data = m_input;
     //--------------------------
-    std::for_each(std::execution::par, _data.begin(), _data.end(), [this](auto& x){
-        //--------------------------
-        x = ((x-m_min)/(m_max-m_min));
-        //--------------------------
-    });
+    std::for_each(std::execution::par, _data.begin(), _data.end(), [this](auto& x){x = ((x-m_min)/(m_max-m_min));});
     //--------------------------
     return _data;
     //--------------------------
@@ -74,30 +70,27 @@ std::vector<torch::Tensor> RLNormalize::normalization_data(const std::vector<tor
     //--------------------------
     std::vector<torch::Tensor> _data = input;
     //--------------------------
-    const auto [t_min, t_max] = find_min_max(input);
+    torch::Tensor t_min, t_max; 
     //--------------------------
-    for(auto& x : _data){
-        //--------------------------
-        x = ((x-t_min)/(t_max-t_min));
-        //--------------------------
-    }// for(auto& x : input)
+    // const auto [t_min, t_max] = find_min_max(input);
+    //--------------------------
+    std::tie(t_min, t_max) = find_min_max(_data);
+    //--------------------------
+    std::for_each(std::execution::par, _data.begin(), _data.end(), [&t_min, &t_max](auto& x){x = ((x-t_min)/(t_max-t_min));});
     //--------------------------
     return _data;
     //--------------------------
-}// end torch::Tensor RLNormalize::normalization_data(const torch::Tensor& input)
+}// end std::vector<torch::Tensor> RLNormalize::normalization_data(const std::vector<torch::Tensor>& input)
 //--------------------------------------------------------------
 std::tuple<std::vector<torch::Tensor>, torch::Tensor, torch::Tensor>  RLNormalize::normalization_min_max_data(const std::vector<torch::Tensor>& input){
     //--------------------------
-    std::vector<torch::Tensor> _data;
-    _data.reserve(input.size());
+    std::vector<torch::Tensor> _data = input;
     //--------------------------
-    const auto [t_min, t_max] = find_min_max(input);
+    torch::Tensor t_min, t_max; 
     //--------------------------
-    for(const auto& x : input){
-        //--------------------------
-        _data.push_back(((x-t_min)/(t_max-t_min)));
-        //--------------------------
-    }// for(const auto& x : input)
+    std::tie(t_min, t_max) = find_min_max(_data);
+    //--------------------------
+    std::for_each(std::execution::par, _data.begin(), _data.end(), [&t_min, &t_max](auto& x){x = ((x-t_min)/(t_max-t_min));});
     //--------------------------
     return {_data, t_min, t_max};
     //--------------------------
@@ -118,10 +111,10 @@ torch::Tensor RLNormalize::unnormalization_data(const torch::Tensor& input, cons
 std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(const std::vector<torch::Tensor>& input){
     //--------------------------
     auto _min_temp = std::min_element(std::execution::par, input.begin(), input.end(), 
-                                    [](const auto& s1, const auto& s2){return torch::min(s1).less(torch::min(s2)).any().template item<bool>();});
+                                    [](const auto& first, const auto& second){return torch::min(first).less(torch::min(second)).any().template item<bool>();});
     //--------------------------
     auto _max_temp = std::max_element(std::execution::par, input.begin(), input.end(), 
-                                    [](const auto& s1, const auto& s2){return torch::max(s2).greater(torch::max(s1)).any().template item<bool>();});
+                                    [](const auto& first, const auto& second){return torch::max(second).greater(torch::max(first)).any().template item<bool>();});
     //--------------------------
     return {torch::min(*_min_temp), torch::max(*_max_temp)};
     //--------------------------

@@ -7,48 +7,29 @@
 //--------------------------------------------------------------
 #include <random>
 //-------------------
-#include <thread>
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
-RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter) :   m_generated_points(generated_points),
-                                                                                                        m_column(column), 
-                                                                                                        m_limiter(limiter){
+RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter) : m_limiter(limiter){
     //--------------------------
-    std::jthread data_thread([this]{ 
-                                    m_data = generate_input(m_generated_points, m_column);
-                                    m_data_sem.release();
-                                    });
+    m_data_test = generate_input(generated_points*0.2, column);
     //--------------------------
-    std::jthread data_test_thread([this]{ 
-                                            m_data_test = generate_input(m_generated_points*0.2, m_column);
-                                            m_data_test_sem.release();
-                                        });
+    m_data = generate_input(generated_points, column);
     //--------------------------
 }// end RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter)
 //--------------------------------------------------------------
 RLGenerate::RLGenerate( const size_t& generated_points, 
                         const size_t& generated_points_test, 
                         const size_t& column, 
-                        const double& limiter) :    m_generated_points(generated_points),
-                                                    m_column(column), 
-                                                    m_limiter(limiter){
+                        const double& limiter) : m_limiter(limiter){
     //--------------------------
-    std::jthread data_thread([this]{    
-                                    m_data = generate_input(m_generated_points, m_column);
-                                    m_data_sem.release();
-                                    });
+    m_data_test = generate_input(generated_points_test, column);
     //--------------------------
-    std::jthread data_test_thread([this, &generated_points_test]{ 
-                                                                m_data_test = generate_input(generated_points_test, m_column);
-                                                                m_data_test_sem.release();
-                                                                });
+    m_data = generate_input(generated_points, column);
     //--------------------------
 }// end RLGenerate::RLGenerate( const size_t& generated_points, const size_t& generated_points_test, const size_t& column, const double& limiter)
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLGenerate::get_input(void){
-    //--------------------------
-    m_data_sem.acquire();
     //--------------------------
     return m_data;
     //--------------------------
@@ -56,7 +37,7 @@ std::vector<torch::Tensor> RLGenerate::get_input(void){
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLGenerate::get_test_input(void){
     //--------------------------
-    m_data_test_sem.acquire();
+    // m_data_test_sem.acquire();
     //--------------------------
     return m_data_test;
     //--------------------------
@@ -86,7 +67,7 @@ std::vector<torch::Tensor> RLGenerate::generate_value(const size_t& generated_po
     //--------------------------
     std::vector<torch::Tensor> _data(generated_points);
     //--------------------------
-    std::generate(std::execution::par_unseq, _data.begin(), _data.end(),[this, &column]() {return inner_generation(column);});
+    std::generate(std::execution::par, _data.begin(), _data.end(),[this, &column]() {return inner_generation(column);});
     //--------------------------
     return _data;
     //--------------------------
@@ -129,7 +110,7 @@ torch::Tensor RLGenerate::generate_target(const size_t& generated_points, const 
     //--------------------------
     std::vector<double> _data(generated_points*column);
     //--------------------------
-    std::generate(std::execution::par_unseq, _data.begin(), _data.end(),[&uniform_angle, &gen]() {return uniform_angle(gen);});
+    std::generate(std::execution::par, _data.begin(), _data.end(),[&uniform_angle, &gen]() {return uniform_angle(gen);});
     //--------------------------
     return torch::tensor(_data).view({-1, static_cast<int64_t>(column)});
     //--------------------------

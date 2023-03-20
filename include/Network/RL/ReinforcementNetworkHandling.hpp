@@ -104,11 +104,11 @@ class ReinforcementNetworkHandling{
         //                                 const size_t& update_frequency) = 0;
         //--------------------------------------------------------------
         virtual void agent_optimizer(   const torch::Tensor& input, 
-                                const torch::Tensor& next_input, 
-                                torch::optim::Optimizer& optimizer, 
-                                const torch::Tensor& rewards, 
-                                const bool& done, 
-                                const double& gamma){
+                                        const torch::Tensor& next_input, 
+                                        torch::optim::Optimizer& optimizer, 
+                                        const torch::Tensor& rewards, 
+                                        const bool& done, 
+                                        const double& gamma){
             //--------------------------
             m_model.train(true);
             //--------------------------

@@ -20,7 +20,7 @@ class ExperienceReplay{
         //--------------------------
         std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> sample(bool& done);
         //--------------------------
-        std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> sample(const size_t& batch, bool& done);
+        std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, bool> sample(const size_t& key);
         //--------------------------
         size_t size(void) const;
         //--------------------------------------------------------------
@@ -32,7 +32,7 @@ class ExperienceReplay{
         //--------------------------
         std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> sample_data(bool& done);
         //--------------------------
-        std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> sample_data(const size_t& batch, bool& done);
+        std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, bool> sample_data(const size_t& key);
         //--------------------------
         size_t map_size(void) const;
         //--------------------------------------------------------------

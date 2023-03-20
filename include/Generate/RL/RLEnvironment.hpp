@@ -31,7 +31,7 @@ class RLEnvironment{
         }// end RLEnvironment(Dataset&& data_loader)
         //--------------------------------------------------------------
         RLEnvironment(  std::vector<T>&& data, 
-                        std::function<COST_OUTPUT(Args&...)> costFunction,
+                        std::function<COST_OUTPUT(const Args&...)> costFunction,
                         const double& egreedy = 0.9,
                         const double& egreedy_final = 0.02,
                         const double& egreedy_decay = 500.,
@@ -68,7 +68,7 @@ class RLEnvironment{
             //----------------------------
         }// std::tuple<torch::Tensor, bool> step(void)
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(Args... args){
+        std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(const Args&... args){
             //----------------------------
             if(m_enable_batch){
                 //----------------------------
@@ -92,7 +92,7 @@ class RLEnvironment{
             //----------------------------
         }// torch::Tensor step(bool& done)
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT> step(double& epsilon, bool& done, Args... args){
+        std::tuple<torch::Tensor, COST_OUTPUT> step(double& epsilon, bool& done, const Args&... args){
             //----------------------------
             if(m_enable_batch){
                 //----------------------------
@@ -104,7 +104,7 @@ class RLEnvironment{
             //----------------------------
         }// std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(Args... args)
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT> step(double& epsilon, bool& done, const size_t& batch, Args... args){
+        std::tuple<torch::Tensor, COST_OUTPUT> step(double& epsilon, bool& done, const size_t& batch, const Args&... args){
             //----------------------------
             return internal_step(epsilon, done, batch, args...);
             //----------------------------
@@ -188,7 +188,7 @@ class RLEnvironment{
             //--------------------------
         }// end std::tuple<torch::Tensor, bool> internal_step(void)
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args){
+        std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const Args&... args){
             //--------------------------
             if (m_data_iter == m_data.end()){
                 //--------------------------
@@ -225,7 +225,7 @@ class RLEnvironment{
             //--------------------------
         }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args))
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, Args... args){
+        std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const Args&... args){
             //--------------------------
             if (m_data_iter == m_data.end()){
                 //--------------------------
@@ -308,7 +308,7 @@ class RLEnvironment{
             //--------------------------
         }// end torch::Tensor internal_step(bool& done)
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args){
+        std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, const Args&... args){
             //--------------------------------------------------------------
             if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
                 //--------------------------
@@ -436,7 +436,7 @@ class RLEnvironment{
             //--------------------------
         }// end std::tuple<torch::Tensor, bool> internal_step(const size_t& batch)
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, Args... args){
+        std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, const Args&... args){
             //--------------------------------------------------------------
             if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
                 //--------------------------
@@ -698,7 +698,7 @@ class RLEnvironment{
         std::vector<T> m_data;
         typename std::vector<T>::iterator m_data_iter;
         //--------------------------
-        std::function<COST_OUTPUT(Args&...)> m_CostFunction;
+        std::function<COST_OUTPUT(const Args&...)> m_CostFunction;
         //--------------------------
         double m_egreedy, m_egreedy_final, m_egreedy_decay;
         //--------------------------

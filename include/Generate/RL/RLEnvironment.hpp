@@ -589,7 +589,7 @@ class RLEnvironment{
                 //--------------------------
                 return {input, epsilon};
                 //--------------------------
-            }// end auto _reward = m_CostFunction(args...)
+            }// end if (m_data_iter == m_data.begin())
             //--------------------------
             return {torch::tensor(0), 0};
             //--------------------------
@@ -613,7 +613,7 @@ class RLEnvironment{
                 //--------------------------
                 return input;
                 //--------------------------
-            }// end auto _reward = m_CostFunction(args...)
+            }// end if (m_data_iter == m_data.begin())
             //--------------------------
             epsilon = 0.;
             //--------------------------
@@ -647,7 +647,7 @@ class RLEnvironment{
                 //--------------------------
                 return {_data, epsilon};
                 //--------------------------
-            }// end auto _reward = m_CostFunction(args...)
+            }// end if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1)
             //--------------------------
             return {torch::tensor(0), 0};
             //--------------------------
@@ -673,7 +673,7 @@ class RLEnvironment{
                 //--------------------------
                 return _data;
                 //--------------------------
-            }// end auto _reward = m_CostFunction(args...)
+            }// end (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1)
             //--------------------------
             epsilon = 0.;
             //--------------------------

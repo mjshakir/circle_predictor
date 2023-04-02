@@ -14,22 +14,23 @@ class RLNormalize{
         //--------------------------
         /**
          *  @brief A constructor 
-         *
-         *  @tparam input: a torch tensor
+         *  
+         *  @param input: std::vector<torch::Tensor>: The data to be normalized. 
          */
         RLNormalize(const std::vector<torch::Tensor>& input);
         //--------------------------
         /**
-         *  @brief RLNormalize the input tensor from the constructor. This uses Min-max feature scaling.
-         *
-         *  @return A normalized a torch tensor
+         * @brief RLNormalize the input tensor from the constructor. This uses Min-max feature scaling.
+         * 
+         * @return std::vector<torch::Tensor>: A normalized data.
          */
         std::vector<torch::Tensor> normalization(void);
         //--------------------------
         /**
-         *  @brief RLNormalize the input tensor from the constructor. This uses Min-max feature scaling.
-         *
-         *  @return A normalized a torch tensor
+         * @brief RLNormalize the input tensor from the constructor. This uses Min-max feature scaling.
+         * 
+         * @param input: torch::Tensor: the input data in tensor format. 
+         * @return torch::Tensor: A normalized data.
          */
         torch::Tensor normalization(const torch::Tensor& input);
         //--------------------------

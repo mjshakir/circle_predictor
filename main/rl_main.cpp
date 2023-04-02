@@ -138,7 +138,8 @@ int main(int argc, char const *argv[]){
         throw std::out_of_range("Must between 0 and 1");
     }// end if (vm.count("precision") < 0)
     //--------------------------------------------------------------
-    std::cout   << "filename:       " << filename << "\n" 
+    std::cout   << "-------------------------------[Input Info]-------------------------------\n"
+                << "filename:       " << filename << "\n" 
                 << "generated size: " << generated_size << "\n"  
                 << "test size:      " << test_size << "\n"
                 << "batch size:     " << batch_size << "\n"
@@ -152,6 +153,8 @@ int main(int argc, char const *argv[]){
     //--------------------------
     torch::DeviceType device_type;
     //--------------------------
+    std::cout   << "-------------------------------[Training Type]-------------------------------" << std::endl;
+    //-----------
     if (torch::cuda::is_available()) {
         std::cout << "CUDA available! Training on GPU." << std::endl;
         device_type = torch::kCUDA;
@@ -164,25 +167,31 @@ int main(int argc, char const *argv[]){
     //--------------------------
     torch::Device device(device_type);
     //--------------------------------------------------------------
-    // TimeIT _timer; 
+    std::cout   << "-------------------------------[Starting Timing]-------------------------------" << std::endl;
+    //-----------
+    TimeIT _timer_tester;
+    //-----------
     RLGenerate _generate(generated_size, test_size, points_size, limiter);
-    // std::cout << "RLGenerate time: " << _timer.get_time_seconds() << std::endl;
+    //-----------
+    std::cout << "RLGenerate time:                  " << _timer_tester.get_time_seconds() << std::endl;
     // auto _temp = _generate.get_input();
     // for(const auto& x : _temp){
     //     std::cout << "data: " << x << std::endl;
     // }
-    // std::cout << "---------------end data------------ " << std::endl;
+    // std::cout << "---------------end data:["<< _timer_tester.get_time_seconds() << "]------------ " << std::endl;
     // std::exit(1);
     //--------------------------
     RLNormalize _normalize(_generate.get_input());
-    // std::cout << "RLGenerate and RLNormalize time: " << _timer.get_time_seconds() << std::endl;
+    //-----------
+    std::cout << "RLGenerate and RLNormalize time:  " << _timer_tester.get_time_seconds() << std::endl;
     // std::exit(1);
     //--------------------------
     auto input = _normalize.normalization();
+    //-----------
     // for(const auto& x : input){
     //     std::cout << "normalize data: " << _normalize.unnormalization(x) << std::endl;
     // }
-    // std::cout << "Input RLNormalize time: " << _timer.get_time_seconds() << std::endl;
+    std::cout << "Input RLNormalize time:           " << _timer_tester.get_time_seconds() << std::endl;
     // std::exit(1);
     //--------------------------
     auto input_test_thread = std::async(std::launch::async, [&_generate](){return RLNormalize::normalization_min_max(_generate.get_test_input());});
@@ -222,10 +231,13 @@ int main(int argc, char const *argv[]){
     std::mt19937 gen(rd());
     std::bernoulli_distribution memory_activation(memory_percentage);
     //--------------------------
-    ExperienceReplay memory(capacity);
+    ExperienceReplay<torch::Tensor, torch::Tensor, torch::Tensor, bool> memory(capacity);
     //--------------------------
     std::vector<torch::Tensor> _rewards;
     _rewards.reserve( input.size() * epoch);
+    //--------------------------
+    // std::cout << "final time: " << _timer_tester.get_time_seconds() << std::endl;
+    // std::exit(1);
     //--------------------------
     progressbar bar(epoch);
     //--------------------------------------------------------------
@@ -295,6 +307,8 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // }//end for(size_t i = 0; i < epoch; ++i)
     //--------------------------------------------------------------
+    std::cout   << "-------------------------------[Training]-------------------------------" << std::endl;
+    //-----------
     TimeIT _timer;
     //--------------------------
     for(size_t i = 0; i < epoch; ++i){

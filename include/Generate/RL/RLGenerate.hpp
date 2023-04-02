@@ -14,19 +14,19 @@ class RLGenerate{
         /**
          *  @brief A constructor. Generate both X, Y center point of the circle, and the radius. 
          *  it also generate test data that 20% of the generated_points
-         *  @param generated_points: How many points to generate. @default: 60000
-         *  @param column: helps design the structure of the output. @default: 2
-         *  @param limiter: the maximum value the points can get for X, Y. @default: 10.0
+         *  @param generated_points [in]: How many points to generate. @default: 60000
+         *  @param column [in]: helps design the structure of the output. @default: 2
+         *  @param limiter [in]: the maximum value the points can get for X, Y. @default: 10.0
          */
         RLGenerate(const size_t& generated_points = 60000, const size_t& column = 2, const double& limiter = 10.);
         //--------------------------
         /**
          *  @brief A constructor. Generate both X, Y center point of the circle, and the radius. 
          *  it also generate test data that 20% of the generated_points
-         *  @param generated_points: How many points to generate. @default: 60000
-         *  @param generated_points_test: How many points to test data is generated. @default: 10000
-         *  @param column: helps design the structure of the output. @default: 2
-         *  @param limiter: the maximum value the points can get for X, Y. @default: 10.0
+         *  @param generated_points [in]: How many points to generate. @default: 60000
+         *  @param generated_points_test [in]: How many points to test data is generated. @default: 10000
+         *  @param column [in]: helps design the structure of the output. @default: 2
+         *  @param limiter [in]: the maximum value the points can get for X, Y. @default: 10.0
          */
         RLGenerate( const size_t& generated_points = 60000,
                     const size_t& generated_points_test = 10000, 
@@ -50,8 +50,8 @@ class RLGenerate{
         /**
          *  @brief Getter: the target data set.
          *   
-         *  @param generated_points: How many points to generate. @default: 60000
-         *  @param column: helps design the structure of the output. @default: 2
+         *  @param generated_points [in]: How many points to generate. @default: 60000
+         *  @param column [in]: helps design the structure of the output. @default: 2
          * 
          *  @return torch::Tensor: target data.
          */
@@ -60,8 +60,8 @@ class RLGenerate{
         /**
          * @brief Generated data.
          * 
-         * @param generated_points: How many points to generate. @default: 60000
-         * @param column: helps design the structure of the output. @default: 2
+         * @param generated_points [in]: How many points to generate. @default: 60000
+         * @param column [in]: helps design the structure of the output. @default: 2
          * @return std::vector<torch::Tensor>: the data
          */
         std::vector<torch::Tensor> data(const size_t& generated_points = 60000, const size_t& column = 3);

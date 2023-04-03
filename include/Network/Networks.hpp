@@ -93,7 +93,7 @@ struct RLNetLSTM : torch::nn::Module {
     //--------------------------
     size_t m_output_size;
     //--------------------------
-    std::tuple<torch::Tensor, torch::Tensor> _gates;
+    std::tuple<torch::Tensor, torch::Tensor> m_gates;
     //--------------------------
     torch::nn::LSTM recurrent_layer;
     //--------------------------

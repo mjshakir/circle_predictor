@@ -3,8 +3,11 @@
 //--------------------------------------------------------------
 #include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
-
-TimeIT::TimeIT() : m_start(std::chrono::high_resolution_clock::now()) {
+// Definitions
+//--------------------------------------------------------------
+#define CONVERT_NANO 1e9
+//--------------------------------------------------------------
+TimeIT::TimeIT(void) : m_start(std::chrono::high_resolution_clock::now()) {
     //--------------------------
 }// end Timing::Timing()
 //--------------------------------------------------------------
@@ -22,11 +25,7 @@ double TimeIT::get_time_seconds(void) const{
 //--------------------------------------------------------------
 uint64_t TimeIT::nanoseconds_time(void) const{
     //--------------------------
-    auto end = std::chrono::high_resolution_clock::now();
-    //--------------------------
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - m_start);
-    //--------------------------
-    return duration.count();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_start).count();
     //--------------------------
 }// end uint64_t TimeIT::nanoseconds_time(void)
 //--------------------------------------------------------------

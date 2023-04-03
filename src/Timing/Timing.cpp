@@ -14,6 +14,8 @@
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+//--------------------------
+#define CONVERT_NANO 1e9
 //--------------------------------------------------------------
 Timing::Timing() : m_function_name("Unknown"), m_start(std::chrono::high_resolution_clock::now()) {
     //--------------------------
@@ -25,9 +27,7 @@ Timing::Timing(const std::string& function_name) : m_function_name(function_name
 //--------------------------------------------------------------
 Timing::~Timing(){
     //--------------------------
-    auto end = std::chrono::high_resolution_clock::now();
-    //--------------------------
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - m_start);
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_start);
     //--------------------------
     printf(ANSI_COLOR_GREEN "%s" ANSI_COLOR_RESET " Execution time: [" ANSI_COLOR_RED "%f " ANSI_COLOR_RESET "S]\n", 
             m_function_name.c_str(), duration.count()/CONVERT_NANO);

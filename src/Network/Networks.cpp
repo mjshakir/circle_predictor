@@ -135,8 +135,8 @@ RLNetLSTM::RLNetLSTM(const std::tuple<uint64_t, uint64_t>& input_size, const uin
             m_device(device),
             m_input_size(input_size),
             m_output_size(output_size),
-            m_gates({torch::from_blob(std::vector<float>(std::get<0>(input_size)* std::get<1>(input_size)*output_size, 0.0).data(), {static_cast<int64_t>(output_size* 2), static_cast<int64_t>(std::get<1>(input_size)), static_cast<int64_t>(std::get<1>(input_size))}).to(device), 
-                    torch::from_blob(std::vector<float>(std::get<0>(input_size)* std::get<1>(input_size)*output_size, 0.0).data(), {static_cast<int64_t>(output_size* 2), static_cast<int64_t>(std::get<1>(input_size)), static_cast<int64_t>(std::get<1>(input_size))}).to(device)}),
+            m_gates({torch::randn({static_cast<int64_t>(output_size* 2), static_cast<int64_t>(std::get<1>(input_size)), static_cast<int64_t>(std::get<1>(input_size))}),
+                    torch::randn({static_cast<int64_t>(output_size* 2), static_cast<int64_t>(std::get<1>(input_size)), static_cast<int64_t>(std::get<1>(input_size))})   }),
             recurrent_layer(torch::nn::LSTMOptions(std::get<0>(input_size), std::get<1>(input_size)).num_layers(output_size).batch_first(true).bidirectional(true).dropout(0.5)),
             input_layer(torch::nn::LinearOptions(std::get<1>(input_size)*output_size, 32).bias(true)), 
             features(torch::nn::LinearOptions(32, 64).bias(true)), 
@@ -156,13 +156,10 @@ torch::Tensor RLNetLSTM::lstm_layers(const torch::Tensor& x){
     //--------------------------
     auto _result = x.view({-1, 1, static_cast<int64_t>(std::get<0>(m_input_size))});
     //--------------------------
-    auto x_lstm = recurrent_layer->forward(_result, m_gates);
+    torch::Tensor x_lstm;
+    std::tie(x_lstm, m_gates) = recurrent_layer->forward(_result, m_gates);
     //--------------------------
-    m_gates = std::get<1>(x_lstm);
-    //-------------------------
-    // return std::get<0>(x_lstm).view({1, -1});
-    //-------------------------
-    return std::get<0>(x_lstm);
+    return x_lstm;
     //-------------------------
 }// end torch::Tensor LSTMNet::lstm_layers(const torch::Tensor& x)
 //--------------------------------------------------------------

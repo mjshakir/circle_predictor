@@ -168,9 +168,9 @@ class ReinforcementNetworkHandling{
             //--------------------------
         }// end torch::Tensor network_test(const torch::Tensor& input)
         //--------------------------------------------------------------
-        std::unique_ptr<Network> get_model(void){
+        Network& get_model(void){
             //--------------------------
-            return std::make_unique<Network>(m_model);
+            return m_model;
             //--------------------------
         }// end Network& get_model(void)
         //--------------------------------------------------------------

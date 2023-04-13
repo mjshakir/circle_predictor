@@ -6,13 +6,13 @@
 //--------------------------------------------------------------
 template<typename T>
 //--------------------------------------------------------------
-class TestEnvironment{
+class Environment{
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
-        TestEnvironment(void) = delete;
+        Environment(void) = delete;
         //--------------------------------------------------------------
-        TestEnvironment(std::vector<T>&& data, const size_t& batch = 1) :   m_data(std::move(data)),
+        Environment(std::vector<T>&& data, const size_t& batch = 1) :   m_data(std::move(data)),
                                                                             m_data_iter (m_data.begin()), 
                                                                             m_enable_batch((batch > 1) ? true : false),
                                                                             m_batch(batch){
@@ -23,7 +23,7 @@ class TestEnvironment{
                 //--------------------------
             }// end if(batch > m_data.size()/2)
             //----------------------------
-        }// end TestEnvironment(std::vector<T>&& data, const size_t& batch = 1)
+        }// end Environment(std::vector<T>&& data, const size_t& batch = 1)
         //--------------------------------------------------------------
         std::tuple<torch::Tensor, bool> step(void){
             //----------------------------
@@ -272,6 +272,12 @@ class TestEnvironment{
             //--------------------------
         }// end void rest_iterator(void)
         //--------------------------------------------------------------
+        std::vector<T>& get_data(void){
+            //--------------------------
+            return m_data; 
+            //--------------------------
+        }// end std::unique_ptr<std::vector<T>> get_data(void)
+        //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
         std::vector<T> m_data;
@@ -281,5 +287,5 @@ class TestEnvironment{
         //--------------------------
         size_t m_batch;
     //--------------------------------------------------------------
-};// end class TestEnvironment
+};// end class Environment
 //--------------------------------------------------------------

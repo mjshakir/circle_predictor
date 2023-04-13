@@ -105,7 +105,7 @@ add_library(${PROJECT_NAME}_timing SHARED
 add_library(${PROJECT_NAME}_rl_data SHARED
   src/Generate/RL/RLGenerate.cpp
   src/Generate/RL/RLEnvironment.cpp
-  src/Generate/RL/TestEnvironment.cpp
+  src/Generate/RL/Environment.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_rl_network SHARED

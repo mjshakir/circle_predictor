@@ -128,8 +128,8 @@ RLNetLSTM::RLNetLSTM(const std::tuple<uint64_t, uint64_t>& input_size, const uin
             m_input_size(input_size),
             m_output_size(output_size),
             m_inject(inject),
-            m_gates({torch::randn({static_cast<int64_t>(output_size* 2), 1, static_cast<int64_t>(std::get<1>(input_size))}),
-                    torch::randn({static_cast<int64_t>(output_size* 2), 1, static_cast<int64_t>(std::get<1>(input_size))})}),
+            m_gates({torch::rand({static_cast<int64_t>(output_size* 2), static_cast<int64_t>(std::get<1>(input_size)), static_cast<int64_t>(std::get<1>(input_size))}),
+                    torch::rand({static_cast<int64_t>(output_size* 2), static_cast<int64_t>(std::get<1>(input_size)), static_cast<int64_t>(std::get<1>(input_size))})}),
             recurrent_layer(torch::nn::LSTMOptions(std::get<0>(input_size), std::get<1>(input_size)).num_layers(output_size).bias(true).batch_first(true).bidirectional(true).dropout(0.5)),
             input_layer(torch::nn::LinearOptions(std::get<1>(input_size)*output_size, 32).bias(true)), 
             features((inject) ? torch::nn::LinearOptions((32 + std::get<0>(input_size)), 64).bias(true) : torch::nn::LinearOptions(32, 64).bias(true)), 
@@ -148,7 +148,7 @@ RLNetLSTM::RLNetLSTM(const std::tuple<uint64_t, uint64_t>& input_size, const uin
 torch::Tensor RLNetLSTM::lstm_layers(const torch::Tensor& x){
     //--------------------------
     torch::Tensor x_lstm;
-    std::tie(x_lstm, m_gates) = recurrent_layer->forward(x.view({1, -1, static_cast<int64_t>(std::get<0>(m_input_size))}), m_gates);
+    std::tie(x_lstm, m_gates) = recurrent_layer->forward(x.view({static_cast<int64_t>(std::get<1>(m_input_size)), -1, static_cast<int64_t>(std::get<0>(m_input_size))}), m_gates);
     //--------------------------
     return x_lstm;
     //-------------------------

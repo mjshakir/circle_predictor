@@ -151,21 +151,21 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                 const bool& done,
                                 const double& gamma){
             //--------------------------
+            torch::Tensor _state_value;
+            //--------------------------
             if(m_double_mode){
                 //--------------------------
-                torch::Tensor _state_value;
                 std::tie(std::ignore, _state_value) = torch::max(m_model.forward(next_input).detach(), 1);
                 //--------------------------
                 return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1));
                 //--------------------------
             }// end if(m_double_mode)
             //--------------------------
-            // torch::Tensor _state_value;
-            // std::tie(_state_value, std::ignore) = torch::max(m_target_model.forward(next_input).detach(), 1);
-            // //--------------------------
-            // return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1)).squeeze(1);
+            std::tie(_state_value, std::ignore) = torch::max(m_target_model.forward(next_input).detach(), 1);
             //--------------------------
-            return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach();
+            return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1).to(torch::kI64));
+            //--------------------------
+            // return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach();
             //--------------------------
         }// end torch::Tensor dqn_agent(const torch::Tensor& input, const torch::Tensor& next_input)
     //--------------------------------------------------------------

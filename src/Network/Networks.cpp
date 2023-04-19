@@ -117,29 +117,22 @@ torch::Tensor DuelNet::forward(const torch::Tensor& x){
     //--------------------------
     auto advantage = advantage_layer->forward(_results);
     //--------------------------
-    // auto value_thread = std::async(std::launch::async, [this, &_results]{return value_layer->forward(_results);});
-    // //--------------------------
-    // auto advantage_thread = std::async(std::launch::async, [this, &_results]{return advantage_layer->forward(_results);});
-    // //--------------------------
-    // auto value = value_thread.get();
-    // //--------------------------
-    // auto advantage = advantage_thread.get();
-    //--------------------------
     return (value + (advantage - advantage.mean()));
     //--------------------------
 }// end torch::Tensor Net::forward(torch::Tensor x)
 //--------------------------------------------------------------
 // RLNetLSTM struct 
 //--------------------------------------------------------------
-RLNetLSTM::RLNetLSTM(const std::tuple<uint64_t, uint64_t>& input_size, const uint64_t& output_size, const torch::Device& device) : 
+RLNetLSTM::RLNetLSTM(const std::tuple<uint64_t, uint64_t>& input_size, const uint64_t& output_size, const torch::Device& device, const bool& inject) : 
             m_device(device),
             m_input_size(input_size),
             m_output_size(output_size),
-            m_gates({torch::randn({static_cast<int64_t>(output_size* 2), static_cast<int64_t>(std::get<1>(input_size)), static_cast<int64_t>(std::get<1>(input_size))}),
-                    torch::randn({static_cast<int64_t>(output_size* 2), static_cast<int64_t>(std::get<1>(input_size)), static_cast<int64_t>(std::get<1>(input_size))})   }),
-            recurrent_layer(torch::nn::LSTMOptions(std::get<0>(input_size), std::get<1>(input_size)).num_layers(output_size).batch_first(true).bidirectional(true).dropout(0.5)),
+            m_inject(inject),
+            m_gates({torch::randn({static_cast<int64_t>(output_size* 2), 1, static_cast<int64_t>(std::get<1>(input_size))}),
+                    torch::randn({static_cast<int64_t>(output_size* 2), 1, static_cast<int64_t>(std::get<1>(input_size))})}),
+            recurrent_layer(torch::nn::LSTMOptions(std::get<0>(input_size), std::get<1>(input_size)).num_layers(output_size).bias(true).batch_first(true).bidirectional(true).dropout(0.5)),
             input_layer(torch::nn::LinearOptions(std::get<1>(input_size)*output_size, 32).bias(true)), 
-            features(torch::nn::LinearOptions(32, 64).bias(true)), 
+            features((inject) ? torch::nn::LinearOptions((32 + std::get<0>(input_size)), 64).bias(true) : torch::nn::LinearOptions(32, 64).bias(true)), 
             features2(torch::nn::LinearOptions(64, 128).bias(true)),
             output_layer(torch::nn::LinearOptions(128, output_size).bias(true)){
     //--------------------------
@@ -154,10 +147,8 @@ RLNetLSTM::RLNetLSTM(const std::tuple<uint64_t, uint64_t>& input_size, const uin
 //--------------------------------------------------------------
 torch::Tensor RLNetLSTM::lstm_layers(const torch::Tensor& x){
     //--------------------------
-    auto _result = x.view({-1, 1, static_cast<int64_t>(std::get<0>(m_input_size))});
-    //--------------------------
     torch::Tensor x_lstm;
-    std::tie(x_lstm, m_gates) = recurrent_layer->forward(_result, m_gates);
+    std::tie(x_lstm, m_gates) = recurrent_layer->forward(x.view({1, -1, static_cast<int64_t>(std::get<0>(m_input_size))}), m_gates);
     //--------------------------
     return x_lstm;
     //-------------------------
@@ -173,11 +164,30 @@ torch::Tensor RLNetLSTM::linear_layers(const torch::Tensor& x){
     //-------------------------
 }// end torch::Tensor Net::linear_layers(torch::Tensor& x)
 //--------------------------------------------------------------
+torch::Tensor RLNetLSTM::linear_layers(const torch::Tensor& input, const torch::Tensor& x){
+    //--------------------------
+    auto _results = torch::leaky_relu(input_layer->forward(x), 5E-2);
+    //--------------------------
+    _results = torch::relu(features->forward(torch::cat({_results.view({-1, 32}), input}, 1)));
+    //--------------------------
+    return torch::relu(features2->forward(_results));
+    //-------------------------
+}// end torch::Tensor Net::linear_layers(torch::Tensor& x)
+//--------------------------------------------------------------
 torch::Tensor RLNetLSTM::forward(const torch::Tensor& x){
     //--------------------------
     auto _result = lstm_layers(x);
     //--------------------------
-    _result = linear_layers(_result);
+    if(m_inject){
+        //--------------------------
+        _result = linear_layers(x, _result);
+        //--------------------------
+    }// end if(m_inject)
+    else{
+        //--------------------------
+        _result = linear_layers(_result);
+        //--------------------------
+    }// end else
     //--------------------------
     torch::dropout(_result, /*p=*/0.5, /*training=*/is_training());
     //-------------------------

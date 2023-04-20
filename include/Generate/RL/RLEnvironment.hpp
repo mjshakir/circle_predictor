@@ -16,12 +16,22 @@ class RLEnvironment : protected Environment<T>{
         //--------------------------------------------------------------
         RLEnvironment(void) = delete;
         //--------------------------------------------------------------
+        /**
+         * @brief Construct to create a training environment for reinforcement learning 
+         * 
+         * @param data          [in] :
+         * @param costFunction  [in] :
+         * @param egreedy       [in] :  @default: 0.9
+         * @param egreedy_final [in] :  @default: 0.02
+         * @param egreedy_decay [in] :  @default: 500.
+         * @param batch         [in] :  @default: 1ul   
+         */
         RLEnvironment(  std::vector<T>&& data, 
                         std::function<COST_OUTPUT(const Args&...)> costFunction,
                         const double& egreedy = 0.9,
                         const double& egreedy_final = 0.02,
                         const double& egreedy_decay = 500.,
-                        const size_t& batch = 1) :  Environment<T>(std::move(data)),
+                        const size_t& batch = 1ul) :  Environment<T>(std::move(data)),
                                                     m_data(this->get_data()),
                                                     m_data_iter (m_data.begin()), 
                                                     m_CostFunction(std::move(costFunction)),
@@ -33,13 +43,9 @@ class RLEnvironment : protected Environment<T>{
             //----------------------------
             if(m_enable_batch and batch >= m_data.size()/2){
                 //--------------------------
-                // std::string _error = "Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(m_data.size()/2) + "]";
-                //--------------------------
-                // throw std::out_of_range(_error.c_str());
-                //--------------------------
                 throw std::out_of_range("Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(m_data.size()/2) + "]");
                 //--------------------------
-            }// end if(batch > m_data.size()/2)
+            }// end if(m_enable_batch and batch >= m_data.size()/2)
             //----------------------------
         }// end RLEnvironment(Dataset&& data_loader)
         //--------------------------------------------------------------

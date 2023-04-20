@@ -8,6 +8,10 @@
 //--------------------------------------------------------------
 #include "Generate/RL/Environment.hpp"
 //--------------------------------------------------------------
+// User definition
+//--------------------------------------------------------------
+#define OUT
+//--------------------------------------------------------------
 template<typename T, typename COST_OUTPUT, typename... Args>
 //--------------------------------------------------------------
 class RLEnvironment : protected Environment<T>{
@@ -61,7 +65,15 @@ class RLEnvironment : protected Environment<T>{
             //----------------------------
         }// std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(Args... args)
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT> step(double& epsilon, bool& done, const Args&... args){
+        /**
+         * @brief 
+         * 
+         * @param epsilon 
+         * @param done 
+         * @param args 
+         * @return std::tuple<torch::Tensor, COST_OUTPUT> 
+         */
+        std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const Args&... args){
             //----------------------------
             if(m_enable_batch){
                 //----------------------------
@@ -73,12 +85,26 @@ class RLEnvironment : protected Environment<T>{
             //----------------------------
         }// std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(Args... args)
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT> step(double& epsilon, bool& done, const size_t& batch, const Args&... args){
+        /**
+         * @brief 
+         * 
+         * @param epsilon 
+         * @param done 
+         * @param batch 
+         * @param args 
+         * @return std::tuple<torch::Tensor, COST_OUTPUT> 
+         */
+        std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args){
             //----------------------------
             return internal_step(epsilon, done, batch, args...);
             //----------------------------
         }// std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(Args... args)
         //--------------------------------------------------------------
+        /**
+         * @brief Get the first object
+         * 
+         * @return std::tuple<torch::Tensor, double> 
+         */
         std::tuple<torch::Tensor, double> get_first(void){
             //----------------------------
             if(m_enable_batch){
@@ -91,7 +117,13 @@ class RLEnvironment : protected Environment<T>{
             //----------------------------
         }// end torch::Tensor get_first(void)
         //--------------------------------------------------------------
-        torch::Tensor get_first(double& epsilon){
+        /**
+         * @brief Get the first object
+         * 
+         * @param epsilon 
+         * @return torch::Tensor 
+         */
+        torch::Tensor get_first(OUT double& epsilon){
             //----------------------------
             if(m_enable_batch){
                 //----------------------------
@@ -103,12 +135,23 @@ class RLEnvironment : protected Environment<T>{
             //----------------------------
         }// end torch::Tensor get_first(void)
         //--------------------------------------------------------------
-        torch::Tensor get_first(double& epsilon, const size_t& batch){
+        /**
+         * @brief Get the first object
+         * 
+         * @param epsilon 
+         * @param batch 
+         * @return torch::Tensor 
+         */
+        torch::Tensor get_first(OUT double& epsilon, const size_t& batch){
             //----------------------------
             return get_first_internal(epsilon, batch);
             //----------------------------
         }// end torch::Tensor get_first(void)
         //--------------------------------------------------------------
+        /**
+         * @brief 
+         * 
+         */
         void reset(void){
             //--------------------------
             reset_iterator();
@@ -154,7 +197,7 @@ class RLEnvironment : protected Environment<T>{
             //--------------------------
         }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args))
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const Args&... args){
+        std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const Args&... args){
             //--------------------------
             if (m_data_iter == m_data.end()){
                 //--------------------------
@@ -264,7 +307,7 @@ class RLEnvironment : protected Environment<T>{
             //--------------------------
         }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args)
         //--------------------------------------------------------------
-        std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, const Args&... args){
+        std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args){
             //--------------------------------------------------------------
             if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
                 //--------------------------
@@ -354,8 +397,8 @@ class RLEnvironment : protected Environment<T>{
             return {torch::tensor(0), 0};
             //--------------------------
         }// end torch::Tensor get_first_internal(void)
-        //--------------------------
-        torch::Tensor get_first_internal(double& epsilon){
+        //--------------------------------------------------------------
+        torch::Tensor get_first_internal(OUT double& epsilon){
             //--------------------------
             if (m_data_iter == m_data.end()){
                 //--------------------------
@@ -413,7 +456,7 @@ class RLEnvironment : protected Environment<T>{
             //--------------------------
         }// end torch::Tensor get_first_internal(void)
         //--------------------------------------------------------------
-        torch::Tensor get_first_internal(double& epsilon, const size_t& batch){
+        torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch){
             //--------------------------
             torch::Tensor _data;
             //--------------------------

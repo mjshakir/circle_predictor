@@ -76,7 +76,7 @@ class ExperienceReplay{
             //--------------------------
             if (key > m_memory.size()){
                 //--------------------------
-                throw std::out_of_range("Key: [" + std::to_string(key) + "] is larger then memory size:[" + std::to_string(m_memory.size()) + "]");
+                throw std::out_of_range("Key: [" + std::to_string(key) + "] is larger then the memory size:[" + std::to_string(m_memory.size()-1) + "]");
                 //--------------------------
             }// end if (key > m_memory.size())
             //--------------------------

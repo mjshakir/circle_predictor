@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 #include "Network/Networks.hpp"
 #include "Generate/RL/RLEnvironment.hpp"
-#include "Generate/RL/TestEnvironment.hpp"
+// #include "Generate/RL/TestEnvironment.hpp"
 #include "Generate/RL/RLGenerate.hpp"
 // #include "Network/RL/ReinforcementNetworkHandling.hpp"
 //--------------------------
@@ -56,7 +56,7 @@ int main(int argc, char const *argv[]){
     //--------------------------
     double memory_percentage;
     //--------------------------
-    bool clamp, double_mode;
+    bool clamp, double_mode, verbos;
     //--------------------------
     boost::program_options::options_description description("Allowed options:");
     //--------------------------
@@ -73,8 +73,9 @@ int main(int argc, char const *argv[]){
     ("limiter,l", boost::program_options::value<size_t>(&limiter)->default_value(10), "Determine when to stop the training. This uses a validation set")
     ("update_frequency,f", boost::program_options::value<size_t>(&update_frequency)->default_value(100), "Determine when to stop the training. This uses a validation set")
     ("memory_percentage,m", boost::program_options::value<double>(&memory_percentage)->default_value(0.3), "Determine when to stop the training. This uses a validation set")
-    ("double_mode,d", boost::program_options::value<bool>(&double_mode)->default_value(true), "false: validation precision or true: Train with an epoch iteration")
-    ("clamp,u", boost::program_options::value<bool>(&clamp)->default_value(true), "false: validation precision or true: Train with an epoch iteration");
+    ("double_mode,d", boost::program_options::value<bool>(&double_mode)->default_value(true), "validation precision or true: Train with an epoch iteration")
+    ("clamp,u", boost::program_options::value<bool>(&clamp)->default_value(true), "validation precision or true: Train with an epoch iteration")
+    ("verbos,v", boost::program_options::value<bool>(&verbos)->default_value(false), "validation precision or true: Train with an epoch iteration");
     //--------------------------
     boost::program_options::variables_map vm;
     boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(description).run(), vm);
@@ -103,7 +104,8 @@ int main(int argc, char const *argv[]){
     }// end if (vm.count("generated_size") < 100)
     //-----------
     if (vm["batch_size"].as<size_t>() > (vm["generated_size"].as<size_t>()/2)){
-        throw std::out_of_range("Batch size must be less then half of the generated size");
+        throw std::out_of_range("Batch Size: [" + std::to_string(vm["batch_size"].as<size_t>()) + 
+                                "] Must Be Less Then Half of The data Size: [" + std::to_string(vm["generated_size"].as<size_t>()) + "]");
     }// end if (vm.count("generated_size") < 100)
     //-----------
     if (vm["test_size"].as<size_t>() < 0){
@@ -123,7 +125,7 @@ int main(int argc, char const *argv[]){
     }// end if (vm.count("epoch") < 0)
     //-----------
     if (vm["capacity"].as<size_t>() < vm["batch_size"].as<size_t>()){
-        throw std::out_of_range("Must higher or equal to the batch size[" + vm["batch_size"].as<std::string>() + "]");
+        throw std::out_of_range("Must higher or equal to the batch size[" + std::to_string(vm["batch_size"].as<size_t>()) + "]");
     }// end if (vm.count("epoch") < 0)
     //-----------
     if (vm["limiter"].as<size_t>() < 0){
@@ -138,14 +140,35 @@ int main(int argc, char const *argv[]){
         throw std::out_of_range("Must between 0 and 1");
     }// end if (vm.count("precision") < 0)
     //--------------------------------------------------------------
-    std::cout   << "-------------------------------[Input Info]-------------------------------\n"
-                << "filename:       " << filename << "\n" 
-                << "generated size: " << generated_size << "\n"  
-                << "test size:      " << test_size << "\n"
-                << "batch size:     " << batch_size << "\n"
-                << "epoch:          " << epoch << "\n"
-                << "clamp:          " << std::boolalpha << clamp << "\n"
-                << "double_mode:    " << std::boolalpha << double_mode << std::endl;
+    // Print table settup
+    //--------------------------
+    fort::char_table info_table;
+    //--------------------------
+    if(verbos){
+        //--------------------------
+        // Change border style
+        //--------------------------
+        info_table.set_border_style( FT_BOLD2_STYLE);
+        //--------------------------
+        // Set color
+        //--------------------------
+        info_table.column(0).set_cell_content_fg_color(fort::color::light_red);
+        info_table.column(0).set_cell_content_text_style(fort::text_style::bold);
+        //--------------------------
+        // Set center alignment for the all columns
+        //--------------------------
+        info_table.column(0).set_cell_text_align(fort::text_align::left);
+        info_table.column(1).set_cell_text_align(fort::text_align::center);
+        //--------------------------
+        info_table  << "filename"       << filename                      << fort::endr;      
+        info_table  << "generated size" << generated_size                << fort::endr;
+        info_table  << "test size"      << test_size                     << fort::endr;
+        info_table  << "batch size"     << batch_size                    << fort::endr;
+        info_table  << "epoch"          << epoch                         << fort::endr;
+        info_table  << "clamp"          << std::boolalpha << clamp       << fort::endr;
+        info_table  << "double_mode"    << std::boolalpha << double_mode << fort::endr;
+        //--------------------------
+    }// end if(verbos)
     //--------------------------------------------------------------
     // Initiate Torch seed, device type
     //--------------------------
@@ -153,47 +176,58 @@ int main(int argc, char const *argv[]){
     //--------------------------
     torch::DeviceType device_type;
     //--------------------------
-    std::cout   << "-------------------------------[Training Type]-------------------------------" << std::endl;
-    //-----------
     if (torch::cuda::is_available()) {
-        std::cout << "CUDA available! Training on GPU." << std::endl;
+        //--------------------------
         device_type = torch::kCUDA;
         torch::cuda::manual_seed(7);
+        //--------------------------
+        if(verbos){
+            //--------------------------
+            info_table  << "Training" << "GPU" << fort::endr;
+            //--------------------------
+        }// if(verbos)
     }// end if (torch::cuda::is_available()) 
     else {
-        std::cout << "Training on CPU." << std::endl;
+        //--------------------------
         device_type = torch::kCPU;
+        //--------------------------
+        if(verbos){
+            //--------------------------
+            info_table  << "Training" << "CPU" << fort::endr;
+            //--------------------------
+        }// if(verbos)
     }// end else
     //--------------------------
     torch::Device device(device_type);
     //--------------------------------------------------------------
-    std::cout   << "-------------------------------[Starting Timing]-------------------------------" << std::endl;
-    //-----------
     TimeIT _timer_tester;
-    //-----------
+    //--------------------------
     RLGenerate _generate(generated_size, test_size, points_size, limiter);
-    //-----------
-    std::cout << "RLGenerate time:                  " << _timer_tester.get_time_seconds() << std::endl;
-    // auto _temp = _generate.get_input();
-    // for(const auto& x : _temp){
-    //     std::cout << "data: " << x << std::endl;
-    // }
-    // std::cout << "---------------end data:["<< _timer_tester.get_time_seconds() << "]------------ " << std::endl;
-    // std::exit(1);
+    //--------------------------
+    if(verbos){
+        //--------------------------
+        info_table  << "RLGenerate time" << _timer_tester.get_time_seconds() << fort::endr;
+        //--------------------------
+    }// if(verbos)
     //--------------------------
     RLNormalize _normalize(_generate.get_input());
-    //-----------
-    std::cout << "RLGenerate and RLNormalize time:  " << _timer_tester.get_time_seconds() << std::endl;
-    // std::exit(1);
+    //--------------------------
+    if(verbos){
+        //--------------------------
+        info_table  << "RLNormalize time" << _timer_tester.get_time_seconds() << fort::endr;
+        //--------------------------
+    }// if(verbos)
     //--------------------------
     auto input = _normalize.normalization();
-    //-----------
-    // for(const auto& x : input){
-    //     std::cout << "normalize data: " << _normalize.unnormalization(x) << std::endl;
-    // }
-    std::cout << "Input RLNormalize time:           " << _timer_tester.get_time_seconds() << std::endl;
-    // std::exit(1);
-    //--------------------------
+   //--------------------------
+    if(verbos){
+        //--------------------------
+        info_table  << "Get normalized time" << _timer_tester.get_time_seconds() << fort::endr;
+        //--------------------------
+        std::cout << info_table.to_string() << std::endl;
+        //--------------------------
+    }// if(verbos)
+    //--------------------------------------------------------------
     auto input_test_thread = std::async(std::launch::async, [&_generate](){return RLNormalize::normalization_min_max(_generate.get_test_input());});
     //--------------------------------------------------------------
     auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
@@ -204,8 +238,8 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
-    // RLNetLSTM model({points_size, batch_size}, output_size, device);
-    // RLNetLSTM target_model({points_size, batch_size}, output_size, device);
+    // RLNetLSTM model({points_size, batch_size}, output_size, device, false);
+    // RLNetLSTM target_model({points_size, batch_size}, output_size, device, false);
     //--------------------------
     // RLNet model(points_size, output_size);
     // RLNet target_model(points_size, output_size);
@@ -462,7 +496,7 @@ int main(int argc, char const *argv[]){
     table   << fort::header
             << "X_1" << "X" << "Y_1" << "Y" << "Original Target" << "Output" << "Loss" << fort::endr;
     //--------------------------------------------------------------
-    TestEnvironment<torch::Tensor> _environment_test(std::move(input_test), batch_size);
+    Environment<torch::Tensor> _environment_test(std::move(input_test), batch_size);
     //--------------------------
     bool done{false};
     //--------------------------

@@ -110,13 +110,10 @@ torch::Tensor RLNormalize::unnormalization_data(const torch::Tensor& input, cons
 //--------------------------------------------------------------
 std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(const std::vector<torch::Tensor>& input){
     //--------------------------
-    auto _min_temp = std::min_element(std::execution::par, input.begin(), input.end(), 
-                                    [](const auto& first, const auto& second){return torch::min(first).less(torch::min(second)).any().template item<bool>();});
-    //--------------------------
-    auto _max_temp = std::max_element(std::execution::par, input.begin(), input.end(), 
-                                    [](const auto& first, const auto& second){return torch::max(second).greater(torch::max(first)).any().template item<bool>();});
-    //--------------------------
-    return {torch::min(*_min_temp), torch::max(*_max_temp)};
+    return {torch::min(*std::min_element(std::execution::par, input.begin(), input.end(), 
+                                    [](const auto& first, const auto& second){return torch::min(first).less(torch::min(second)).any().template item<bool>();})), 
+            torch::max(*std::max_element(std::execution::par, input.begin(), input.end(), 
+                                    [](const auto& first, const auto& second){return torch::max(second).greater(torch::max(first)).any().template item<bool>();}))};
     //--------------------------
 }// end std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(std::vector<torch::Tensor> input)
 //--------------------------------------------------------------

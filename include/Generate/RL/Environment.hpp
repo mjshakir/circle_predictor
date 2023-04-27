@@ -13,9 +13,9 @@ class Environment{
         Environment(void) = delete;
         //--------------------------------------------------------------
         Environment(std::vector<T>&& data, const size_t& batch = 1) :   m_data(std::move(data)),
-                                                                            m_data_iter (m_data.begin()), 
-                                                                            m_enable_batch((batch > 1) ? true : false),
-                                                                            m_batch(batch){
+                                                                        m_data_iter (m_data.begin()), 
+                                                                        m_enable_batch((batch > 1) ? true : false),
+                                                                        m_batch(batch){
             //----------------------------
             if(m_enable_batch and batch >= m_data.size()/2){
                 //--------------------------
@@ -271,12 +271,6 @@ class Environment{
             m_data_iter = m_data.begin();
             //--------------------------
         }// end void rest_iterator(void)
-        //--------------------------------------------------------------
-        std::vector<T>& get_data(void){
-            //--------------------------
-            return m_data; 
-            //--------------------------
-        }// end std::unique_ptr<std::vector<T>> get_data(void)
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------

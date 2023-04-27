@@ -4,9 +4,9 @@
     and https://stackoverflow.com/questions/70355767/binding-a-class-method-to-a-method-of-another-class 
     and https://stackoverflow.com/questions/28746744/passing-capturing-lambda-as-function-pointer */
 //--------------------------------------------------------------
-// User defined library
+// LibTorch library
 //--------------------------------------------------------------
-#include "Generate/RL/Environment.hpp"
+#include <torch/torch.h>
 //--------------------------------------------------------------
 // User definition
 //--------------------------------------------------------------
@@ -14,7 +14,7 @@
 //--------------------------------------------------------------
 template<typename T, typename COST_OUTPUT, typename... Args>
 //--------------------------------------------------------------
-class RLEnvironment : protected Environment<T>{
+class RLEnvironment{
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
@@ -23,27 +23,26 @@ class RLEnvironment : protected Environment<T>{
         /**
          * @brief Construct to create a training environment for reinforcement learning 
          * 
-         * @param data          [in] :
-         * @param costFunction  [in] :
-         * @param egreedy       [in] :  @default: 0.9
-         * @param egreedy_final [in] :  @default: 0.02
-         * @param egreedy_decay [in] :  @default: 500.
-         * @param batch         [in] :  @default: 1ul   
+         * @param data          [in] : Data Vector of the template type T
+         * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters
+         * @param egreedy       [in] : The starting egreedy                                           @default: 0.9
+         * @param egreedy_final [in] : The egreedy number where it will change                        @default: 0.02
+         * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor                     @default: 500.
+         * @param batch         [in] : The batch number (needs to be less then half of the data size) @default: 1ul   
          */
         RLEnvironment(  std::vector<T>&& data, 
                         std::function<COST_OUTPUT(const Args&...)> costFunction,
                         const double& egreedy = 0.9,
                         const double& egreedy_final = 0.02,
                         const double& egreedy_decay = 500.,
-                        const size_t& batch = 1ul) :  Environment<T>(std::move(data)),
-                                                    m_data(this->get_data()),
-                                                    m_data_iter (m_data.begin()), 
-                                                    m_CostFunction(std::move(costFunction)),
-                                                    m_egreedy(egreedy),
-                                                    m_egreedy_final(egreedy_final),
-                                                    m_egreedy_decay(egreedy_decay),
-                                                    m_enable_batch((batch > 1) ? true : false),
-                                                    m_batch(batch){
+                        const size_t& batch = 1ull) :   m_data(std::move(data)),
+                                                        m_data_iter (m_data.begin()), 
+                                                        m_CostFunction(std::move(costFunction)),
+                                                        m_egreedy(egreedy),
+                                                        m_egreedy_final(egreedy_final),
+                                                        m_egreedy_decay(egreedy_decay),
+                                                        m_enable_batch((batch > 1) ? true : false),
+                                                        m_batch(batch){
             //----------------------------
             if(m_enable_batch and batch >= m_data.size()/2){
                 //--------------------------
@@ -492,13 +491,13 @@ class RLEnvironment : protected Environment<T>{
         //--------------------------------------------------------------
         constexpr double calculate_epsilon(void){
             //--------------------------
-            return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * std::distance(m_data.begin(), m_data_iter) / m_egreedy_decay );
+            return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * std::distance(m_data.begin(), m_data_iter) / m_egreedy_decay);
             //--------------------------
         }// end double calculate_epsilon()
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
-        std::vector<T>& m_data;
+        std::vector<T> m_data;
         typename std::vector<T>::iterator m_data_iter;
         //--------------------------
         std::function<COST_OUTPUT(const Args&...)> m_CostFunction;

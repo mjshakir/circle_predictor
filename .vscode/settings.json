@@ -76,7 +76,14 @@
         "csignal": "cpp",
         "numbers": "cpp",
         "semaphore": "cpp",
-        "strstream": "cpp"
+        "strstream": "cpp",
+        "buffer": "cpp",
+        "executor": "cpp",
+        "internet": "cpp",
+        "io_context": "cpp",
+        "netfwd": "cpp",
+        "socket": "cpp",
+        "timer": "cpp"
     },
     // "C_Cpp.errorSquiggles": "Disabled",
     "cmake.configureOnOpen": true,

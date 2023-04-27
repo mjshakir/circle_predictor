@@ -37,8 +37,6 @@ std::vector<torch::Tensor> RLGenerate::get_input(void){
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLGenerate::get_test_input(void){
     //--------------------------
-    // m_data_test_sem.acquire();
-    //--------------------------
     return m_data_test;
     //--------------------------
 }// end std::vector<torch::Tensor> RLGenerate::get_test_input(void)

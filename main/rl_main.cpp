@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 #include "Network/Networks.hpp"
 #include "Generate/RL/RLEnvironment.hpp"
-// #include "Generate/RL/TestEnvironment.hpp"
+#include "Generate/RL/Environment.hpp"
 #include "Generate/RL/RLGenerate.hpp"
 // #include "Network/RL/ReinforcementNetworkHandling.hpp"
 //--------------------------
@@ -74,7 +74,7 @@ int main(int argc, char const *argv[]){
     ("update_frequency,f", boost::program_options::value<size_t>(&update_frequency)->default_value(100), "Determine when to stop the training. This uses a validation set")
     ("memory_percentage,m", boost::program_options::value<double>(&memory_percentage)->default_value(0.3), "Determine when to stop the training. This uses a validation set")
     ("double_mode,d", boost::program_options::value<bool>(&double_mode)->default_value(true), "validation precision or true: Train with an epoch iteration")
-    ("clamp,u", boost::program_options::value<bool>(&clamp)->default_value(true), "validation precision or true: Train with an epoch iteration")
+    ("clamp,u", boost::program_options::value<bool>(&clamp)->default_value(false), "validation precision or true: Train with an epoch iteration")
     ("verbos,v", boost::program_options::value<bool>(&verbos)->default_value(false), "validation precision or true: Train with an epoch iteration");
     //--------------------------
     boost::program_options::variables_map vm;
@@ -230,11 +230,78 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     auto input_test_thread = std::async(std::launch::async, [&_generate](){return RLNormalize::normalization_min_max(_generate.get_test_input());});
     //--------------------------------------------------------------
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     return (torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3);
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     std::random_device rd;
+    //     std::mt19937 gen(rd());
+    //     std::bernoulli_distribution memory_activation(0.5);
+    //     //--------------------------
+    //     auto result = (torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3);
+    //     //--------------------------
+    //     if(memory_activation(gen)){
+    //         //--------------------------
+    //         return at::normal(torch::abs(result/2), torch::arange(result.size(1)));
+    //         //--------------------------
+    //     }// end if(memory_activation(gen))
+    //     //--------------------------
+    //     return at::normal((result/2), torch::arange(result.size(1)));
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
     auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
         //--------------------------
-        return (torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3);
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::bernoulli_distribution memory_activation(0.5);
+        //--------------------------
+        if(memory_activation(gen)){
+            //--------------------------
+            return (torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3);
+            //--------------------------
+        }// end if(memory_activation(gen))
+        //--------------------------
+        return torch::abs((torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3));
         //--------------------------
     };
+    //--------------------------------------------------------------
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     std::random_device rd;
+    //     std::mt19937 gen(rd());
+    //     std::bernoulli_distribution abs_activation(0.50);
+    //     std::bernoulli_distribution normal_activation(0.25);
+    //     //--------------------------
+    //     if(abs_activation(gen)){
+    //         //--------------------------
+    //         auto _results = (torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3);
+    //         //--------------------------
+    //         if(normal_activation(gen)){
+    //             //--------------------------
+    //             return at::normal(_results/2, torch::arange(_results.size(1)));
+    //             //--------------------------
+    //         }// end if(normal_activation(gen))
+    //         //--------------------------
+    //         return _results;
+    //         //--------------------------
+    //     }// end if(abs_activation(gen))
+    //     //--------------------------
+    //     auto _results = torch::abs((torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3));
+    //     //--------------------------
+    //     if(normal_activation(gen)){
+    //         //--------------------------
+    //         return at::normal(_results/2, torch::arange(_results.size(1)));
+    //         //--------------------------
+    //     }// end if(normal_activation(gen))
+    //     //--------------------------
+    //     return _results;
+    //     //--------------------------
+    // };
     //--------------------------------------------------------------
     RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------

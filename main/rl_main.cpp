@@ -56,7 +56,7 @@ int main(int argc, char const *argv[]){
     //--------------------------
     double memory_percentage;
     //--------------------------
-    bool clamp, double_mode, verbos;
+    bool clamp, double_mode, verbos, randomizer;
     //--------------------------
     boost::program_options::options_description description("Allowed options:");
     //--------------------------
@@ -75,6 +75,7 @@ int main(int argc, char const *argv[]){
     ("memory_percentage,m", boost::program_options::value<double>(&memory_percentage)->default_value(0.3), "Determine when to stop the training. This uses a validation set")
     ("double_mode,d", boost::program_options::value<bool>(&double_mode)->default_value(true), "validation precision or true: Train with an epoch iteration")
     ("clamp,u", boost::program_options::value<bool>(&clamp)->default_value(false), "validation precision or true: Train with an epoch iteration")
+    ("randomizer,r", boost::program_options::value<bool>(&randomizer)->default_value(false), "validation precision or true: Train with an epoch iteration")
     ("verbos,v", boost::program_options::value<bool>(&verbos)->default_value(false), "validation precision or true: Train with an epoch iteration");
     //--------------------------
     boost::program_options::variables_map vm;
@@ -167,6 +168,7 @@ int main(int argc, char const *argv[]){
         info_table  << "epoch"          << epoch                         << fort::endr;
         info_table  << "clamp"          << std::boolalpha << clamp       << fort::endr;
         info_table  << "double_mode"    << std::boolalpha << double_mode << fort::endr;
+        info_table  << "randomizer"     << std::boolalpha << randomizer  << fort::endr;
         //--------------------------
     }// end if(verbos)
     //--------------------------------------------------------------
@@ -303,7 +305,7 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // };
     //--------------------------------------------------------------
-    RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
+    RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size, randomizer);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device, false);
     // RLNetLSTM target_model({points_size, batch_size}, output_size, device, false);

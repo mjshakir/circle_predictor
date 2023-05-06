@@ -104,8 +104,13 @@ add_library(${PROJECT_NAME}_timing SHARED
 #----------------------------------
 add_library(${PROJECT_NAME}_rl_data SHARED
   src/Generate/RL/RLGenerate.cpp
-  src/Generate/RL/RLEnvironment.cpp
-  src/Generate/RL/Environment.cpp
+)
+#------------------------------------------------------------------------------------------
+add_library(${PROJECT_NAME}_rl_environment SHARED
+  src/Environment/RL/RLEnvironment.cpp
+  src/Environment/RL/RLEnvironmentLoader.cpp
+  src/Environment/RL/RLEnvironmentRandomLoader.cpp
+  src/Environment/RL/EnvironmentTest.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_rl_network SHARED
@@ -120,11 +125,13 @@ if(USE_TTB)
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} tbb fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES} tbb)
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES} tbb)
+  target_link_libraries(${PROJECT_NAME}_rl_environment PRIVATE ${TORCH_LIBRARIES} tbb)
   target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} tbb)
 else()
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME}_rl_environment PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES})
 endif(USE_TTB)
 #------------------------------------------------------------------------------------------
@@ -147,6 +154,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}_rl PRIVATE
   ${PROJECT_NAME}_timing
   ${PROJECT_NAME}_rl_data
+  ${PROJECT_NAME}_rl_environment
   ${PROJECT_NAME}_rl_network 
   ${TORCH_LIBRARIES}
   ${Boost_LIBRARIES}

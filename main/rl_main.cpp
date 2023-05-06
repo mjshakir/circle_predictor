@@ -11,16 +11,20 @@
 // User Defined library
 //--------------------------------------------------------------
 #include "Network/Networks.hpp"
-#include "Generate/RL/RLEnvironment.hpp"
-#include "Generate/RL/Environment.hpp"
 #include "Generate/RL/RLGenerate.hpp"
 // #include "Network/RL/ReinforcementNetworkHandling.hpp"
+//--------------------------
+#include "Environment/RL/EnvironmentTest.hpp"
+#include "Environment/RL/RLEnvironment.hpp"
+#include "Environment/RL/RLEnvironmentLoader.hpp"
+#include "Environment/RL/RLEnvironmentRandomLoader.hpp"
 //--------------------------
 #include "Network/RL/ReinforcementNetworkHandlingDQN.hpp"
 //--------------------------
 #include "Network/RL/RLNormalize.hpp"
 #include "Network/RL/ExperienceReplay.hpp"
 //--------------------------
+#include "Timing/Timing.hpp"
 #include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
 // Standard cpp library
@@ -202,6 +206,8 @@ int main(int argc, char const *argv[]){
     //--------------------------
     torch::Device device(device_type);
     //--------------------------------------------------------------
+    Timing _full_timer(__FUNCTION__);
+    //--------------------------
     TimeIT _timer_tester;
     //--------------------------
     RLGenerate _generate(generated_size, test_size, points_size, limiter);
@@ -305,7 +311,7 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // };
     //--------------------------------------------------------------
-    RLEnvironment<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size, randomizer);
+    Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device, false);
     // RLNetLSTM target_model({points_size, batch_size}, output_size, device, false);
@@ -565,7 +571,7 @@ int main(int argc, char const *argv[]){
     table   << fort::header
             << "X_1" << "X" << "Y_1" << "Y" << "Original Target" << "Output" << "Loss" << fort::endr;
     //--------------------------------------------------------------
-    Environment<torch::Tensor> _environment_test(std::move(input_test), batch_size);
+    Environment::EnvironmentTest<torch::Tensor> _environment_test(std::move(input_test), batch_size);
     //--------------------------
     bool done{false};
     //--------------------------
@@ -579,28 +585,24 @@ int main(int argc, char const *argv[]){
         //--------------------------
         auto _circle = torch::pow((_test_result.slice(1,0,1) - _test.slice(1,0,1)),2)+ (torch::pow((_test_result.slice(1,1,2)-_test.slice(1,1,2)),2));
         //--------------------------
-        // auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3), torch::Reduction::Sum).item().toFloat();
-        //--------------------------
-        // std::cout << "done: " << std::boolalpha << done << " error: " << _loss*100 << std::endl;
-        //--------------------------
         auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3));
         //--------------------------
-        // table   << RLNormalize::unnormalization(_test_result.slice(1,0,1), t_min, t_max) 
-        //         << RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
-        //         << RLNormalize::unnormalization(_test_result.slice(1,1,2), t_min, t_max) 
-        //         << RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
-        //         << RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
-        //         << RLNormalize::unnormalization(_circle, t_min, t_max)
-        //         << _loss << fort::endr;
+        table   << RLNormalize::unnormalization(_test_result.slice(1,0,1), t_min, t_max) 
+                << RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
+                << RLNormalize::unnormalization(_test_result.slice(1,1,2), t_min, t_max) 
+                << RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
+                << RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
+                << RLNormalize::unnormalization(_circle, t_min, t_max)
+                << _loss << fort::endr;
         //--------------------------
-        table   << _test_result.slice(1,0,1)
-                << _test.slice(1,0,1)
-                << _test_result.slice(1,1,2)
-                << _test.slice(1,1,2)
-                << _test.slice(1,2,3)
-                << _circle
-                << _loss*100 << fort::endr;
-        //--------------------------
+        // table   << _test_result.slice(1,0,1)
+        //         << _test.slice(1,0,1)
+        //         << _test_result.slice(1,1,2)
+        //         << _test.slice(1,1,2)
+        //         << _test.slice(1,2,3)
+        //         << _circle
+        //         << _loss*100 << fort::endr;
+        // //--------------------------
     }// end while (!done)
     //--------------------------
     // std::for_each(std::execution::par_unseq, _test_threads.begin(), _test_threads.end(), [](auto& _thread){_thread.join();});

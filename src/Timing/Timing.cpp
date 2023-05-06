@@ -27,10 +27,8 @@ Timing::Timing(const std::string& function_name) : m_function_name(function_name
 //--------------------------------------------------------------
 Timing::~Timing(){
     //--------------------------
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_start);
-    //--------------------------
     printf(ANSI_COLOR_GREEN "%s" ANSI_COLOR_RESET " Execution time: [" ANSI_COLOR_RED "%f " ANSI_COLOR_RESET "S]\n", 
-            m_function_name.c_str(), duration.count()/CONVERT_NANO);
+            m_function_name.c_str(), std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_start).count()/CONVERT_NANO);
     //--------------------------
 }// end Timing::~Timing()
 //--------------------------------------------------------------

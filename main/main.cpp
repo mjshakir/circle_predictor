@@ -12,6 +12,7 @@
 //--------------------------------------------------------------
 #include "Network/Supervised/Supervised.hpp"
 #include "Generate/Supervised/Generate.hpp"
+#include "Generate/Supervised/Normalize.hpp"
 #include "Timing/Timing.hpp"
 //--------------------------------------------------------------
 

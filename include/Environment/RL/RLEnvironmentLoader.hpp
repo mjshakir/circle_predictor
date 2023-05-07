@@ -210,14 +210,14 @@ namespace Environment {
                     //--------------------------
                     _data = *m_data_iter;
                     //--------------------------
-                    epsilon = this->calculate_epsilon();
-                    done = true;
-                    //--------------------------
                     for (size_t i = 1; i < batch; ++i){
                         //--------------------------
                         _data = torch::cat({_data, *++m_data_iter});
                         //--------------------------
                     }// end for (size_t i = 1; i < batch; i++)
+                    //--------------------------
+                    epsilon = this->calculate_epsilon();
+                    done = true;
                     //--------------------------
                     return {_data, m_CostFunction(args...)};
                     //--------------------------
@@ -260,7 +260,7 @@ namespace Environment {
                     //--------------------------
                     for(size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        _data = torch::cat({ _data, *++m_data_iter});
+                        _data = torch::cat({_data, *++m_data_iter});
                         //--------------------------
                     }// end for(size_t i = 0; i < batch; ++i)
                     //--------------------------
@@ -274,9 +274,15 @@ namespace Environment {
             //--------------------------------------------------------------
             torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch){
                 //--------------------------
-                torch::Tensor _data;
+                if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
+                    //--------------------------
+                    throw std::out_of_range("End Of The Data Iterator");
+                    //--------------------------
+                }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
                 //--------------------------
                 if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
+                    //--------------------------
+                    torch::Tensor _data;
                     //--------------------------
                     epsilon = this->calculate_epsilon();
                     //--------------------------
@@ -284,7 +290,7 @@ namespace Environment {
                     //--------------------------
                     for(size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        _data = torch::cat({ _data, *++m_data_iter});
+                        _data = torch::cat({_data, *++m_data_iter});
                         //--------------------------
                     }// end for(size_t i = 0; i < batch; ++i)
                     //--------------------------

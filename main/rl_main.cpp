@@ -14,10 +14,7 @@
 #include "Generate/RL/RLGenerate.hpp"
 // #include "Network/RL/ReinforcementNetworkHandling.hpp"
 //--------------------------
-#include "Environment/RL/EnvironmentTest.hpp"
-#include "Environment/RL/RLEnvironment.hpp"
-#include "Environment/RL/RLEnvironmentLoader.hpp"
-#include "Environment/RL/RLEnvironmentRandomLoader.hpp"
+#include "Environment/RL/Environment.hpp"
 //--------------------------
 #include "Network/RL/ReinforcementNetworkHandlingDQN.hpp"
 //--------------------------

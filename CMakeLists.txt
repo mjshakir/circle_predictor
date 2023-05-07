@@ -88,11 +88,11 @@ add_library(${PROJECT_NAME}_network SHARED
   src/Network/Supervised/Supervised.cpp
   src/Network/Supervised/NetworkHandling.cpp
   src/Network/Supervised/DataLoader.cpp
-  src/Network/Supervised/Normalize.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_data SHARED
   src/Generate/Supervised/Generate.cpp
+  src/Generate/Supervised/Normalize.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_timing SHARED
@@ -104,6 +104,7 @@ add_library(${PROJECT_NAME}_timing SHARED
 #----------------------------------
 add_library(${PROJECT_NAME}_rl_data SHARED
   src/Generate/RL/RLGenerate.cpp
+  src/Generate/RL/RLNormalize.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_rl_environment SHARED
@@ -117,7 +118,6 @@ add_library(${PROJECT_NAME}_rl_network SHARED
   src/Network/Networks.cpp
   src/Network/RL/ReinforcementNetworkHandling.cpp
   src/Network/RL/ReinforcementNetworkHandlingDQN.cpp
-  src/Network/RL/RLNormalize.cpp
   src/Network/RL/ExperienceReplay.cpp
 )
 #------------------------------------------------------------------------------------------

@@ -29,7 +29,8 @@ namespace Environment {
                                 const double& egreedy = 0.9,
                                 const double& egreedy_final = 0.02,
                                 const double& egreedy_decay = 500.,
-                                const size_t& batch = 1ul) : RLEnvironment<T, COST_OUTPUT, Args...>(std::move(data), std::move(costFunction), egreedy, egreedy_final, egreedy_decay),
+                                const size_t& batch = 1ul) : RLEnvironment<T, COST_OUTPUT, Args...>(std::move(data), std::move(costFunction), 
+                                                                                                    egreedy, egreedy_final, egreedy_decay),
                                                              m_data(this->get_data()),
                                                              m_data_iter (this->get_iterator()), 
                                                              m_CostFunction(this->get_cost_function()),
@@ -140,9 +141,7 @@ namespace Environment {
                     //--------------------------
                     for(size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                        _data = torch::cat({_data, *m_data_iter});
+                        _data = torch::cat({_data, *++m_data_iter});
                         //--------------------------
                     }// end for(size_t i = 0; i < batch; ++i)
                     //--------------------------
@@ -156,9 +155,7 @@ namespace Environment {
                     //--------------------------
                     for (size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                        _data = torch::cat({_data, *m_data_iter});
+                        _data = torch::cat({_data, *++m_data_iter});
                         //--------------------------
                     }// end for (size_t i = 1; i < batch; i++)
                     //--------------------------
@@ -168,15 +165,11 @@ namespace Environment {
                 //--------------------------------------------------------------
                 if(m_data_iter != m_data.end()-1 and std::next(m_data_iter, batch) != m_data.end()-1){
                     //--------------------------
-                    ++m_data_iter;
-                    //--------------------------
-                    _data = *m_data_iter;
+                    _data = *++m_data_iter;
                     //--------------------------
                     for(size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                        _data = torch::cat({_data, *m_data_iter});
+                        _data = torch::cat({_data, *++m_data_iter});
                         //--------------------------
                     }// end for(size_t i = 0; i < batch; ++i)
                     //--------------------------
@@ -205,9 +198,7 @@ namespace Environment {
                     //--------------------------
                     for(size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                        _data = torch::cat({_data, *m_data_iter});
+                        _data = torch::cat({_data, *++m_data_iter});
                         //--------------------------
                     }// end for(size_t i = 0; i < batch; ++i)
                     //--------------------------
@@ -224,9 +215,7 @@ namespace Environment {
                     //--------------------------
                     for (size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                        _data = torch::cat({_data, *m_data_iter});
+                        _data = torch::cat({_data, *++m_data_iter});
                         //--------------------------
                     }// end for (size_t i = 1; i < batch; i++)
                     //--------------------------
@@ -236,15 +225,11 @@ namespace Environment {
                 //--------------------------------------------------------------
                 if(m_data_iter != m_data.end()-1 and std::next(m_data_iter, batch) != m_data.end()-1){
                     //--------------------------
-                    ++m_data_iter;
-                    //--------------------------
-                    _data = *m_data_iter;
+                    _data = *++m_data_iter;
                     //--------------------------
                     for(size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                        _data = torch::cat({_data, *m_data_iter});
+                        _data = torch::cat({_data, *++m_data_iter});
                         //--------------------------
                     }// end for(size_t i = 0; i < batch; ++i)
                     //--------------------------
@@ -275,9 +260,7 @@ namespace Environment {
                     //--------------------------
                     for(size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                        _data = torch::cat({ _data, *m_data_iter});
+                        _data = torch::cat({ _data, *++m_data_iter});
                         //--------------------------
                     }// end for(size_t i = 0; i < batch; ++i)
                     //--------------------------
@@ -301,9 +284,7 @@ namespace Environment {
                     //--------------------------
                     for(size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                        _data = torch::cat({ _data, *m_data_iter});
+                        _data = torch::cat({ _data, *++m_data_iter});
                         //--------------------------
                     }// end for(size_t i = 0; i < batch; ++i)
                     //--------------------------

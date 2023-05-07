@@ -21,7 +21,7 @@
 //--------------------------
 #include "Network/RL/ReinforcementNetworkHandlingDQN.hpp"
 //--------------------------
-#include "Network/RL/RLNormalize.hpp"
+#include "Generate/RL/RLNormalize.hpp"
 #include "Network/RL/ExperienceReplay.hpp"
 //--------------------------
 #include "Timing/Timing.hpp"
@@ -441,9 +441,9 @@ int main(int argc, char const *argv[]){
         //--------------------------
         while(!done){
             //--------------------------
-            auto output = handler.action(training_input, epsilon, batch_size, output_size);
+            output = handler.action(training_input, epsilon, batch_size, output_size);
             //--------------------------
-            auto [next_input, reward] = _environment.step(epsilon, done, training_input,  _normalize.normalization(output));
+            std::tie(next_input, reward) = _environment.step(epsilon, done, training_input,  _normalize.normalization(output));
             //--------------------------
             memory.push(training_input, next_input.to(device), reward, done);
             //--------------------------

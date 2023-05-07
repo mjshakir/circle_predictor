@@ -68,7 +68,7 @@ class ExperienceReplay{
             std::mt19937 rng(dev());
             std::uniform_int_distribution<std::mt19937::result_type> uniform_position(0, m_memory.size()-1);
             //--------------------------
-            return std::next( m_memory.begin() , uniform_position(rng))->second;
+            return std::next(m_memory.begin(), uniform_position(rng))->second;
             //--------------------------
         }// end std::tuple<Args...> sample_data(void)
         //--------------------------------------------------------------

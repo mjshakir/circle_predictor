@@ -86,11 +86,16 @@ class RLNormalize{
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
-        torch::Tensor m_min, m_max;
-        //--------------------------
         std::vector<torch::Tensor> m_input;
+        //--------------------------
+        torch::Tensor m_min, m_max;
         //--------------------------------------------------------------
         static std::tuple<torch::Tensor, torch::Tensor> find_min_max(const std::vector<torch::Tensor>& input);
+        //--------------------------
+        torch::Tensor find_min(const std::vector<torch::Tensor>& input);
+        //--------------------------
+        torch::Tensor find_max(const std::vector<torch::Tensor>& input);
         //--------------------------------------------------------------
     //--------------------------------------------------------------
-};
+};// end class RLNormalize
+//--------------------------------------------------------------

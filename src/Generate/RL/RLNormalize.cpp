@@ -7,10 +7,12 @@
 //--------------------------------------------------------------
 #include <algorithm>
 #include <execution>
+//--------------------------
+#include <thread>
 //--------------------------------------------------------------
-RLNormalize::RLNormalize(const std::vector<torch::Tensor>& input) : m_input(input){
-    //--------------------------
-    std::tie(m_min, m_max) = find_min_max(input);
+RLNormalize::RLNormalize(const std::vector<torch::Tensor>& input) : m_input(input),
+                                                                    m_min(find_min(input)),
+                                                                    m_max(find_max(input)){
     //--------------------------
 }// end RLNormalize::RLNormalize(const torch::Tensor& input)
 //--------------------------------------------------------------
@@ -116,4 +118,18 @@ std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(const std::ve
                                     [](const auto& first, const auto& second){return torch::max(second).greater(torch::max(first)).any().template item<bool>();}))};
     //--------------------------
 }// end std::tuple<torch::Tensor, torch::Tensor> RLNormalize::find_min_max(std::vector<torch::Tensor> input)
+//--------------------------------------------------------------
+torch::Tensor RLNormalize::find_min(const std::vector<torch::Tensor>& input){
+    //--------------------------
+    return torch::min(*std::min_element(std::execution::par, input.begin(), input.end(), 
+                                    [](const auto& first, const auto& second){return torch::min(first).less(torch::min(second)).any().template item<bool>();}));
+    //--------------------------
+}// end torch::Tensor RLNormalize::find_min(const std::vector<torch::Tensor>& input)
+//--------------------------------------------------------------
+torch::Tensor RLNormalize::find_max(const std::vector<torch::Tensor>& input){
+    //--------------------------
+    return torch::max(*std::max_element(std::execution::par, input.begin(), input.end(), 
+                                    [](const auto& first, const auto& second){return torch::max(second).greater(torch::max(first)).any().template item<bool>();}));
+    //--------------------------
+}// end torch::Tensor RLNormalize::find_max(const std::vector<torch::Tensor>& input)
 //--------------------------------------------------------------

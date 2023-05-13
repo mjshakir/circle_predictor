@@ -8,16 +8,16 @@ namespace Environment {
     //--------------------------------------------------------------
     template<typename T>
     //--------------------------------------------------------------
-    class EnvironmentTest{
+    class EnvironmentDataLoader{
         //--------------------------------------------------------------
         public:
             //--------------------------------------------------------------
-            EnvironmentTest(void) = delete;
+            EnvironmentDataLoader(void) = delete;
             //--------------------------------------------------------------
-            EnvironmentTest(std::vector<T>&& data, const size_t& batch = 1) :   m_data(std::move(data)),
-                                                                                m_data_iter (m_data.begin()), 
-                                                                                m_enable_batch((batch > 1) ? true : false),
-                                                                                m_batch(batch){
+            EnvironmentDataLoader(std::vector<T>&& data, const size_t& batch = 1) : m_data(std::move(data)),
+                                                                                    m_data_iter (m_data.begin()), 
+                                                                                    m_enable_batch((batch > 1) ? true : false),
+                                                                                    m_batch(batch){
                 //----------------------------
                 if(m_enable_batch and batch >= m_data.size()/2){
                     //--------------------------
@@ -25,7 +25,7 @@ namespace Environment {
                     //--------------------------
                 }// end if(batch > m_data.size()/2)
                 //----------------------------
-            }// end EnvironmentTest(std::vector<T>&& data, const size_t& batch = 1)
+            }// end EnvironmentDataLoader(std::vector<T>&& data, const size_t& batch = 1)
             //--------------------------------------------------------------
             std::tuple<torch::Tensor, bool> step(void){
                 //----------------------------
@@ -283,7 +283,7 @@ namespace Environment {
             //--------------------------
             size_t m_batch;
         //--------------------------------------------------------------
-    };// end class EnvironmentTest
+    };// end class EnvironmentDataLoader
     //--------------------------------------------------------------
 }// end namespace Environment
 //--------------------------------------------------------------

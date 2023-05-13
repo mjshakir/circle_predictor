@@ -25,12 +25,13 @@ namespace Environment {
             /**
              * @brief Construct to create a training environment for reinforcement learning 
              * 
-             * @param data          [in] : Data Vector of the template type T
-             * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters
+             * @param data          [in] : Data Vector of the template type T                             
+             *                          @example: RLEnvironment<torch::Tensor,..., ...> foo(data, ...) this will results in std::vector<torch::Tensor>
+             * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters 
+             *                          @example: RLEnvironment<..., torch::Tensor,double, int> foo(..., [](double x, int y){return torch::tensor(x*y);})
              * @param egreedy       [in] : The starting egreedy                                           @default: 0.9
              * @param egreedy_final [in] : The egreedy number where it will change                        @default: 0.02
              * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor                     @default: 500.
-             * @param batch         [in] : The batch number (needs to be less then half of the data size) @default: 1ul   
              */
             RLEnvironment(  std::vector<T>&& data, 
                             std::function<COST_OUTPUT(const Args&...)> costFunction,

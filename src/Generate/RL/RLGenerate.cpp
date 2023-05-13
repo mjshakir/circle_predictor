@@ -10,34 +10,32 @@
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
-RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter) : m_limiter(limiter){
-    //--------------------------
-    m_data_test = generate_input(generated_points*0.2, column);
-    //--------------------------
-    m_data = generate_input(generated_points, column);
+RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter) : m_generated_points(generated_points),
+                                                                                                      m_generated_points_test(generated_points*0.2),
+                                                                                                      m_column(column),
+                                                                                                      m_limiter(limiter){
     //--------------------------
 }// end RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter)
 //--------------------------------------------------------------
 RLGenerate::RLGenerate( const size_t& generated_points, 
                         const size_t& generated_points_test, 
                         const size_t& column, 
-                        const double& limiter) : m_limiter(limiter){
-    //--------------------------
-    m_data_test = generate_input(generated_points_test, column);
-    //--------------------------
-    m_data = generate_input(generated_points, column);
+                        const double& limiter) : m_generated_points(generated_points),
+                                                 m_generated_points_test(generated_points_test),
+                                                 m_column(column),
+                                                 m_limiter(limiter){
     //--------------------------
 }// end RLGenerate::RLGenerate( const size_t& generated_points, const size_t& generated_points_test, const size_t& column, const double& limiter)
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLGenerate::get_input(void){
     //--------------------------
-    return m_data;
+    return generate_input(m_generated_points, m_column);
     //--------------------------
 }// end torch::Tensor RLGenerate::get_input(void)
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RLGenerate::get_test_input(void){
     //--------------------------
-    return m_data_test;
+    return generate_input(m_generated_points_test, m_column);
     //--------------------------
 }// end std::vector<torch::Tensor> RLGenerate::get_test_input(void)
 //--------------------------------------------------------------
@@ -83,13 +81,9 @@ torch::Tensor RLGenerate::inner_generation(const size_t& column){
     std::vector<double> _output_data;
     _output_data.reserve(column-1);
     //--------------------------
-    for (size_t i{0}; i < column-1; ++i){
-        //--------------------------
-        _temp.push_back(uniform_angle(gen));
-        //--------------------------
-        _output_data.push_back(uniform_angle(gen));
-        //--------------------------
-    }// end for (size_t i{0}; i < column-1; ++i)
+    std::generate_n(std::execution::par, std::inserter(_temp, _temp.begin()), column-1, [&uniform_angle, &gen](){return uniform_angle(gen);});
+    //--------------------------
+    std::generate_n(std::execution::par, std::inserter(_output_data, _output_data.begin()), column-1, [&uniform_angle, &gen](){return uniform_angle(gen);});
     //--------------------------
     _temp.push_back((std::pow((_output_data.at(0) - _temp.at(0)),2) + std::pow(( _output_data.at(1) - _temp.at(1)),2)));
     //--------------------------

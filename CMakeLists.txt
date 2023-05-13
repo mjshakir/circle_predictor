@@ -7,8 +7,8 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
 endif()
 #------------------------------------------------------------------------------------------
-option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
-
+option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
+#---------------
 if (${FORCE_COLORED_OUTPUT})
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
        add_compile_options (-fdiagnostics-color=always)
@@ -112,7 +112,7 @@ add_library(${PROJECT_NAME}_rl_environment SHARED
   src/Environment/RL/RLEnvironment.cpp
   src/Environment/RL/RLEnvironmentLoader.cpp
   src/Environment/RL/RLEnvironmentRandomLoader.cpp
-  src/Environment/RL/EnvironmentTest.cpp
+  src/Environment/RL/EnvironmentDataLoader.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_rl_network SHARED

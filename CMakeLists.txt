@@ -8,6 +8,7 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 #------------------------------------------------------------------------------------------
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
+MESSAGE(STATUS "FORCE_COLORED_OUTPUT: " ${FORCE_COLORED_OUTPUT})
 #---------------
 if (${FORCE_COLORED_OUTPUT})
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -27,6 +28,10 @@ endfunction()
 # option(USE_CLANG "build application with CLang" OFF) # OFF is the default
 # MESSAGE(STATUS "USE_CLANG: " ${USE_CLANG})
 #---------------
+# if(${USE_CLANG})
+#   set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+# endif(${USE_CLANG})
+#------------------------------------------------------------------------------------------
 # option(USE_TTB "build application with TTB" ON) # ON is the default
 # MESSAGE(STATUS "USE_TTB: " ${USE_TTB})
 #------------------------------------------------------------------------------------------

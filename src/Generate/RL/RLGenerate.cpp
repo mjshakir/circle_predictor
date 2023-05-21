@@ -10,18 +10,22 @@
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
-RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter) : m_generated_points(generated_points),
-                                                                                                      m_generated_points_test(generated_points*0.2),
-                                                                                                      m_column(column),
-                                                                                                      m_limiter(limiter){
+// short form to get the previous even: x &= ~1;
+RLGenerate::RLGenerate( const size_t& generated_points, 
+                        const size_t& column, 
+                        const double& limiter) :    m_generated_points((generated_points%2 == 0) ? generated_points : generated_points - (generated_points & 1)), 
+                                                    m_generated_points_test(m_generated_points*0.2),
+                                                    m_column(column),
+                                                    m_limiter(limiter){
     //--------------------------
 }// end RLGenerate::RLGenerate(const size_t& generated_points, const size_t& column, const double& limiter)
 //--------------------------------------------------------------
 RLGenerate::RLGenerate( const size_t& generated_points, 
                         const size_t& generated_points_test, 
                         const size_t& column, 
-                        const double& limiter) : m_generated_points(generated_points),
-                                                 m_generated_points_test(generated_points_test),
+                        const double& limiter) : m_generated_points((generated_points%2 == 0) ? generated_points : generated_points - (generated_points & 1)),
+                                                 m_generated_points_test((generated_points_test%2 == 0 and generated_points_test==0) ? 
+                                                    generated_points_test : generated_points_test - (generated_points_test & 1)),
                                                  m_column(column),
                                                  m_limiter(limiter){
     //--------------------------

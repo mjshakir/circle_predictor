@@ -81,7 +81,7 @@ class ExperienceReplay{
             //--------------------------
             return m_memory.at(key);
             //--------------------------
-        }// end std::tuple<Args...> sample_data(const size_t& key)y)
+        }// end std::tuple<Args...> sample_data(const size_t& key)
         //--------------------------------------------------------------
         size_t map_size(void) const {
             //--------------------------

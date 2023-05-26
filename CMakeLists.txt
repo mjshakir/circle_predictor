@@ -108,7 +108,8 @@ add_library(${PROJECT_NAME}_timing SHARED
 # RL Library
 #----------------------------------
 add_library(${PROJECT_NAME}_rl_data SHARED
-  src/Generate/RL/RLGenerate.cpp
+  src/Generate/RL/Generate.cpp  
+  src/Generate/RL/GeneratePoints.cpp
   src/Generate/RL/RLNormalize.cpp
 )
 #------------------------------------------------------------------------------------------

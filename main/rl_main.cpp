@@ -11,7 +11,7 @@
 // User Defined library
 //--------------------------------------------------------------
 #include "Network/Networks.hpp"
-#include "Generate/RL/RLGenerate.hpp"
+#include "Generate/RL/GeneratePoints.hpp"
 // #include "Network/RL/ReinforcementNetworkHandling.hpp"
 //--------------------------
 #include "Environment/RL/Environment.hpp"
@@ -207,11 +207,11 @@ int main(int argc, char const *argv[]){
     //--------------------------
     TimeIT _timer_tester;
     //--------------------------
-    RLGenerate _generate(generated_size, test_size, points_size, limiter);
+    RL::GeneratePoints _generate(generated_size, test_size, points_size, limiter);
     //--------------------------
     if(verbos){
         //--------------------------
-        info_table  << "RLGenerate time" << _timer_tester.get_time_seconds() << fort::endr;
+        info_table  << "GeneratePoints time" << _timer_tester.get_time_seconds() << fort::endr;
         //--------------------------
     }// if(verbos)
     //--------------------------
@@ -232,6 +232,8 @@ int main(int argc, char const *argv[]){
         std::cout << info_table.to_string() << std::endl;
         //--------------------------
     }// if(verbos)
+    //--------------------------------------------------------------
+    // std::exit(1);
     //--------------------------------------------------------------
     auto input_test_thread = std::async(std::launch::async, [&_generate](){return RLNormalize::normalization_min_max(_generate.get_test_input());});
     //--------------------------------------------------------------
@@ -308,7 +310,7 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // };
     //--------------------------------------------------------------
-    Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
+    RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device, false);
     // RLNetLSTM target_model({points_size, batch_size}, output_size, device, false);
@@ -568,7 +570,7 @@ int main(int argc, char const *argv[]){
     table   << fort::header
             << "X_1" << "X" << "Y_1" << "Y" << "Original Target" << "Output" << "Loss" << fort::endr;
     //--------------------------------------------------------------
-    Environment::EnvironmentTest<torch::Tensor> _environment_test(std::move(input_test), batch_size);
+    RL::Environment::EnvironmentDataLoader<torch::Tensor> _environment_test(std::move(input_test), batch_size);
     //--------------------------
     bool done{false};
     //--------------------------

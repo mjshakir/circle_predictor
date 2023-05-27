@@ -78,9 +78,9 @@ namespace RL {
         std::vector<double> _output_data;
         _output_data.reserve(column-1);
         //--------------------------
-        std::generate_n(std::execution::par, std::inserter(_temp, _temp.begin()), column-1, [&uniform_angle, &gen](){return uniform_angle(gen);});
+        std::generate_n(std::execution::par, std::back_inserter(_temp), column-1, [&uniform_angle, &gen](){return uniform_angle(gen);});
         //--------------------------
-        std::generate_n(std::execution::par, std::inserter(_output_data, _output_data.begin()), column-1, [&uniform_angle, &gen](){return uniform_angle(gen);});
+        std::generate_n(std::execution::par, std::back_inserter(_output_data), column-1, [&uniform_angle, &gen](){return uniform_angle(gen);});
         //--------------------------
         _temp.push_back((std::pow((_output_data.at(0) - _temp.at(0)),2) + std::pow(( _output_data.at(1) - _temp.at(1)),2)));
         //--------------------------
@@ -97,7 +97,7 @@ namespace RL {
         std::vector<double> _data;
         _data.reserve(generated_points*column);
         //--------------------------
-        std::generate_n(std::execution::par, std::inserter(_data, _data.begin()), generated_points*column, [&uniform_angle, &gen]() {return uniform_angle(gen);});
+        std::generate_n(std::execution::par, std::back_inserter(_data), generated_points*column, [&uniform_angle, &gen]() {return uniform_angle(gen);});
         //--------------------------
         return torch::tensor(_data).view({-1, static_cast<int64_t>(column)});
         //--------------------------

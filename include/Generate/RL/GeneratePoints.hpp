@@ -84,8 +84,6 @@ namespace RL {
             size_t m_generated_points, m_generated_points_test, m_column;
             //--------------------------
             double m_limiter;
-            //--------------------------
-            // std::vector<torch::Tensor> m_data, m_data_test;
         //--------------------------------------------------------------
     };// end class GeneratePoints
     //--------------------------------------------------------------

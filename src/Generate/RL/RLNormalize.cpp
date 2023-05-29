@@ -12,7 +12,7 @@ RLNormalize::RLNormalize(const std::vector<torch::Tensor>& input) : m_input(inpu
                                                                     m_min(find_min(input)),
                                                                     m_max(find_max(input)){
     //--------------------------
-    if(std::abs(m_max.item().toDouble() - m_min.item().toDouble()) == 0.){
+    if(std::abs(m_max.item().toDouble() - m_min.item().toDouble()) <= 1E-9){
         //--------------------------
         throw std::runtime_error("Divide by zero. Max:[" + std::to_string(m_max.item().toDouble()) + "] and min:[" + std::to_string(m_min.item().toDouble()) + "]");
         //--------------------------

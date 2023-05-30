@@ -60,9 +60,10 @@ namespace RL {
             template<typename T, typename F, typename... Args>
             std::vector<T> generate_value(const size_t& generated_points, F&& function, const Args&... args){
                 //--------------------------
-                std::vector<T> _data(generated_points);
+                std::vector<T> _data;
+                _data.reserve(generated_points);
                 //--------------------------
-                std::generate(std::execution::par, _data.begin(), _data.end(), [&function, &args...](){return function(args...);});
+                std::generate_n(std::execution::par, std::back_inserter(_data), generated_points, [&function, &args...](){return function(args...);});
                 //--------------------------
                 return _data;
                 //--------------------------

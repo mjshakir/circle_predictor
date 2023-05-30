@@ -215,11 +215,11 @@ int main(int argc, char const *argv[]){
         //--------------------------
     }// if(verbos)
     //--------------------------
-    RLNormalize _normalize(_generate.get_input());
+    RL::RLNormalize _normalize(_generate.get_input());
     //--------------------------
     if(verbos){
         //--------------------------
-        info_table  << "RLNormalize time" << _timer_tester.get_time_seconds() << fort::endr;
+        info_table  << "RL::RLNormalize time" << _timer_tester.get_time_seconds() << fort::endr;
         //--------------------------
     }// if(verbos)
     //--------------------------
@@ -233,13 +233,19 @@ int main(int argc, char const *argv[]){
         //--------------------------
     }// if(verbos)
     //--------------------------------------------------------------
-    // std::exit(1);
+    std::exit(1);
     //--------------------------------------------------------------
-    auto input_test_thread = std::async(std::launch::async, [&_generate](){return RLNormalize::normalization_min_max(_generate.get_test_input());});
+    auto input_test_thread = std::async(std::launch::async, [&_generate](){return RL::RLNormalize::normalization_min_max(_generate.get_test_input());});
     //--------------------------------------------------------------
     // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
     //     //--------------------------
     //     return (torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3);
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     return torch::abs(((torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3))*10);
     //     //--------------------------
     // };
     //--------------------------------------------------------------
@@ -261,21 +267,21 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // };
     //--------------------------------------------------------------
-    auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
-        //--------------------------
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::bernoulli_distribution memory_activation(0.5);
-        //--------------------------
-        if(memory_activation(gen)){
-            //--------------------------
-            return (torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3);
-            //--------------------------
-        }// end if(memory_activation(gen))
-        //--------------------------
-        return torch::abs((torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3));
-        //--------------------------
-    };
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     std::random_device rd;
+    //     std::mt19937 gen(rd());
+    //     std::bernoulli_distribution memory_activation(0.5);
+    //     //--------------------------
+    //     if(memory_activation(gen)){
+    //         //--------------------------
+    //         return ((torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3))*10;
+    //         //--------------------------
+    //     }// end if(memory_activation(gen))
+    //     //--------------------------
+    //     return torch::abs(((torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2)+ (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2)))- input.slice(1,2,3))*10);
+    //     //--------------------------
+    // };
     //--------------------------------------------------------------
     // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
     //     //--------------------------
@@ -309,6 +315,92 @@ int main(int argc, char const *argv[]){
     //     return _results;
     //     //--------------------------
     // };
+    //--------------------------------------------------------------
+    auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+        //--------------------------
+        // std::random_device rd;
+        // std::mt19937 gen(rd());
+        // std::bernoulli_distribution memory_activation(0.5);
+        //--------------------------
+        auto _circle = torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2) + (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2));
+        //--------------------------
+        auto _results = _circle - input.slice(1,2,3);
+        //--------------------------
+        auto _loss = torch::mse_loss(_circle, input.slice(1,2,3))*100;
+        //--------------------------
+        auto _results_meam = torch::mean(_results);
+        //--------------------------
+        // auto _X = torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2);
+        // //--------------------------
+        // auto _Y = torch::pow((output.slice(1,1,2) - input.slice(1,1,2)),2);
+        // //--------------------------
+        // auto _circle = _X + _Y;
+        // //--------------------------
+        // auto _results = _circle - input.slice(1,2,3);
+        // //--------------------------
+        // auto _loss = torch::mse_loss(_circle, input.slice(1,2,3))*100;
+        // //--------------------------
+        // auto _results_meam = torch::mean(_results);
+        // //--------------------------
+        // auto _final_results = torch::cat({_X, _Y}, 1);
+        //--------------------------
+        if(_results_meam.less(1E-2).item().toBool() and _results_meam.greater_equal(1E-3).item().toBool()){
+            //--------------------------
+            // if(memory_activation(gen)){
+            //     //--------------------------
+            //     return torch::abs(_results)*_loss*20;
+            //     //--------------------------
+            // }// end if(abs_activation(gen))
+            // //--------------------------
+            return _results*_loss*-20;
+            //--------------------------
+        }//end if(_results.less(1E-1).item().toBool())
+        // //--------------------------
+        if(_results_meam.less(1E-1).item().toBool() and _results_meam.greater_equal(1E-2).item().toBool()){
+            //--------------------------
+            // if(memory_activation(gen)){
+            //     //--------------------------
+            //     return torch::abs(_results)*_loss*50;
+            //     //--------------------------
+            // }// end if(abs_activation(gen))
+            //--------------------------
+            return _results*_loss*-10;
+            //--------------------------
+        }//end if(torch::mean(_results).less(1E-2).item().toBool())
+        // //--------------------------
+        if(_results_meam.less(1E0).item().toBool() and _results_meam.greater_equal(1E-1).item().toBool()){
+            //--------------------------
+            // if(memory_activation(gen)){
+            //     //--------------------------
+            //     return torch::abs(_results)*_loss*20;
+            //     //--------------------------
+            // }// end if(abs_activation(gen))
+            //--------------------------
+            return _results*_loss*-5;
+            //--------------------------
+        }//end if(torch::mean(_results).less(1E-2).item().toBool())
+        // //--------------------------
+        if(_results_meam.less(1E1).item().toBool() and _results_meam.greater_equal(1E-0).item().toBool()){
+            //--------------------------
+            // if(memory_activation(gen)){
+            //     //--------------------------
+            //     return torch::abs(_results)*_loss*10;
+            //     //--------------------------
+            // }// end if(abs_activation(gen))
+            // //--------------------------
+            return _results*_loss*-2;
+            //--------------------------
+        }//end if(torch::mean(_results).less(1E-2).item().toBool())
+        //--------------------------
+        // if(memory_activation(gen)){
+        //     //--------------------------
+        //     return torch::abs(_results)*_loss;
+        //     //--------------------------
+        // }// end if(abs_activation(gen))
+        // //--------------------------
+        return _results*_loss;
+        //--------------------------
+    };
     //--------------------------------------------------------------
     RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
@@ -481,6 +573,10 @@ int main(int argc, char const *argv[]){
         //--------------------------
     }//end for(size_t i = 0; i < epoch; ++i)
     //--------------------------
+    // for(const auto& x : _rewards){
+    //     std::cout << "_rewards: " << x << std::endl;
+    // }
+    // std::exit(1);
     //--------------------------------------------------------------
     // std::vector<std::thread> _threads(epoch);
     // _threads.reserve(std::thread::hardware_concurrency() - 1);
@@ -586,12 +682,12 @@ int main(int argc, char const *argv[]){
         //--------------------------
         auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3));
         //--------------------------
-        table   << RLNormalize::unnormalization(_test_result.slice(1,0,1), t_min, t_max) 
-                << RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
-                << RLNormalize::unnormalization(_test_result.slice(1,1,2), t_min, t_max) 
-                << RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
-                << RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
-                << RLNormalize::unnormalization(_circle, t_min, t_max)
+        table   << RL::RLNormalize::unnormalization(_test_result.slice(1,0,1), t_min, t_max) 
+                << RL::RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
+                << RL::RLNormalize::unnormalization(_test_result.slice(1,1,2), t_min, t_max) 
+                << RL::RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
+                << RL::RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
+                << RL::RLNormalize::unnormalization(_circle, t_min, t_max)
                 << _loss << fort::endr;
         //--------------------------
         // table   << _test_result.slice(1,0,1)

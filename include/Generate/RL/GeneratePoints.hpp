@@ -73,9 +73,9 @@ namespace RL {
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
-            std::vector<torch::Tensor> generate_value(const size_t& generated_points = 60000, const size_t& column = 2);
+            std::vector<torch::Tensor> generate_value(const size_t& generated_points, const size_t& column);
             //--------------------------
-            torch::Tensor generate_target(const size_t& generated_points = 60000, const size_t& column = 2);
+            torch::Tensor generate_target(const size_t& generated_points, const size_t& column);
             //--------------------------
             torch::Tensor inner_generation(const size_t& column = 2);
             //--------------------------------------------------------------

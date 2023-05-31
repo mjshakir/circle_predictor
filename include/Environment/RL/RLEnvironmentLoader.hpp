@@ -65,11 +65,36 @@ namespace RL {
                 }// end RLEnvironmentLoader(Dataset&& data_loader)
                 //--------------------------------------------------------------
                 /**
-                 * @brief 
-                 * 
-                 * @param args 
-                 * @return std::tuple<torch::Tensor, COST_OUTPUT, double, bool> 
-                 */
+                * @brief Executes an internal step in the RL environment.
+                *
+                * This function performs an internal step in the RL environment, processing a batch of data
+                * and returning a tuple containing the resulting tensor, cost output, epsilon value, and a flag
+                * indicating whether the data iteration is complete.
+                *
+                * @param args The variadic arguments for the cost function.
+                *
+                * @return A tuple containing the resulting tensor, cost output, epsilon value, and a flag indicating
+                *         whether the data iteration is complete.
+                *
+                * @throws std::out_of_range If the current data iterator is at the end or if advancing the iterator by
+                *                          the batch size exceeds the end of the data.
+                *
+                * @note The data vector should be populated before calling this function.
+                *
+                * @note The cost function should be set before calling this function.
+                *
+                * @example
+                * size_t batchSize = 4;
+                * RLEnvironmentLoader loader(data, costFunction, 0.9, 0.02, 500.0, batchSize);
+                * 
+                * auto result = loader.step(arg1, arg2);
+                *
+                * // Example usage of the returned tuple elements
+                * torch::Tensor tensor = std::get<0>(result);
+                * COST_OUTPUT costOutput = std::get<1>(result);
+                * double epsilon = std::get<2>(result);
+                * bool isComplete = std::get<3>(result);
+                */
                 virtual std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(const Args&... args) override {
                     //----------------------------
                     return internal_step(m_batch, args...);
@@ -89,6 +114,43 @@ namespace RL {
                     return internal_step(epsilon, done, m_batch, args...);
                     //----------------------------
                 }// std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const Args&... args))
+                //--------------------------------------------------------------
+                /**
+                * @brief Executes an internal step in the RL environment.
+                *
+                * This function performs an internal step in the RL environment, processing a batch of data
+                * and returning a tuple containing the resulting tensor, cost output, epsilon value, and a flag
+                * indicating whether the data iteration is complete.
+                *
+                * @param batch The batch size indicating the number of data elements to process.
+                * @param args The variadic arguments for the cost function.
+                *
+                * @return A tuple containing the resulting tensor, cost output, epsilon value, and a flag indicating
+                *         whether the data iteration is complete.
+                *
+                * @throws std::out_of_range If the current data iterator is at the end or if advancing the iterator by
+                *                          the batch size exceeds the end of the data.
+                *
+                * @note The data vector should be populated before calling this function.
+                *
+                * @note The cost function should be set before calling this function.
+                *
+                * @example
+                * RLEnvironmentLoader loader(data, costFunction, 0.9, 0.02, 500.0);
+                * size_t batchSize = 4;
+                * auto result = loader.step(batchSize, arg1, arg2);
+                *
+                * // Example usage of the returned tuple elements
+                * torch::Tensor tensor = std::get<0>(result);
+                * COST_OUTPUT costOutput = std::get<1>(result);
+                * double epsilon = std::get<2>(result);
+                * bool isComplete = std::get<3>(result);
+                */
+                std::tuple<torch::Tensor, COST_OUTPUT> step(const size_t& batch, const Args&... args){
+                    //----------------------------
+                    return internal_step(batch, args...);
+                    //----------------------------
+                }// std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args)
                 //--------------------------------------------------------------
                 /**
                  * @brief 

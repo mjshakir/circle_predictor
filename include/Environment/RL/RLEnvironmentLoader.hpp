@@ -151,51 +151,48 @@ namespace RL {
                         //--------------------------
                     }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
                     //--------------------------
-                    torch::Tensor _data;
+                    std::vector<torch::Tensor> _data;
+                    _data.reserve(batch);
                     //--------------------------------------------------------------
                     if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
                         //--------------------------
                         auto epsilon = this->calculate_epsilon();
                         //--------------------------
-                        _data = *m_data_iter;
+                        _data.push_back(*m_data_iter);
                         //--------------------------
                         for(size_t i = 1; i < batch; ++i){
                             //--------------------------
-                            _data = torch::cat({_data, *++m_data_iter});
+                            _data.push_back(*++m_data_iter);
                             //--------------------------
                         }// end for(size_t i = 0; i < batch; ++i)
                         //--------------------------
-                        return {_data, torch::tensor(NULL), epsilon, false};
+                        return {torch::cat(_data, 0), torch::tensor(0), epsilon, false};
                         //--------------------------
                     }// end if (m_data_iter == m_data.begin())
                     //--------------------------------------------------------------
                     if(std::next(m_data_iter, batch) == m_data.end()-1){
                         //--------------------------
-                        _data = *m_data_iter;
+                        _data.push_back(*m_data_iter);
                         //--------------------------
                         for (size_t i = 1; i < batch; ++i){
                             //--------------------------
-                            _data = torch::cat({_data, *++m_data_iter});
+                            _data.push_back(*++m_data_iter);
                             //--------------------------
                         }// end for (size_t i = 1; i < batch; i++)
                         //--------------------------
-                        return {_data, m_CostFunction(args...), this->calculate_epsilon(), true};
+                        return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(), true};
                         //--------------------------
                     }// if(m_data_iter == m_data.end())
                     //--------------------------------------------------------------
-                    if(m_data_iter != m_data.end()-1 and std::next(m_data_iter, batch) != m_data.end()-1){
-                        //--------------------------
-                        _data = *++m_data_iter;
-                        //--------------------------
-                        for(size_t i = 1; i < batch; ++i){
-                            //--------------------------
-                            _data = torch::cat({_data, *++m_data_iter});
-                            //--------------------------
-                        }// end for(size_t i = 0; i < batch; ++i)
-                        //--------------------------
-                    }// end if(m_data_iter != m_data.end()-1 && std::next(m_data_iter, batch) != m_data.end()-1)
+                    _data.push_back(*++m_data_iter);
                     //--------------------------
-                    return {_data, m_CostFunction(args...), this->calculate_epsilon(), false};
+                    for(size_t i = 1; i < batch; ++i){
+                        //--------------------------
+                        _data.push_back(*++m_data_iter);
+                        //--------------------------
+                    }// end for(size_t i = 0; i < batch; ++i)
+                    //--------------------------
+                    return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(), false};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args)
                 //--------------------------------------------------------------
@@ -207,58 +204,55 @@ namespace RL {
                         //--------------------------
                     }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
                     //--------------------------
-                    torch::Tensor _data;
+                    std::vector<torch::Tensor> _data;
+                    _data.reserve(batch);
                     //--------------------------------------------------------------
                     if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
                         //--------------------------
                         epsilon = this->calculate_epsilon();
                         done = false;
                         //--------------------------
-                        _data = *m_data_iter;
+                        _data.push_back(*m_data_iter);
                         //--------------------------
                         for(size_t i = 1; i < batch; ++i){
                             //--------------------------
-                            _data = torch::cat({_data, *++m_data_iter});
+                            _data.push_back(*++m_data_iter);
                             //--------------------------
                         }// end for(size_t i = 0; i < batch; ++i)
                         //--------------------------
-                        return {_data, torch::tensor(0)};
+                        return {torch::cat(_data, 0), torch::tensor(0)};
                         //--------------------------
                     }// end if (m_data_iter == m_data.begin())
                     //--------------------------------------------------------------
                     if(std::next(m_data_iter, batch) == m_data.end()-1){
                         //--------------------------
-                        _data = *m_data_iter;
+                        _data.push_back(*m_data_iter);
                         //--------------------------
                         for (size_t i = 1; i < batch; ++i){
                             //--------------------------
-                            _data = torch::cat({_data, *++m_data_iter});
+                            _data.push_back(*++m_data_iter);
                             //--------------------------
                         }// end for (size_t i = 1; i < batch; i++)
                         //--------------------------
                         epsilon = this->calculate_epsilon();
                         done = true;
                         //--------------------------
-                        return {_data, m_CostFunction(args...)};
+                        return {torch::cat(_data, 0), m_CostFunction(args...)};
                         //--------------------------
                     }// if(m_data_iter == m_data.end())
                     //--------------------------------------------------------------
-                    if(m_data_iter != m_data.end()-1 and std::next(m_data_iter, batch) != m_data.end()-1){
+                    _data.push_back(*++m_data_iter);
+                    //--------------------------
+                    for(size_t i = 1; i < batch; ++i){
                         //--------------------------
-                        _data = *++m_data_iter;
+                        _data.push_back(*++m_data_iter);
                         //--------------------------
-                        for(size_t i = 1; i < batch; ++i){
-                            //--------------------------
-                            _data = torch::cat({_data, *++m_data_iter});
-                            //--------------------------
-                        }// end for(size_t i = 0; i < batch; ++i)
-                        //--------------------------
-                    }// end if(m_data_iter != m_data.end()-1 && std::next(m_data_iter, batch) != m_data.end()-1)
+                    }// end for(size_t i = 0; i < batch; ++i)
                     //--------------------------
                     epsilon = this->calculate_epsilon();
                     done = false;
                     //--------------------------
-                    return {_data, m_CostFunction(args...)};
+                    return {torch::cat(_data, 0), m_CostFunction(args...)};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, Args... args)
                 //--------------------------------------------------------------
@@ -272,19 +266,20 @@ namespace RL {
                     //--------------------------
                     if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
                         //--------------------------
-                        torch::Tensor _data;
+                        std::vector<torch::Tensor> _data;
+                        _data.reserve(batch);
                         //--------------------------
                         auto epsilon = this->calculate_epsilon();
                         //--------------------------
-                        _data = *m_data_iter;
+                        _data.push_back(*m_data_iter);
                         //--------------------------
                         for(size_t i = 1; i < batch; ++i){
                             //--------------------------
-                            _data = torch::cat({_data, *++m_data_iter});
+                            _data.push_back(*++m_data_iter);
                             //--------------------------
                         }// end for(size_t i = 0; i < batch; ++i)
                         //--------------------------
-                        return {_data, epsilon};
+                        return {torch::cat(_data, 0), epsilon};
                         //--------------------------
                     }// end if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1)
                     //--------------------------
@@ -302,19 +297,20 @@ namespace RL {
                     //--------------------------
                     if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
                         //--------------------------
-                        torch::Tensor _data;
+                        std::vector<torch::Tensor> _data;
+                        _data.reserve(batch);
                         //--------------------------
                         epsilon = this->calculate_epsilon();
                         //--------------------------
-                        _data = *m_data_iter;
+                        _data.push_back(*m_data_iter);
                         //--------------------------
                         for(size_t i = 1; i < batch; ++i){
                             //--------------------------
-                            _data = torch::cat({_data, *++m_data_iter});
+                            _data.push_back(*++m_data_iter);
                             //--------------------------
                         }// end for(size_t i = 0; i < batch; ++i)
                         //--------------------------
-                        return _data;
+                        return torch::cat(_data, 0);
                         //--------------------------
                     }// end (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1)
                     //--------------------------

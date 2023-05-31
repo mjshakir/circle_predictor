@@ -17,15 +17,33 @@ namespace RL {
                 RLEnvironmentLoader(void) = delete;
                 //--------------------------------------------------------------
                 /**
-                 * @brief Construct to create a training environment for reinforcement learning 
-                 * 
-                 * @param data          [in] : Data Vector of the template type T
-                 * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters
-                 * @param egreedy       [in] : The starting egreedy                                           @default: 0.9
-                 * @param egreedy_final [in] : The egreedy number where it will change                        @default: 0.02
-                 * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor                     @default: 500.
-                 * @param batch         [in] : The batch number (needs to be less then half of the data size) @default: 1ul   
-                 */
+                * @brief Constructs an RLEnvironmentLoader object.
+                * This class represents a loader for reinforcement learning environments. 
+                * It takes as input a vector of data, a cost function, 
+                * and optional parameters for epsilon-greedy exploration. 
+                * The data is moved into the object, and the cost function and other parameters are stored for later use.
+                * 
+                * @param data The vector of data representing the RL environment.
+                * @param costFunction The cost function to evaluate the RL environment.
+                * @param egreedy The initial value of epsilon-greedy exploration (@default: 0.9).
+                * @param egreedy_final The final value of epsilon-greedy exploration (@default: 0.02).
+                * @param egreedy_decay The decay rate of epsilon-greedy exploration (@default: 500.0).
+                * @param batch The size of the batch for RL training (@default: 1).
+                * 
+                * @note The template arguments T and Args represent the data type and additional argument types required by the cost function, respectively.
+                * @note The data vector is moved into the RLEnvironmentLoader object, ensuring efficient data transfer.
+                * @note The RLEnvironmentLoader class is derived from RLEnvironment and initializes its base class using the given parameters.
+                * 
+                * @example
+                * // Create a vector of data representing the RL environment
+                * std::vector<int> data = {1, 2, 3, 4, 5};
+                * // Define a cost function
+                * auto costFunction = [](const int& state) { return state * state; };
+                * // Create an RLEnvironmentLoader object
+                * RLEnvironmentLoader<int, int> loader(std::move(data), costFunction, 0.9, 0.02, 500.0, 1);
+                *  @throws std::out_of_range If the specified batch size is greater than or equal to half the size of the data vector.
+                *          The exception message provides details about the expected range for the batch size.
+                */
                 RLEnvironmentLoader(std::vector<T>&& data, 
                                     std::function<COST_OUTPUT(const Args&...)> costFunction,
                                     const double& egreedy = 0.9,

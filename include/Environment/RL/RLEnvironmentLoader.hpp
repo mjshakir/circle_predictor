@@ -4,8 +4,6 @@
 //--------------------------------------------------------------
 #include "Environment/RL/RLEnvironment.hpp"
 //--------------------------------------------------------------
-#include "Timing/Timing.hpp"
-//--------------------------------------------------------------
 namespace RL {
     //--------------------------------------------------------------
     namespace Environment {
@@ -147,8 +145,6 @@ namespace RL {
                 * @note Make sure that the data iterator is properly initialized before calling this function.
                 */
                 virtual std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const Args&... args) override {
-                    //----------------------------
-                    Timing _timer(__FUNCTION__);
                     //----------------------------
                     return internal_step(epsilon, done, m_batch, args...);
                     //----------------------------

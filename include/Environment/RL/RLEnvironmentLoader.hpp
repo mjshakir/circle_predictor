@@ -25,10 +25,10 @@ namespace RL {
                 * 
                 * @tparam data The vector of data representing the RL environment.
                 * @tparam costFunction The cost function to evaluate the RL environment.
-                * @param egreedy The initial value of epsilon-greedy exploration (@default: 0.9).
-                * @param egreedy_final The final value of epsilon-greedy exploration (@default: 0.02).
-                * @param egreedy_decay The decay rate of epsilon-greedy exploration (@default: 500.0).
-                * @param batch The size of the batch for RL training (@default: 1).
+                * @param egreedy The initial value of epsilon-greedy exploration @default: 0.9.
+                * @param egreedy_final The final value of epsilon-greedy exploration @default: 0.02.
+                * @param egreedy_decay The decay rate of epsilon-greedy exploration @default: 500.0.
+                * @param batch The size of the batch for RL training @default: 1.
                 * 
                 * @note The template arguments T and Args represent the data type and additional argument types required by the cost function, respectively.
                 * @note The data vector is moved into the RLEnvironmentLoader object, ensuring efficient data transfer.
@@ -49,7 +49,7 @@ namespace RL {
                                     const double& egreedy = 0.9,
                                     const double& egreedy_final = 0.02,
                                     const double& egreedy_decay = 500.,
-                                    const size_t& batch = 1ul) : RLEnvironment<T, COST_OUTPUT, Args...>(std::move(data), std::move(costFunction), 
+                                    const size_t& batch = 1UL) : RLEnvironment<T, COST_OUTPUT, Args...>(std::move(data), std::move(costFunction), 
                                                                                                         egreedy, egreedy_final, egreedy_decay),
                                                                 m_data(this->get_data()),
                                                                 m_data_iter (this->get_iterator()), 

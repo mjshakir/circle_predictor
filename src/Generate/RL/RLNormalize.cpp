@@ -10,9 +10,9 @@
 #include <future>
 //--------------------------------------------------------------
 RL::RLNormalize::RLNormalize(const std::vector<torch::Tensor>& input) : m_input(input),
-                                                                    m_input_tensor(torch::cat(input, 0)),
-                                                                    m_min(torch::min(m_input_tensor)),
-                                                                    m_max(torch::max(m_input_tensor)){
+                                                                        m_input_tensor(torch::cat(input, 0)),
+                                                                        m_min(torch::min(m_input_tensor)),
+                                                                        m_max(torch::max(m_input_tensor)){
     //--------------------------
     if(std::abs(m_max.item().toDouble() - m_min.item().toDouble()) <= 1E-9){
         //--------------------------

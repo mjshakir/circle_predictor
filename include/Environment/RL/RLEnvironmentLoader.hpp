@@ -4,6 +4,8 @@
 //--------------------------------------------------------------
 #include "Environment/RL/RLEnvironment.hpp"
 //--------------------------------------------------------------
+#include "Timing/Timing.hpp"
+//--------------------------------------------------------------
 namespace RL {
     //--------------------------------------------------------------
     namespace Environment {
@@ -145,6 +147,8 @@ namespace RL {
                 * @note Make sure that the data iterator is properly initialized before calling this function.
                 */
                 virtual std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const Args&... args) override {
+                    //----------------------------
+                    Timing _timer(__FUNCTION__);
                     //----------------------------
                     return internal_step(epsilon, done, m_batch, args...);
                     //----------------------------
@@ -378,24 +382,26 @@ namespace RL {
                     //--------------------------------------------------------------
                     std::vector<torch::Tensor> _data;
                     _data.reserve(batch);
+                    //--------------------------
+                    auto _data_end = std::next(m_data_iter, batch);
                     //--------------------------------------------------------------
-                    if(std::next(m_data_iter, batch) == m_data.end()-1){
+                    if(_data_end == m_data.end()-1){
                         //--------------------------
-                        for (size_t i = 0; i < batch; ++i){
+                        for(; m_data_iter != _data_end; ++m_data_iter) {
                             //--------------------------
-                            _data.push_back(*m_data_iter++);
+                            _data.push_back(*m_data_iter);
                             //--------------------------
-                        }// end for (size_t i = 1; i < batch; i++)
+                        }// end for(; m_data_iter != _data_end; ++m_data_iter)
                         //--------------------------
                         return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(), true};
                         //--------------------------
                     }// if(m_data_iter == m_data.end())
                     //--------------------------------------------------------------
-                    for(size_t i = 0; i < batch; ++i){
+                    for(; m_data_iter != _data_end; ++m_data_iter) {
                         //--------------------------
-                        _data.push_back(*++m_data_iter);
+                        _data.push_back(*m_data_iter);
                         //--------------------------
-                    }// end for(size_t i = 0; i < batch; ++i)
+                    }// end for(; m_data_iter != _data_end; ++m_data_iter)
                     //--------------------------
                     return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(), false};
                     //--------------------------
@@ -421,14 +427,16 @@ namespace RL {
                     //--------------------------------------------------------------
                     std::vector<torch::Tensor> _data;
                     _data.reserve(batch);
+                    //--------------------------
+                    auto _data_end = std::next(m_data_iter, batch);
                     //--------------------------------------------------------------
-                    if(std::next(m_data_iter, batch) == m_data.end()-1){
+                    if(_data_end == m_data.end()-1){
                         //--------------------------
-                        for (size_t i = 0; i < batch; ++i){
+                        for(; m_data_iter != _data_end; ++m_data_iter) {
                             //--------------------------
-                            _data.push_back(*m_data_iter++);
+                            _data.push_back(*m_data_iter);
                             //--------------------------
-                        }// end for (size_t i = 1; i < batch; i++)
+                        }// end for(; m_data_iter != _data_end; ++m_data_iter)
                         //--------------------------
                         epsilon = this->calculate_epsilon();
                         done = true;
@@ -437,11 +445,11 @@ namespace RL {
                         //--------------------------
                     }// if(m_data_iter == m_data.end())
                     //--------------------------------------------------------------
-                    for(size_t i = 0; i < batch; ++i){
+                    for(; m_data_iter != _data_end; ++m_data_iter) {
                         //--------------------------
-                        _data.push_back(*++m_data_iter);
+                        _data.push_back(*m_data_iter);
                         //--------------------------
-                    }// end for(size_t i = 0; i < batch; ++i)
+                    }// end for(; m_data_iter != _data_end; ++m_data_iter)
                     //--------------------------
                     epsilon = this->calculate_epsilon();
                     done = false;

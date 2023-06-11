@@ -79,7 +79,7 @@ torch::Tensor Utils::TriangleArea(const torch::Tensor& points){
 //--------------------------------------------------------------
 torch::Tensor Utils::CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, torch::Tensor radius){
     //--------------------------
-    calculateCircleSmoothness(points, center, radius);
+    return calculateCircleSmoothness(points, center, radius);
     //--------------------------    
 }// end torch::Tensor Utils::CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, torch::Tensor radius)
 //--------------------------------------------------------------

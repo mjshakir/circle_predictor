@@ -10,8 +10,8 @@ RL::Generate::Generate( const size_t& generated_points) :   m_generated_points((
 }// end RL::Generate::Generate(const size_t& generated_points, const size_t& column, const double& limiter)
 //--------------------------------------------------------------
 RL::Generate::Generate( const size_t& generated_points, 
-                    const size_t& generated_points_test) : m_generated_points((generated_points%2 == 0) ? generated_points : generated_points - (generated_points & 1)),
-                                                           m_generated_points_test((generated_points_test%2 == 0 and generated_points_test==0) ? 
+                        const size_t& generated_points_test) : m_generated_points((generated_points%2 == 0) ? generated_points : generated_points - (generated_points & 1)),
+                                                               m_generated_points_test((generated_points_test%2 == 0 and generated_points_test==0) ? 
                                                                 generated_points_test : generated_points_test - (generated_points_test & 1)){
     //--------------------------
 }// end RL::Generate::Generate( const size_t& generated_points, const size_t& generated_points_test, const size_t& column, const double& limiter)

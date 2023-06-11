@@ -17,18 +17,31 @@ namespace RL {
             Generate(void) = delete;
             //--------------------------
             /**
-             *  @brief A constructor. Generate both X, Y center point of the circle, and the radius.  
-             *  it also generate test data that 20% of the generated_points
-             *  @param generated_points [in]: How many points to generate. The constructor ensures that it is an even number    @default: 60000
-             */
-            Generate(const size_t& generated_points = 60000);
+            * @brief Construct a new RL::Generate object.
+            * This constructor initializes an instance of the RL::Generate class.
+            * It takes the number of generated points as a parameter and assigns it to the member variable m_generated_points.
+            * If the provided number is odd, it subtracts 1 from it to make it even.
+            * The constructor also calculates the value of m_generated_points_test by multiplying m_generated_points by 0.2.
+            * 
+            * @param generated_points The number of generated points.
+            * @example usage:
+            * RL::Generate generator(100); // Create a generator object with 100 generated points
+            */
+            Generate(const size_t& generated_points = 60000UL);
             //--------------------------
             /**
-             *  @brief A constructor. Generate both X, Y center point of the circle, and the radius. 
-             *  it also generate test data that 20% of the generated_points
-             *  @param generated_points      [in]: How many points to generate. The constructor ensures that it is an even number                  @default: 60000
-             *  @param generated_points_test [in]: How many points to test data is generated. The constructor ensures that it is an even number    @default: 10000
-             */
+            * @brief Construct a new RL::Generate object.
+            * This constructor initializes an instance of the RL::Generate class.
+            * It takes the number of generated points and the number of test points as parameters and assigns them to the corresponding member variables.
+            * If the provided number of generated points is odd, it subtracts 1 from it to make it even.
+            * If the provided number of test points is odd and not equal to 0, it subtracts 1 from it to make it even.
+            * 
+            * @param generated_points The number of generated points.
+            * @param generated_points_test The number of test points.
+            * 
+            * @example usage:
+            * RL::Generate generator(100, 20); // Create a generator object with 100 generated points and 20 test points
+            */
             Generate( const size_t& generated_points, const size_t& generated_points_test);
             //--------------------------
             /**

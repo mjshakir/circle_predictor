@@ -21,6 +21,8 @@
 #include "Generate/RL/RLNormalize.hpp"
 #include "Network/RL/ExperienceReplay.hpp"
 //--------------------------
+#include "Utilities/Utils.hpp"
+//--------------------------
 #include "Timing/Timing.hpp"
 #include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
@@ -233,7 +235,7 @@ int main(int argc, char const *argv[]){
         //--------------------------
     }// if(verbos)
     //--------------------------------------------------------------
-    std::exit(1);
+    // std::exit(1);
     //--------------------------------------------------------------
     auto input_test_thread = std::async(std::launch::async, [&_generate](){return RL::RLNormalize::normalization_min_max(_generate.get_test_input());});
     //--------------------------------------------------------------
@@ -316,89 +318,219 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // };
     //--------------------------------------------------------------
-    auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     // std::random_device rd;
+    //     // std::mt19937 gen(rd());
+    //     // std::bernoulli_distribution memory_activation(0.5);
+    //     //--------------------------
+    //     auto _circle = torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2) + (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2));
+    //     //--------------------------
+    //     auto _results = _circle - input.slice(1,2,3);
+    //     //--------------------------
+    //     auto _loss = torch::mse_loss(_circle, input.slice(1,2,3))*100;
+    //     //--------------------------
+    //     auto _results_meam = torch::mean(_results);
+    //     //--------------------------
+    //     // auto _X = torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2);
+    //     // //--------------------------
+    //     // auto _Y = torch::pow((output.slice(1,1,2) - input.slice(1,1,2)),2);
+    //     // //--------------------------
+    //     // auto _circle = _X + _Y;
+    //     // //--------------------------
+    //     // auto _results = _circle - input.slice(1,2,3);
+    //     // //--------------------------
+    //     // auto _loss = torch::mse_loss(_circle, input.slice(1,2,3))*100;
+    //     // //--------------------------
+    //     // auto _results_meam = torch::mean(_results);
+    //     // //--------------------------
+    //     // auto _final_results = torch::cat({_X, _Y}, 1);
+    //     //--------------------------
+    //     if(_results_meam.less(1E-2).item().toBool() and _results_meam.greater_equal(1E-3).item().toBool()){
+    //         //--------------------------
+    //         // if(memory_activation(gen)){
+    //         //     //--------------------------
+    //         //     return torch::abs(_results)*_loss*20;
+    //         //     //--------------------------
+    //         // }// end if(abs_activation(gen))
+    //         // //--------------------------
+    //         return _results*_loss*-20;
+    //         //--------------------------
+    //     }//end if(_results.less(1E-1).item().toBool())
+    //     // //--------------------------
+    //     if(_results_meam.less(1E-1).item().toBool() and _results_meam.greater_equal(1E-2).item().toBool()){
+    //         //--------------------------
+    //         // if(memory_activation(gen)){
+    //         //     //--------------------------
+    //         //     return torch::abs(_results)*_loss*50;
+    //         //     //--------------------------
+    //         // }// end if(abs_activation(gen))
+    //         //--------------------------
+    //         return _results*_loss*-10;
+    //         //--------------------------
+    //     }//end if(torch::mean(_results).less(1E-2).item().toBool())
+    //     // //--------------------------
+    //     if(_results_meam.less(1E0).item().toBool() and _results_meam.greater_equal(1E-1).item().toBool()){
+    //         //--------------------------
+    //         // if(memory_activation(gen)){
+    //         //     //--------------------------
+    //         //     return torch::abs(_results)*_loss*20;
+    //         //     //--------------------------
+    //         // }// end if(abs_activation(gen))
+    //         //--------------------------
+    //         return _results*_loss*-5;
+    //         //--------------------------
+    //     }//end if(torch::mean(_results).less(1E-2).item().toBool())
+    //     // //--------------------------
+    //     if(_results_meam.less(1E1).item().toBool() and _results_meam.greater_equal(1E-0).item().toBool()){
+    //         //--------------------------
+    //         // if(memory_activation(gen)){
+    //         //     //--------------------------
+    //         //     return torch::abs(_results)*_loss*10;
+    //         //     //--------------------------
+    //         // }// end if(abs_activation(gen))
+    //         // //--------------------------
+    //         return _results*_loss*-2;
+    //         //--------------------------
+    //     }//end if(torch::mean(_results).less(1E-2).item().toBool())
+    //     //--------------------------
+    //     // if(memory_activation(gen)){
+    //     //     //--------------------------
+    //     //     return torch::abs(_results)*_loss;
+    //     //     //--------------------------
+    //     // }// end if(abs_activation(gen))
+    //     // //--------------------------
+    //     return _results*_loss;
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     std::random_device rd;
+    //     std::mt19937 gen(rd());
+    //     std::bernoulli_distribution memory_activation(0.5);
+    //     //--------------------------
+    //     auto _circle = torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2) + (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2));
+    //     //--------------------------
+    //     auto _results = _circle - input.slice(1,2,3);
+    //     //--------------------------
+    //     auto _loss = torch::mse_loss(_circle, input.slice(1,2,3))*100;
+    //     //--------------------------
+    //     auto _results_meam = torch::mean(_results);
+    //     //--------------------------
+    //     // auto _X = torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2);
+    //     // //--------------------------
+    //     // auto _Y = torch::pow((output.slice(1,1,2) - input.slice(1,1,2)),2);
+    //     // //--------------------------
+    //     // auto _circle = _X + _Y;
+    //     // //--------------------------
+    //     // auto _results = _circle - input.slice(1,2,3);
+    //     // //--------------------------
+    //     // auto _loss = torch::mse_loss(_circle, input.slice(1,2,3))*100;
+    //     // //--------------------------
+    //     // auto _results_meam = torch::mean(_results);
+    //     // //--------------------------
+    //     // auto _final_results = torch::cat({_X, _Y}, 1);
+    //     //--------------------------
+    //     // if(_results_meam.less(1E-2).item().toBool() and _results_meam.greater_equal(1E-3).item().toBool()){
+    //     //     //--------------------------
+    //     //     if(memory_activation(gen)){
+    //     //         //--------------------------
+    //     //         return _loss*20;
+    //     //         //--------------------------
+    //     //     }// end if(abs_activation(gen))
+    //     //     //--------------------------
+    //     //     return _loss*-20;
+    //     //     //--------------------------
+    //     // }//end if(_results.less(1E-1).item().toBool())
+    //     // // //--------------------------
+    //     // if(_results_meam.less(1E-1).item().toBool() and _results_meam.greater_equal(1E-2).item().toBool()){
+    //     //     //--------------------------
+    //     //     if(memory_activation(gen)){
+    //     //         //--------------------------
+    //     //         return _loss*10;
+    //     //         //--------------------------
+    //     //     }// end if(abs_activation(gen))
+    //     //     //--------------------------
+    //     //     return _loss*-10;
+    //     //     //--------------------------
+    //     // }//end if(torch::mean(_results).less(1E-2).item().toBool())
+    //     // // //--------------------------
+    //     // if(_results_meam.less(1E0).item().toBool() and _results_meam.greater_equal(1E-1).item().toBool()){
+    //     //     //--------------------------
+    //     //     if(memory_activation(gen)){
+    //     //         //--------------------------
+    //     //         return _loss*5;
+    //     //         //--------------------------
+    //     //     }// end if(abs_activation(gen))
+    //     //     //--------------------------
+    //     //     return _loss*-5;
+    //     //     //--------------------------
+    //     // }//end if(torch::mean(_results).less(1E-2).item().toBool())
+    //     // // //--------------------------
+    //     // if(_results_meam.less(1E1).item().toBool() and _results_meam.greater_equal(1E-0).item().toBool()){
+    //     //     //--------------------------
+    //     //     if(memory_activation(gen)){
+    //     //         //--------------------------
+    //     //         return _loss*2;
+    //     //         //--------------------------
+    //     //     }// end if(abs_activation(gen))
+    //     //     //--------------------------
+    //     //     return _loss*-2;
+    //     //     //--------------------------
+    //     // }//end if(torch::mean(_results).less(1E-2).item().toBool())
+    //     //--------------------------
+    //     if(memory_activation(gen)){
+    //         //--------------------------
+    //         return _results/2;
+    //         //--------------------------
+    //     }// end if(abs_activation(gen))
+    //     // //--------------------------
+    //     return (_loss/(torch::log10(_loss)*10))/2; 
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
+    auto _circle_reward = [&batch_size](const torch::Tensor& input, const torch::Tensor& output){
         //--------------------------
-        // std::random_device rd;
-        // std::mt19937 gen(rd());
-        // std::bernoulli_distribution memory_activation(0.5);
+        std::vector<torch::Tensor> reward;
+        reward.reserve(output.size(0));
         //--------------------------
-        auto _circle = torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2) + (torch::pow((output.slice(1,1,2)-input.slice(1,1,2)),2));
+        for (size_t i = 0; i < batch_size -1; ++i){
+            //--------------------------
+            auto _reward = torch::zeros(batch_size);
+            //--------------------------
+            // Criterion 1: Points aligned
+            Utils::Aligned(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+            //--------------------------
+            // Criterion 2: Points close to the circumference of a circle
+            Utils::CloseToCircumference(_reward,
+                                        output.slice(0,(i*batch_size), ((i+1)*batch_size)),
+                                        input.slice(1,0,2).slice(0,i,(i+1)),
+                                        input.slice(1,2,3).slice(0,i,(i+1)),
+                                        1E-1);
+            //--------------------------
+            // Criterion 3: Points equidistant
+            Utils::Equidistant(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+            //--------------------------
+            // Criterion 4: Angle ratios consistent
+            Utils::AngleRatiosConsistent(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+            //--------------------------
+            // Criterion 5: Symmetry of the points
+            Utils::Symmetric(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size))); 
+            //--------------------------
+            // Criterion 6: Triangle area
+            _reward += Utils::TriangleArea(output.slice(0,(i*batch_size), ((i+1)*batch_size)));
+            //--------------------------
+            // Criterion 7: Circle smoothness
+            _reward /= Utils::CircleSmoothness( output.slice(0,(i*batch_size), ((i+1)*batch_size)),
+                                                input.slice(1,0,2).slice(0,i,(i+1)),
+                                                input.slice(1,2,3).slice(0,i,(i+1)));
+            //--------------------------
+            reward.push_back(_reward);
+            //--------------------------
+        }for (size_t i = 0; i < batch_size; ++i)        
         //--------------------------
-        auto _results = _circle - input.slice(1,2,3);
-        //--------------------------
-        auto _loss = torch::mse_loss(_circle, input.slice(1,2,3))*100;
-        //--------------------------
-        auto _results_meam = torch::mean(_results);
-        //--------------------------
-        // auto _X = torch::pow((output.slice(1,0,1) - input.slice(1,0,1)),2);
-        // //--------------------------
-        // auto _Y = torch::pow((output.slice(1,1,2) - input.slice(1,1,2)),2);
-        // //--------------------------
-        // auto _circle = _X + _Y;
-        // //--------------------------
-        // auto _results = _circle - input.slice(1,2,3);
-        // //--------------------------
-        // auto _loss = torch::mse_loss(_circle, input.slice(1,2,3))*100;
-        // //--------------------------
-        // auto _results_meam = torch::mean(_results);
-        // //--------------------------
-        // auto _final_results = torch::cat({_X, _Y}, 1);
-        //--------------------------
-        if(_results_meam.less(1E-2).item().toBool() and _results_meam.greater_equal(1E-3).item().toBool()){
-            //--------------------------
-            // if(memory_activation(gen)){
-            //     //--------------------------
-            //     return torch::abs(_results)*_loss*20;
-            //     //--------------------------
-            // }// end if(abs_activation(gen))
-            // //--------------------------
-            return _results*_loss*-20;
-            //--------------------------
-        }//end if(_results.less(1E-1).item().toBool())
-        // //--------------------------
-        if(_results_meam.less(1E-1).item().toBool() and _results_meam.greater_equal(1E-2).item().toBool()){
-            //--------------------------
-            // if(memory_activation(gen)){
-            //     //--------------------------
-            //     return torch::abs(_results)*_loss*50;
-            //     //--------------------------
-            // }// end if(abs_activation(gen))
-            //--------------------------
-            return _results*_loss*-10;
-            //--------------------------
-        }//end if(torch::mean(_results).less(1E-2).item().toBool())
-        // //--------------------------
-        if(_results_meam.less(1E0).item().toBool() and _results_meam.greater_equal(1E-1).item().toBool()){
-            //--------------------------
-            // if(memory_activation(gen)){
-            //     //--------------------------
-            //     return torch::abs(_results)*_loss*20;
-            //     //--------------------------
-            // }// end if(abs_activation(gen))
-            //--------------------------
-            return _results*_loss*-5;
-            //--------------------------
-        }//end if(torch::mean(_results).less(1E-2).item().toBool())
-        // //--------------------------
-        if(_results_meam.less(1E1).item().toBool() and _results_meam.greater_equal(1E-0).item().toBool()){
-            //--------------------------
-            // if(memory_activation(gen)){
-            //     //--------------------------
-            //     return torch::abs(_results)*_loss*10;
-            //     //--------------------------
-            // }// end if(abs_activation(gen))
-            // //--------------------------
-            return _results*_loss*-2;
-            //--------------------------
-        }//end if(torch::mean(_results).less(1E-2).item().toBool())
-        //--------------------------
-        // if(memory_activation(gen)){
-        //     //--------------------------
-        //     return torch::abs(_results)*_loss;
-        //     //--------------------------
-        // }// end if(abs_activation(gen))
-        // //--------------------------
-        return _results*_loss;
+        return torch::cat(reward, 0);
         //--------------------------
     };
     //--------------------------------------------------------------

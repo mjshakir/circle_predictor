@@ -48,7 +48,13 @@ torch::Tensor RL::GeneratePoints::get_output(const size_t& generated_points, con
     //--------------------------
     return generate_target(generated_points, column);
     //--------------------------
-}// end std::vector<torch::Tensor> RL::GeneratePoints::get_output(const size_t& generated_points, const size_t& column)
+}// end torch::Tensor RL::GeneratePoints::get_output(const size_t& generated_points, const size_t& column)
+//--------------------------------------------------------------
+torch::Tensor RL::GeneratePoints::get_output(const size_t& generated_points, const size_t& points_size, const size_t& column){
+    //--------------------------
+    return generate_target(generated_points, points_size, column);
+    //--------------------------
+}// end torch::Tensor RL::GeneratePoints::get_output(const size_t& generated_points, const size_t& points_size, const size_t& column)
 //--------------------------------------------------------------
 std::vector<torch::Tensor> RL::GeneratePoints::data(const size_t& generated_points, const size_t& column){
     //--------------------------
@@ -98,6 +104,21 @@ torch::Tensor RL::GeneratePoints::generate_target(const size_t& generated_points
     std::generate_n(std::execution::par, std::back_inserter(_data), generated_points*column, [&uniform_angle, &gen]() {return uniform_angle(gen);});
     //--------------------------
     return torch::tensor(_data).view({-1, static_cast<int64_t>(column)});
+    //--------------------------
+}// end torch::Tensor RL::GeneratePoints::generate_target(const size_t& generated_points, const size_t& column)
+//--------------------------------------------------------------
+torch::Tensor RL::GeneratePoints::generate_target(const size_t& generated_points, const size_t& points_size,const size_t& column){
+    //--------------------------
+    std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd(
+    std::uniform_real_distribution<double> uniform_angle(-m_limiter, m_limiter);
+    //--------------------------
+    std::vector<double> _data;
+    _data.reserve(generated_points*column);
+    //--------------------------
+    std::generate_n(std::execution::par, std::back_inserter(_data), generated_points*column, [&uniform_angle, &gen]() {return uniform_angle(gen);});
+    //--------------------------
+    return torch::tensor(_data).view({-1, static_cast<int64_t>(points_size), static_cast<int64_t>(column)});
     //--------------------------
 }// end torch::Tensor RL::GeneratePoints::generate_target(const size_t& generated_points, const size_t& column)
 //--------------------------------------------------------------

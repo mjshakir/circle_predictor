@@ -100,6 +100,9 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             //--------------------------
             auto _predicted_value = m_model.forward(input);
             //--------------------------
+            // std::cout   << "_target_value: " << _target_value.sizes()
+            //             << " _predicted_value: " << _predicted_value.sizes() << std::endl;
+            //--------------------------
             torch::Tensor loss = torch::mse_loss(_predicted_value, _target_value);
             //--------------------------
             if(torch::isnan(loss).any().item<bool>()){
@@ -146,24 +149,46 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------
         bool m_clamp, m_double_mode;
         //--------------------------
-        torch::Tensor dqn_agent(const torch::Tensor& next_input, 
-                                const torch::Tensor& rewards, 
-                                const bool& done,
-                                const double& gamma){
+        torch::Tensor dqn_agent(  const torch::Tensor& next_input, 
+                                            const torch::Tensor& rewards, 
+                                            const bool& done,
+                                            const double& gamma){
             //--------------------------
             torch::Tensor _state_value;
             //--------------------------
             if(m_double_mode){
                 //--------------------------
-                std::tie(std::ignore, _state_value) = torch::max(m_model.forward(next_input).detach(), 1);
+                auto _state_indexes = m_model.forward(next_input).detach();
+                //--------------------------
+                if (_state_indexes.dim() > 2){
+                    //--------------------------
+                    std::tie(std::ignore, _state_value) = torch::max(_state_indexes, 2);
+                    //--------------------------
+                    return rewards.unsqueeze(1).unsqueeze(2) + (1 - done) * gamma * 
+                                m_target_model.forward(next_input).detach().gather(2, _state_value.unsqueeze(2)).expand_as(_state_indexes);
+                    //--------------------------
+                }// end if (_state_indexes.dim() > 2)
+                //--------------------------
+                std::tie(std::ignore, _state_value) = torch::max(_state_indexes, 1);
                 //--------------------------
                 return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1));
                 //--------------------------
             }// end if(m_double_mode)
             //--------------------------
-            std::tie(_state_value, std::ignore) = torch::max(m_target_model.forward(next_input).detach(), 1);
+            auto _state_indexes = m_target_model.forward(next_input).detach();
             //--------------------------
-            return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1).to(torch::kI64));
+            if (_state_indexes.dim() > 2){
+                //--------------------------
+                std::tie(_state_value, std::ignore) = torch::max(_state_indexes, 1);
+                //--------------------------
+                return rewards.unsqueeze(1).unsqueeze(2) + (1 - done) * gamma * 
+                            m_target_model.forward(next_input).detach().gather(2, _state_value.unsqueeze(2).to(torch::kDouble)).expand_as(_state_indexes);
+                //--------------------------
+            }// end if (_state_indexes.dim() > 2)
+            //--------------------------
+            std::tie(_state_value, std::ignore) = torch::max(_state_indexes, 1);
+            //--------------------------
+            return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach().gather(1, _state_value.unsqueeze(1).to(torch::kDouble));
             //--------------------------
             // return rewards + (1 - done) * gamma * m_target_model.forward(next_input).detach();
             //--------------------------

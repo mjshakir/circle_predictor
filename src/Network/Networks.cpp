@@ -44,7 +44,25 @@ torch::Tensor Net::linear_layers(const torch::Tensor& x){
 RLNet::RLNet(const uint64_t& batch_size, const uint64_t& output_size) : input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
                                                                         features(torch::nn::LinearOptions(128, 256).bias(true)), 
                                                                         features2(torch::nn::LinearOptions(256, 512).bias(true)),
-                                                                        output_layer(torch::nn::LinearOptions(512, output_size).bias(true)){
+                                                                        output_layer(torch::nn::LinearOptions(512, output_size).bias(true)),
+                                                                        m_output_size(output_size),
+                                                                        m_points_size(0){
+    //--------------------------
+    register_module("input_layer", input_layer);
+    register_module("features", features);
+    register_module("features2", features2);
+    register_module("output_layer", output_layer);
+    //--------------------------
+}// end RLNet()
+//--------------------------------------------------------------
+RLNet::RLNet(   const uint64_t& batch_size,
+                const uint64_t& output_size,
+                const uint64_t& points_size) :  input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
+                                                features(torch::nn::LinearOptions(128, 256).bias(true)), 
+                                                features2(torch::nn::LinearOptions(256, 512).bias(true)),
+                                                output_layer(torch::nn::LinearOptions(512, (output_size*points_size)).bias(true)),
+                                                m_output_size(output_size),
+                                                m_points_size(points_size){
     //--------------------------
     register_module("input_layer", input_layer);
     register_module("features", features);
@@ -77,7 +95,13 @@ torch::Tensor RLNet::forward(const torch::Tensor& x){
     //-------------------------
     // return torch::transpose(output_layer->forward(x).view({2,-1}), 0, 1);
     //--------------------------
-    return output_layer->forward(_results);
+    if(m_points_size != 0){
+        //--------------------------
+        return output_layer->forward(_results).view({-1, static_cast<int64_t>(m_points_size), static_cast<int64_t>(m_output_size)});
+        //--------------------------
+    }// end if(m_points_size != 0)
+    //--------------------------
+    return output_layer->forward(_results).view({-1, static_cast<int64_t>(m_output_size)});
     //--------------------------
 }// end torch::Tensor Net::forward(torch::Tensor x)
 //--------------------------------------------------------------
@@ -86,8 +110,28 @@ torch::Tensor RLNet::forward(const torch::Tensor& x){
 DuelNet::DuelNet(const uint64_t& batch_size, const uint64_t& output_size) : input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
                                                                             features(torch::nn::LinearOptions(128, 256).bias(true)), 
                                                                             features2(torch::nn::LinearOptions(256, 512).bias(true)),
-                                                                            value_layer(torch::nn::LinearOptions(512, 1).bias(true)),
-                                                                            advantage_layer(torch::nn::LinearOptions(512, output_size).bias(true)){
+                                                                            value_layer(torch::nn::LinearOptions((512+batch_size), 1).bias(true)),
+                                                                            advantage_layer(torch::nn::LinearOptions((512+batch_size), output_size).bias(true)),
+                                                                            m_output_size(output_size),
+                                                                            m_points_size(0){
+    //--------------------------
+    register_module("input_layer", input_layer);
+    register_module("features", features);
+    register_module("features2", features2);
+    register_module("value_layer", value_layer);
+    register_module("advantage_layer", advantage_layer);
+    //--------------------------
+}// end RLNet()
+//--------------------------------------------------------------
+DuelNet::DuelNet(   const uint64_t& batch_size,
+                    const uint64_t& points_size,
+                    const uint64_t& output_size) :  input_layer(torch::nn::LinearOptions(batch_size, 128).bias(true)), 
+                                                    features(torch::nn::LinearOptions(128, 256).bias(true)), 
+                                                    features2(torch::nn::LinearOptions(256, 512).bias(true)),
+                                                    value_layer(torch::nn::LinearOptions((512+batch_size), 1).bias(true)),
+                                                    advantage_layer(torch::nn::LinearOptions((512+batch_size), (output_size*points_size)).bias(true)), 
+                                                    m_output_size(output_size),
+                                                    m_points_size(points_size){
     //--------------------------
     register_module("input_layer", input_layer);
     register_module("features", features);
@@ -103,7 +147,9 @@ torch::Tensor DuelNet::linear_layers(const torch::Tensor& x){
     //--------------------------
     _results = torch::relu(features->forward(_results));
     //--------------------------
-    return torch::relu(features2->forward(_results));
+    _results = torch::relu(features2->forward(_results));
+    //--------------------------
+    return torch::cat({_results, x}, 1);
     //-------------------------
 }// end torch::Tensor DuelNet::linear_layers(torch::Tensor& x)
 //--------------------------------------------------------------
@@ -116,6 +162,12 @@ torch::Tensor DuelNet::forward(const torch::Tensor& x){
     auto value = value_layer->forward(_results);
     //--------------------------
     auto advantage = advantage_layer->forward(_results);
+    //--------------------------
+    if(m_points_size != 0){
+        //--------------------------
+        return (value + (advantage - advantage.mean())).view({-1, static_cast<int64_t>(m_points_size), static_cast<int64_t>(m_output_size)});
+        //--------------------------
+    }// end if(m_points_size != 0)
     //--------------------------
     return (value + (advantage - advantage.mean()));
     //--------------------------

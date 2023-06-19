@@ -32,7 +32,9 @@ struct RLNet : torch::nn::Module {
   //--------------------------------------------------------------
   public:
     //--------------------------
-    RLNet(const uint64_t& batch_size, const uint64_t& output_size = 20);
+    RLNet(const uint64_t& batch_size, const uint64_t& output_size);
+    //--------------------------
+    RLNet(const uint64_t& batch_size, const uint64_t& points_size, const uint64_t& output_size);
     //--------------------------
     torch::Tensor forward(const torch::Tensor& x);
     //--------------------------------------------------------------
@@ -46,6 +48,8 @@ struct RLNet : torch::nn::Module {
     torch::nn::Linear features;
     torch::nn::Linear features2;
     torch::nn::Linear output_layer;
+    //--------------------------
+    uint64_t m_output_size, m_points_size;
     //--------------------------------------------------------------
 }; // end struct Net : torch::nn::Module
 //--------------------------------------------------------------
@@ -53,7 +57,9 @@ struct DuelNet : torch::nn::Module {
   //--------------------------------------------------------------
   public:
     //--------------------------
-    DuelNet(const uint64_t& batch_size, const uint64_t& output_size = 20);
+    DuelNet(const uint64_t& batch_size, const uint64_t& output_size);
+    //--------------------------
+    DuelNet(const uint64_t& batch_size, const uint64_t& points_size, const uint64_t& output_size);
     //--------------------------
     torch::Tensor forward(const torch::Tensor& x);
     //--------------------------------------------------------------
@@ -68,6 +74,8 @@ struct DuelNet : torch::nn::Module {
     torch::nn::Linear features2;
     torch::nn::Linear value_layer;
     torch::nn::Linear advantage_layer;
+    //--------------------------
+    uint64_t m_output_size, m_points_size;
     //--------------------------------------------------------------
 }; // end struct Net : torch::nn::Module
 //--------------------------------------------------------------

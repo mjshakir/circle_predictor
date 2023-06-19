@@ -48,9 +48,9 @@ class Utils{
         static torch::Tensor CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
         //--------------------------
         static void CircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
-    //--------------------------------------------------------------
+        //--------------------------------------------------------------
     protected:
-    //--------------------------------------------------------------
+        //--------------------------------------------------------------
         static void arePointsAligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance); 
         //--------------------------
         /*static torch::Tensor arePointsAligned(const torch::Tensor& points, const double& tolerance);*/

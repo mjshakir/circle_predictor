@@ -63,6 +63,16 @@ namespace RL {
             torch::Tensor get_output(const size_t& generated_points = 60000, const size_t& column = 2);
             //--------------------------
             /**
+             *  @brief Getter: the target data set.
+             *   
+             *  @param generated_points [in]: How many points to generate.                @default: 60000
+             *  @param column           [in]: helps design the structure of the output.   @default: 2
+             * 
+             *  @return torch::Tensor: target data.
+             */
+            torch::Tensor get_output(const size_t& generated_points = 60000,  const size_t& points_size = 10, const size_t& column = 2);
+            //--------------------------
+            /**
              * @brief Generated data.
              * 
              * @param generated_points  [in]: How many points to generate.              @default: 60000
@@ -76,6 +86,8 @@ namespace RL {
             std::vector<torch::Tensor> generate_value(const size_t& generated_points, const size_t& column);
             //--------------------------
             torch::Tensor generate_target(const size_t& generated_points, const size_t& column);
+            //--------------------------
+            torch::Tensor generate_target(const size_t& generated_points, const size_t& points_size, const size_t& column);
             //--------------------------
             torch::Tensor inner_generation(const size_t& column = 2);
             //--------------------------------------------------------------

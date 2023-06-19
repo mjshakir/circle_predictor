@@ -53,6 +53,7 @@ int main(int argc, char const *argv[]){
             epoch,
             points_size,
             output_size,
+            generated_points_size,
             capacity,
             limiter,
             update_frequency;
@@ -72,6 +73,7 @@ int main(int argc, char const *argv[]){
     ("epoch,e", boost::program_options::value<size_t>(&epoch)->default_value(5000), "How many iterations to train")
     ("points_size,p", boost::program_options::value<size_t>(&points_size)->default_value(3), "Determine when to stop the training. This uses a validation set")
     ("output_size,o", boost::program_options::value<size_t>(&output_size)->default_value(2), "Determine when to stop the training. This uses a validation set")
+    ("generated_points_size,s", boost::program_options::value<size_t>(&generated_points_size)->default_value(10), "Determine when to stop the training. This uses a validation set")
     ("capacity,c", boost::program_options::value<size_t>(&capacity)->default_value(3000), "Determine when to stop the training. This uses a validation set")
     ("limiter,l", boost::program_options::value<size_t>(&limiter)->default_value(10), "Determine when to stop the training. This uses a validation set")
     ("update_frequency,f", boost::program_options::value<size_t>(&update_frequency)->default_value(100), "Determine when to stop the training. This uses a validation set")
@@ -490,47 +492,235 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // };
     //--------------------------------------------------------------
-    auto _circle_reward = [&batch_size](const torch::Tensor& input, const torch::Tensor& output){
+    // auto _circle_reward = [&batch_size](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     std::vector<torch::Tensor> reward;
+    //     reward.reserve(output.size(0));
+    //     //--------------------------
+    //     // std::cout << "output.size: " << output.sizes() << " batch_size: " << batch_size << std::endl;
+    //     //--------------------------
+    //     size_t _loop_size = output.size(0)/batch_size;
+    //     //--------------------------
+    //     for (size_t i = 0; i < _loop_size; ++i){
+    //         //--------------------------
+    //         auto _reward = torch::zeros(batch_size);
+    //         //--------------------------
+    //         // Criterion 1: Points aligned
+    //         Utils::Aligned(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)).slice(1,1,2), 1E-1);
+    //         //--------------------------
+    //         // std::cout << "Aligned: " << " _reward: " << _reward.sizes() << std::endl;
+    //         //--------------------------
+    //         // Criterion 2: Points close to the circumference of a circle
+    //         Utils::CloseToCircumference(_reward,
+    //                                     output.slice(0,(i*batch_size), ((i+1)*batch_size)),
+    //                                     input.slice(1,0,2).slice(0,i,(i+1)),
+    //                                     input.slice(1,2,3).slice(0,i,(i+1)).squeeze(),
+    //                                     1E-1);
+    //         //--------------------------
+    //         // std::cout << "CloseToCircumference: " << " _reward: " << _reward.sizes() << std::endl;
+    //         //--------------------------
+    //         // Criterion 3: Points equidistant
+    //         Utils::Equidistant(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+    //         //--------------------------
+    //         // std::cout << "Equidistant: " << " _reward: " << _reward.sizes() << std::endl;
+    //         //--------------------------
+    //         // Criterion 4: Angle ratios consistent
+    //         Utils::AngleRatiosConsistent(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+    //         //--------------------------
+    //         // std::cout << "AngleRatiosConsistent: " << " _reward: " << _reward.sizes() << std::endl;
+    //         //--------------------------
+    //         // Criterion 5: Symmetry of the points
+    //         Utils::Symmetric(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size))); 
+    //         //--------------------------
+    //         // std::cout << "Symmetric: " << " _reward: " << _reward.sizes() << std::endl;
+    //         //--------------------------
+    //         // Criterion 6: Triangle area
+    //         _reward += Utils::TriangleArea(output.slice(0,(i*batch_size), ((i+1)*batch_size)));
+    //         //--------------------------
+    //         // std::cout << "TriangleArea: " << " _reward: " << _reward.sizes() << std::endl;
+    //         //--------------------------
+    //         // Criterion 7: Circle smoothness
+    //         _reward /= Utils::CircleSmoothness( output.slice(0,(i*batch_size), ((i+1)*batch_size)),
+    //                                             input.slice(1,0,2).slice(0,i,(i+1)),
+    //                                             input.slice(1,2,3).slice(0,i,(i+1)).squeeze());
+    //         //--------------------------
+    //         // std::cout << "CircleSmoothness: " << " _reward: " << _reward.sizes() << std::endl;
+    //         //--------------------------
+    //         reward.push_back(_reward);
+    //         //--------------------------
+    //     }//end for (size_t i = 0; i < batch_size -1; ++i)        
+    //     //--------------------------
+    //     // auto reward_answer = torch::cat(reward, 0);
+    //     // std::cout << "reward: " << reward_answer.sizes() << std::endl;
+    //     //--------------------------
+    //     // return reward_answer;
+    //     //--------------------------
+    //     return torch::cat(reward, 0);
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     std::vector<double> reward;
+    //     reward.reserve(output.size(0));
+    //     //--------------------------
+    //     std::fill_n(std::execution::par, std::back_inserter(reward), output.size(0), 0);
+    //     //--------------------------
+    //     for (size_t i = 0; i < static_cast<size_t>(output.size(0)); ++i){
+    //         //--------------------------
+    //         // Criterion 1: Points aligned
+    //         if(Utils::Aligned(output[i], 1E-1)){
+    //             //--------------------------
+    //             reward.at(i) += 1; 
+    //             //--------------------------
+    //         }// end if(Utils::Aligned(output[i], 1E-1))
+    //         //--------------------------
+    //         // Criterion 2: Points close to the circumference of a circle
+    //         if(Utils::CloseToCircumference( output[i],
+    //                                         input.slice(1,0,2).slice(0,i,(i+1)),
+    //                                         input.slice(1,2,3).slice(0,i,(i+1)).squeeze(),
+    //                                         1E-1)){
+    //             //--------------------------
+    //             reward.at(i) += 1; 
+    //             //--------------------------
+    //         }// end if(Utils::CloseToCircumference(output[i], input.slice(1,0,2).slice(0,i,(i+1)), input.slice(1,2,3).slice(0,i,(i+1)).squeeze(), 1E-1))
+    //         //--------------------------
+    //         // Criterion 3: Points equidistant
+    //         if(Utils::Equidistant(output[i], 1E-1)){
+    //             //--------------------------
+    //             reward.at(i) += 1; 
+    //             //--------------------------
+    //         }// end if(Utils::Equidistant(output[i], 1E-1))
+    //         //--------------------------
+    //         // Criterion 4: Angle ratios consistent
+    //         if(Utils::AngleRatiosConsistent(output[i], 1E-1)){
+    //             //--------------------------
+    //             reward.at(i) += 1; 
+    //             //--------------------------
+    //         }// end if(Utils::AngleRatiosConsistent(output[i], 1E-1))
+    //         //--------------------------
+    //         // Criterion 5: Symmetry of the points
+    //         if(Utils::Symmetric(output[i])){
+    //             //--------------------------
+    //             reward.at(i) += 1; 
+    //             //--------------------------
+    //         } // end if(Utils::Symmetric(output[i]))
+    //         //--------------------------
+    //         // Criterion 6: Triangle area
+    //         reward.at(i) += Utils::TriangleArea(output[i]).item<double>();
+    //         //--------------------------
+    //         // Criterion 7: Circle smoothness
+    //         reward.at(i) /= Utils::CircleSmoothness(output[i],
+    //                                                 input.slice(1,0,2).slice(0,i,(i+1)),
+    //                                                 input.slice(1,2,3).slice(0,i,(i+1)).squeeze()).item<double>();
+    //         //--------------------------
+    //     }//end for (size_t i = 0; i < batch_size -1; ++i)        
+    //     //--------------------------
+    //     return torch::tensor(reward);
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
+    // auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     std::vector<double> reward(output.size(0), 0.);
+    //     //--------------------------
+    //     // Parallelize the loop using STL parallel for_each
+    //     std::for_each(std::execution::par, reward.begin(), reward.end(), [&](double& r) {
+    //         //--------------------------
+    //         size_t i = &r - &reward[0];  // Get the index of the current element
+    //         //--------------------------
+    //         // Criterion 1: Points aligned
+    //         if (Utils::Aligned(output[i], 1E-1)){
+    //             //--------------------------
+    //             r += 1.;
+    //             //--------------------------
+    //         }// end if (Utils::Aligned(output[i], 1E-1))
+    //         //--------------------------
+    //         // Criterion 2: Points close to the circumference of a circle
+    //         if (Utils::CloseToCircumference(output[i],
+    //                                         input.slice(1, 0, 2).slice(0, i, (i + 1)),
+    //                                         input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(),
+    //                                         1E-1)){
+    //             //--------------------------
+    //             r += 1.;
+    //             //--------------------------
+    //         }// end if (Utils::CloseToCircumference(output[i], input.slice(1, 0, 2).slice(0, i, (i + 1)),input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(), 1E-1))
+    //         //--------------------------
+    //         // Criterion 3: Points equidistant
+    //         if (Utils::Equidistant(output[i], 1E-1)){
+    //             //--------------------------
+    //             r += 1.;
+    //             //--------------------------
+    //         }// end if (Utils::Equidistant(output[i], 1E-1))
+    //         //--------------------------
+    //         // Criterion 4: Angle ratios consistent
+    //         if (Utils::AngleRatiosConsistent(output[i], 1E-1)){
+    //             //--------------------------
+    //             r += 1.;
+    //             //--------------------------
+    //         }// end if (Utils::AngleRatiosConsistent(output[i], 1E-1))
+    //         //--------------------------
+    //         // Criterion 5: Symmetry of the points
+    //         if (Utils::Symmetric(output[i])){
+    //             //--------------------------
+    //             r += 1.;
+    //             //--------------------------
+    //         }// end if (Utils::Symmetric(output[i]))
+    //         //--------------------------
+    //         // Criterion 6: Triangle area
+    //         r += Utils::TriangleArea(output[i]).item<double>();
+    //         //--------------------------
+    //         // Criterion 7: Circle smoothness
+    //         r /= Utils::CircleSmoothness(output[i],
+    //                                     input.slice(1, 0, 2).slice(0, i, (i + 1)),
+    //                                     input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze()).item<double>();
+    //         //--------------------------
+    //     });      
+    //     //--------------------------
+    //     return torch::tensor(reward);
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
+    auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
         //--------------------------
-        std::vector<torch::Tensor> reward;
-        reward.reserve(output.size(0));
+        std::vector<double> reward(output.size(0), 0.);
         //--------------------------
-        for (size_t i = 0; i < batch_size -1; ++i){
+        // Parallelize the loop using STL parallel for_each
+        std::for_each(std::execution::par, reward.begin(), reward.end(), [&](double& r) {
             //--------------------------
-            auto _reward = torch::zeros(batch_size);
+            size_t i = &r - &reward[0];  // Get the index of the current element
             //--------------------------
             // Criterion 1: Points aligned
-            Utils::Aligned(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+            Utils::Aligned(r, output[i], 1E-1);
             //--------------------------
             // Criterion 2: Points close to the circumference of a circle
-            Utils::CloseToCircumference(_reward,
-                                        output.slice(0,(i*batch_size), ((i+1)*batch_size)),
-                                        input.slice(1,0,2).slice(0,i,(i+1)),
-                                        input.slice(1,2,3).slice(0,i,(i+1)),
+            Utils::CloseToCircumference(r,
+                                        output[i],
+                                        input.slice(1, 0, 2).slice(0, i, (i + 1)),
+                                        input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(),
                                         1E-1);
             //--------------------------
             // Criterion 3: Points equidistant
-            Utils::Equidistant(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+            Utils::Equidistant(r, output[i], 1E-1);
             //--------------------------
             // Criterion 4: Angle ratios consistent
-            Utils::AngleRatiosConsistent(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+            Utils::AngleRatiosConsistent(r, output[i], 1E-1);
             //--------------------------
             // Criterion 5: Symmetry of the points
-            Utils::Symmetric(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size))); 
+            Utils::Symmetric(r, output[i]);
             //--------------------------
             // Criterion 6: Triangle area
-            _reward += Utils::TriangleArea(output.slice(0,(i*batch_size), ((i+1)*batch_size)));
+            Utils::TriangleArea(r, output[i]);
             //--------------------------
             // Criterion 7: Circle smoothness
-            _reward /= Utils::CircleSmoothness( output.slice(0,(i*batch_size), ((i+1)*batch_size)),
-                                                input.slice(1,0,2).slice(0,i,(i+1)),
-                                                input.slice(1,2,3).slice(0,i,(i+1)));
+            Utils::CircleSmoothness(r, 
+                                    output[i],
+                                    input.slice(1, 0, 2).slice(0, i, (i + 1)),
+                                    input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze());
             //--------------------------
-            reward.push_back(_reward);
-            //--------------------------
-        }for (size_t i = 0; i < batch_size; ++i)        
+        });      
         //--------------------------
-        return torch::cat(reward, 0);
+        return torch::tensor(reward);
         //--------------------------
     };
     //--------------------------------------------------------------
@@ -542,8 +732,14 @@ int main(int argc, char const *argv[]){
     // RLNet model(points_size, output_size);
     // RLNet target_model(points_size, output_size);
     //--------------------------
-    DuelNet model(points_size, output_size);
-    DuelNet target_model(points_size, output_size);
+    // RLNet model(points_size, generated_points_size, output_size);
+    // RLNet target_model(points_size, generated_points_size, output_size);
+    //--------------------------
+    // DuelNet model(points_size, output_size);
+    // DuelNet target_model(points_size, output_size);
+    //--------------------------
+    DuelNet model(points_size, generated_points_size, output_size);
+    DuelNet target_model(points_size, generated_points_size, output_size);
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
     //--------------------------
@@ -556,8 +752,8 @@ int main(int argc, char const *argv[]){
                                                                                 update_frequency,
                                                                                 clamp,
                                                                                 double_mode, 
-                                                                                [&_generate](const size_t& size = 1, const size_t& col = 2){ 
-                                                                                    return  _generate.get_output(size, col);});
+                                                                                [&_generate, &generated_points_size](const size_t& size = 1, const size_t& col = 2){ 
+                                                                                    return  _generate.get_output(size, generated_points_size, col);});
     //--------------------------
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -650,7 +846,7 @@ int main(int argc, char const *argv[]){
         //--------------------------
         auto _input = _environment.get_first(epsilon).to(device);
         //--------------------------
-        auto output = handler.action(_input, epsilon, batch_size, output_size).to(device);
+        auto output = handler.action(_input, epsilon, batch_size*10, output_size).to(device);
         //--------------------------
         auto [next_input, reward] = _environment.step(epsilon, done, _input, _normalize.normalization(output));
         //--------------------------
@@ -664,7 +860,7 @@ int main(int argc, char const *argv[]){
         //--------------------------
         while(!done){
             //--------------------------
-            output = handler.action(training_input, epsilon, batch_size, output_size);
+            output = handler.action(training_input, epsilon, batch_size*10, output_size);
             //--------------------------
             std::tie(next_input, reward) = _environment.step(epsilon, done, training_input,  _normalize.normalization(output));
             //--------------------------
@@ -705,10 +901,10 @@ int main(int argc, char const *argv[]){
         //--------------------------
     }//end for(size_t i = 0; i < epoch; ++i)
     //--------------------------
-    // for(const auto& x : _rewards){
-    //     std::cout << "_rewards: " << x << std::endl;
-    // }
-    // std::exit(1);
+    for(const auto& x : _rewards){
+        std::cout << "_rewards: " << x;
+    }// end for(const auto& x : _rewards)
+    std::exit(1);
     //--------------------------------------------------------------
     // std::vector<std::thread> _threads(epoch);
     // _threads.reserve(std::thread::hardware_concurrency() - 1);

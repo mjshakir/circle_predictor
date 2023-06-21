@@ -68,7 +68,6 @@ namespace RL {
              *  @return A unnormalize a torch tensor
              */
             static torch::Tensor unnormalization(const torch::Tensor& input, const torch::Tensor& t_min, const torch::Tensor& t_max);
-            //--------------------------
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
@@ -83,7 +82,6 @@ namespace RL {
             torch::Tensor unnormalization_data(const torch::Tensor& input);
             //--------------------------
             static torch::Tensor unnormalization_data(const torch::Tensor& input, const torch::Tensor& t_min, const torch::Tensor& t_max);
-            //--------------------------
             //--------------------------------------------------------------
         private:
             //--------------------------------------------------------------

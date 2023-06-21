@@ -18,6 +18,8 @@
 //--------------------------
 #include "Network/RL/ReinforcementNetworkHandlingDQN.hpp"
 //--------------------------
+#include "Generate/Supervised/Normalize.hpp"
+//--------------------------
 #include "Generate/RL/RLNormalize.hpp"
 #include "Network/RL/ExperienceReplay.hpp"
 //--------------------------
@@ -154,7 +156,7 @@ int main(int argc, char const *argv[]){
         //--------------------------
         // Change border style
         //--------------------------
-        info_table.set_border_style( FT_BOLD2_STYLE);
+        info_table.set_border_style(FT_BASIC2_STYLE);
         //--------------------------
         // Set color
         //--------------------------
@@ -691,7 +693,7 @@ int main(int argc, char const *argv[]){
             size_t i = &r - &reward[0];  // Get the index of the current element
             //--------------------------
             // Criterion 1: Points aligned
-            Utils::Aligned(r, output[i], 1E-1);
+            Utils::Aligned(r, output[i], 1E-4);
             //--------------------------
             // Criterion 2: Points close to the circumference of a circle
             Utils::CloseToCircumference(r,
@@ -701,10 +703,10 @@ int main(int argc, char const *argv[]){
                                         1E-1);
             //--------------------------
             // Criterion 3: Points equidistant
-            Utils::Equidistant(r, output[i], 1E-1);
+            Utils::Equidistant(r, output[i], 1E-4);
             //--------------------------
             // Criterion 4: Angle ratios consistent
-            Utils::AngleRatiosConsistent(r, output[i], 1E-1);
+            Utils::AngleRatiosConsistent(r, output[i], 1E-4);
             //--------------------------
             // Criterion 5: Symmetry of the points
             Utils::Symmetric(r, output[i]);
@@ -720,7 +722,10 @@ int main(int argc, char const *argv[]){
             //--------------------------
         });      
         //--------------------------
-        return torch::tensor(reward);
+        auto _reward_results = torch::tensor(reward);
+        return Normalize::normalization(_reward_results);
+        //--------------------------
+        // return torch::tensor(reward);
         //--------------------------
     };
     //--------------------------------------------------------------
@@ -747,13 +752,15 @@ int main(int argc, char const *argv[]){
     //                                                                         [&_generate](const size_t& size = 1, const size_t& col = 2){ 
     //                                                                             return  _generate.get_output(size, col);});
     //--------------------------
-    ReinforcementNetworkHandlingDQN<decltype(model), size_t, size_t> handler(   std::move(model), 
-                                                                                std::move(target_model),
-                                                                                update_frequency,
-                                                                                clamp,
-                                                                                double_mode, 
-                                                                                [&_generate, &generated_points_size](const size_t& size = 1, const size_t& col = 2){ 
-                                                                                    return  _generate.get_output(size, generated_points_size, col);});
+    ReinforcementNetworkHandlingDQN<decltype(model), size_t, size_t, size_t> handler(   std::move(model), 
+                                                                                        std::move(target_model),
+                                                                                        update_frequency,
+                                                                                        clamp,
+                                                                                        double_mode, 
+                                                                                        [&_generate](const size_t& size = 1,
+                                                                                                    const size_t& points_size = 1,
+                                                                                                    const size_t& col = 2){ 
+                                                                                            return  _generate.get_output(size, points_size, col);});
     //--------------------------
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -846,7 +853,7 @@ int main(int argc, char const *argv[]){
         //--------------------------
         auto _input = _environment.get_first(epsilon).to(device);
         //--------------------------
-        auto output = handler.action(_input, epsilon, batch_size*10, output_size).to(device);
+        auto output = handler.action(_input, epsilon, batch_size*10, generated_points_size, output_size).to(device);
         //--------------------------
         auto [next_input, reward] = _environment.step(epsilon, done, _input, _normalize.normalization(output));
         //--------------------------
@@ -860,7 +867,7 @@ int main(int argc, char const *argv[]){
         //--------------------------
         while(!done){
             //--------------------------
-            output = handler.action(training_input, epsilon, batch_size*10, output_size);
+            output = handler.action(training_input, epsilon, batch_size*10, generated_points_size, output_size);
             //--------------------------
             std::tie(next_input, reward) = _environment.step(epsilon, done, training_input,  _normalize.normalization(output));
             //--------------------------
@@ -902,9 +909,9 @@ int main(int argc, char const *argv[]){
     }//end for(size_t i = 0; i < epoch; ++i)
     //--------------------------
     for(const auto& x : _rewards){
-        std::cout << "_rewards: " << x;
+        std::cout << "_rewards: " << torch::mean(x).item().toDouble() << std::endl;
     }// end for(const auto& x : _rewards)
-    std::exit(1);
+    // std::exit(1);
     //--------------------------------------------------------------
     // std::vector<std::thread> _threads(epoch);
     // _threads.reserve(std::thread::hardware_concurrency() - 1);
@@ -994,7 +1001,9 @@ int main(int argc, char const *argv[]){
     table   << fort::header
             << "X_1" << "X" << "Y_1" << "Y" << "Original Target" << "Output" << "Loss" << fort::endr;
     //--------------------------------------------------------------
-    RL::Environment::EnvironmentDataLoader<torch::Tensor> _environment_test(std::move(input_test), batch_size);
+    // RL::Environment::EnvironmentDataLoader<torch::Tensor> _environment_test(std::move(input_test), batch_size);
+    //--------------------------
+    RL::Environment::EnvironmentDataLoader<torch::Tensor> _environment_test(std::move(input_test));
     //--------------------------
     bool done{false};
     //--------------------------
@@ -1006,18 +1015,48 @@ int main(int argc, char const *argv[]){
         //--------------------------
         auto _test_result = handler.test(_test);
         //--------------------------
-        auto _circle = torch::pow((_test_result.slice(1,0,1) - _test.slice(1,0,1)),2)+ (torch::pow((_test_result.slice(1,1,2)-_test.slice(1,1,2)),2));
+        // std::cout << "_test: " << _test.sizes() << " _test_result: " << _test_result.sizes() << std::endl;
+        //--------------------------
+        // for (size_t i = 0; i < batch_size; i++){
+        //     //--------------------------
+        //     auto _circle = torch::pow((_test_result[i].slice(1,0,1) - _test.slice(1,0,1)),2) + (torch::pow((_test_result[i].slice(1,1,2)-_test.slice(1,1,2)),2));
+        //     //--------------------------
+        //     auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3));
+        //     //--------------------------
+        //     table   << RL::RLNormalize::unnormalization(_test_result[i].slice(1,0,1), t_min, t_max) 
+        //             << RL::RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
+        //             << RL::RLNormalize::unnormalization(_test_result[i].slice(1,1,2), t_min, t_max) 
+        //             << RL::RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
+        //             << RL::RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
+        //             << RL::RLNormalize::unnormalization(_circle, t_min, t_max)
+        //             << _loss << fort::endr;
+        //     //--------------------------
+        // }// end for (size_t i = 0; i < batch_size; i++)
+        //--------------------------
+        auto _circle = torch::pow((_test_result[0].slice(1,0,1) - _test.slice(1,0,1)),2) + (torch::pow((_test_result[0].slice(1,1,2)-_test.slice(1,1,2)),2));
         //--------------------------
         auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3));
         //--------------------------
-        table   << RL::RLNormalize::unnormalization(_test_result.slice(1,0,1), t_min, t_max) 
+        table   << RL::RLNormalize::unnormalization(_test_result[0].slice(1,0,1), t_min, t_max) 
                 << RL::RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
-                << RL::RLNormalize::unnormalization(_test_result.slice(1,1,2), t_min, t_max) 
+                << RL::RLNormalize::unnormalization(_test_result[0].slice(1,1,2), t_min, t_max) 
                 << RL::RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
                 << RL::RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
                 << RL::RLNormalize::unnormalization(_circle, t_min, t_max)
                 << _loss << fort::endr;
         //--------------------------
+        // auto _circle = torch::pow((_test_result.slice(1,0,1) - _test.slice(1,0,1)),2)+ (torch::pow((_test_result.slice(1,1,2)-_test.slice(1,1,2)),2));
+        // //--------------------------
+        // auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3));
+        // //--------------------------
+        // table   << RL::RLNormalize::unnormalization(_test_result.slice(1,0,1), t_min, t_max) 
+        //         << RL::RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
+        //         << RL::RLNormalize::unnormalization(_test_result.slice(1,1,2), t_min, t_max) 
+        //         << RL::RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
+        //         << RL::RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
+        //         << RL::RLNormalize::unnormalization(_circle, t_min, t_max)
+        //         << _loss << fort::endr;
+        // //--------------------------
         // table   << _test_result.slice(1,0,1)
         //         << _test.slice(1,0,1)
         //         << _test_result.slice(1,1,2)

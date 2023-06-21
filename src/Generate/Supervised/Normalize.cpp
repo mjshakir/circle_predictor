@@ -13,12 +13,6 @@ torch::Tensor Normalize::normalization(void){
     //--------------------------
 }// end torch::Tensor Normalize::normalization(void)
 //--------------------------------------------------------------
-torch::Tensor Normalize::vnormalization(const torch::Tensor& input){
-    //--------------------------
-    return normalization_vdata(input);
-    //--------------------------
-}// end torch::Tensor Normalize::normalization(void)
-//--------------------------------------------------------------
 torch::Tensor Normalize::normalization(const torch::Tensor& input){
     //--------------------------
     return normalization_data(input);

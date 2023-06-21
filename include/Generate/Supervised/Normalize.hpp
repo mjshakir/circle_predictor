@@ -27,13 +27,6 @@ class Normalize{
         torch::Tensor normalization(void);
         //--------------------------
         /**
-         *  @brief Normalize the input tensor from the constructor. This uses Min-max feature scaling.
-         *
-         *  @return A normalized a torch tensor
-         */
-        torch::Tensor vnormalization(const torch::Tensor& input);
-        //--------------------------
-        /**
          *  @brief  A static Normalizing function. This uses Min-max feature scaling. 
          *          Warning: cannot use unnormalization.
          * 

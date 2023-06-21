@@ -273,7 +273,7 @@ void Utils::arePointsAligned(double& reward, const torch::Tensor& points, const 
     //--------------------------
     reward += aligned;
     //--------------------------
-}// bed void Utils::arePointsAligned(double& reward, const torch::Tensor& points, const double& tolerance)
+}// end void Utils::arePointsAligned(double& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
 void Utils::arePointsCloseToCircumference(torch::Tensor& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
     //--------------------------
@@ -897,10 +897,8 @@ torch::Tensor Utils::calculateTriangleArea(const torch::Tensor& points) {
 }// end torch::Tensor Utils::calculateTriangleArea(const torch::Tensor& points)
 //--------------------------------------------------------------
 void Utils::calculateTriangleArea(double& reward, const torch::Tensor& points){
-    //--------------------------
-    auto area = calculateTriangleArea(points).item<double>();
-    //--------------------------
-    reward += area;
+    //-------------------------
+    reward += calculateTriangleArea(points).item<double>();
     //--------------------------
 }// end void Utils::calculateTriangleArea(double& reward, const torch::Tensor& points)
 //--------------------------------------------------------------

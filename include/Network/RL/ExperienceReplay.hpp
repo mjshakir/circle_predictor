@@ -21,6 +21,28 @@ class ExperienceReplay{
             //--------------------------
         }// end ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity), m_position(0)
         //--------------------------
+        ExperienceReplay(const ExperienceReplay& other) : m_capacity(other.m_capacity),
+                                                          m_position(other.m_position){
+            //--------------------------
+            m_memory.reserve(m_capacity);
+            //--------------------------
+        }// end ExperienceReplay(const ExperienceReplay& other)
+        //--------------------------
+        ExperienceReplay& operator=(const ExperienceReplay& other) {
+            //--------------------------
+            // Check for self-assignment
+            if (this == &other) {
+                return *this;
+            }// end if (this == &other)
+            //--------------------------
+            // Perform a deep copy of the data
+            m_capacity  = other.m_capacity;
+            m_position  = other.m_position;
+            //--------------------------
+            return *this;
+            //--------------------------
+        }// end ExperienceReplay& operator=(const ExperienceReplay& other)
+        //--------------------------
         void push(const Args&... args){
             //--------------------------
             return push_data(args...);

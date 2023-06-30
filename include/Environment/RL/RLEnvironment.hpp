@@ -37,16 +37,16 @@ namespace RL {
                  * 
                  * @throws std::runtime_error
                  */
-                RLEnvironment(  std::vector<T>&& data, 
-                                std::function<COST_OUTPUT(const Args&...)> costFunction,
-                                const double& egreedy = 0.9,
-                                const double& egreedy_final = 0.02,
-                                const double& egreedy_decay = 500.) :   m_data(std::move(data)),
-                                                                        m_data_iter(m_data.begin()), 
-                                                                        m_CostFunction(std::move(costFunction)),
-                                                                        m_egreedy(egreedy),
-                                                                        m_egreedy_final(egreedy_final),
-                                                                        m_egreedy_decay(egreedy_decay){
+                explicit RLEnvironment( std::vector<T>&& data, 
+                                        std::function<COST_OUTPUT(const Args&...)> costFunction,
+                                        const double& egreedy = 0.9,
+                                        const double& egreedy_final = 0.02,
+                                        const double& egreedy_decay = 500.) :   m_data(std::move(data)),
+                                                                                m_data_iter(m_data.begin()), 
+                                                                                m_CostFunction(std::move(costFunction)),
+                                                                                m_egreedy(egreedy),
+                                                                                m_egreedy_final(egreedy_final),
+                                                                                m_egreedy_decay(egreedy_decay){
                     //----------------------------
                     if(egreedy_decay == 0.){
                         //----------------------------
@@ -55,7 +55,37 @@ namespace RL {
                     }// end if(egreedy_decay == 0.)
                     //----------------------------
                 }// end RLEnvironment(Dataset&& data_loader)
-                //--------------------------------------------------------------m_batch
+                //--------------------------------------------------------------
+                // Option 2: Define copy constructor explicitly
+                RLEnvironment(const RLEnvironment& other) : m_data(other.m_data),
+                                                            m_data_iter(other.m_data_iter),
+                                                            m_CostFunction(other.m_CostFunction),
+                                                            m_egreedy(other.m_egreedy),
+                                                            m_egreedy_final(other.m_egreedy_final),
+                                                            m_egreedy_decay(other.m_egreedy_decay) {
+                    //--------------------------
+                }// end RLEnvironment(const RLEnvironment& other)
+                //--------------------------------------------------------------
+                 //Copy assignment operator
+                RLEnvironment& operator=(const RLEnvironment& other) {
+                    //--------------------------
+                    // Check for self-assignment
+                    if (this == &other) {
+                        return *this;
+                    }// end if (this == &other)
+                    //--------------------------
+                    // Perform a deep copy of the data
+                    m_data          = other.m_data;
+                    m_data_iter     = other.m_data_iter;
+                    m_CostFunction  = other.m_CostFunction;
+                    m_egreedy       = other.m_egreedy;
+                    m_egreedy_final = other.m_egreedy_final;
+                    m_egreedy_decay = other.m_egreedy_decay;
+                    //--------------------------
+                    return *this;
+                    //--------------------------
+                }// end RLEnvironmentLoader& operator=(const RLEnvironmentLoader& other)
+                //--------------------------------------------------------------
                 /**
                  * @brief 
                  * 

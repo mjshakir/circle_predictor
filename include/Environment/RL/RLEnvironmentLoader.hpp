@@ -44,17 +44,17 @@ namespace RL {
                 *  @throws std::out_of_range If the specified batch size is greater than or equal to half the size of the data vector.
                 *          The exception message provides details about the expected range for the batch size.
                 */
-                RLEnvironmentLoader(std::vector<T>&& data, 
-                                    std::function<COST_OUTPUT(const Args&...)> costFunction,
-                                    const double& egreedy = 0.9,
-                                    const double& egreedy_final = 0.02,
-                                    const double& egreedy_decay = 500.,
-                                    const size_t& batch = 1UL) : RLEnvironment<T, COST_OUTPUT, Args...>(std::move(data), std::move(costFunction), 
-                                                                                                        egreedy, egreedy_final, egreedy_decay),
-                                                                m_data(this->get_data()),
-                                                                m_data_iter (this->get_iterator()), 
-                                                                m_CostFunction(this->get_cost_function()),
-                                                                m_batch(batch){
+                explicit RLEnvironmentLoader(   std::vector<T>&& data, 
+                                                std::function<COST_OUTPUT(const Args&...)> costFunction,
+                                                const double& egreedy = 0.9,
+                                                const double& egreedy_final = 0.02,
+                                                const double& egreedy_decay = 500.,
+                                                const size_t& batch = 2UL) : RLEnvironment<T, COST_OUTPUT, Args...>(std::move(data), std::move(costFunction), 
+                                                                                                                    egreedy, egreedy_final, egreedy_decay),
+                                                                            m_data(this->get_data()),
+                                                                            m_data_iter (this->get_iterator()), 
+                                                                            m_CostFunction(this->get_cost_function()),
+                                                                            m_batch(batch){
                     //----------------------------
                     if(batch >= m_data.size()/2){
                         //--------------------------
@@ -63,6 +63,34 @@ namespace RL {
                     }// end if(batch >= m_data.size()/2)
                     //----------------------------
                 }// end RLEnvironmentLoader(Dataset&& data_loader)
+                //--------------------------------------------------------------
+                // Option 2: Define copy constructor explicitly
+                RLEnvironmentLoader(const RLEnvironmentLoader& other) : RLEnvironment<T, COST_OUTPUT, Args...>(other),
+                                                                        m_data(other.m_data),
+                                                                        m_data_iter(other.m_data_iter),
+                                                                        m_CostFunction(other.m_CostFunction),
+                                                                        m_batch(other.m_batch) {
+                    //--------------------------
+                }// end RLEnvironmentLoader(const RLEnvironmentLoader& other)
+                //--------------------------------------------------------------
+                //Copy assignment operator
+                RLEnvironmentLoader& operator=(const RLEnvironmentLoader& other) {
+                    //--------------------------
+                    // Check for self-assignment
+                    if (this == &other) {
+                        return *this;
+                    }// end if (this == &other)
+                    //--------------------------
+                    // Perform a deep copy of the data
+                    RLEnvironment<T, COST_OUTPUT, Args...>::operator=(other);
+                    m_data          = other.m_data;
+                    m_data_iter     = other.m_data_iter;
+                    m_CostFunction  = other.m_CostFunction;
+                    m_batch         = other.m_batch;
+                    //--------------------------
+                    return *this;
+                    //--------------------------
+                }// end RLEnvironmentLoader& operator=(const RLEnvironmentLoader& other)
                 //--------------------------------------------------------------
                 /**
                 * @brief Executes an internal step in the RL environment.
@@ -181,7 +209,7 @@ namespace RL {
                 * double epsilon = std::get<2>(result);
                 * bool isComplete = std::get<3>(result);
                 */
-                std::tuple<torch::Tensor, COST_OUTPUT> step(const size_t& batch, const Args&... args){
+                virtual std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(const size_t& batch, const Args&... args) {
                     //----------------------------
                     return internal_step(batch, args...);
                     //----------------------------
@@ -242,7 +270,7 @@ namespace RL {
                 * COST_OUTPUT cost = std::get<1>(result);
                 * @endcode
                 */
-                std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args){
+                virtual std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args) {
                     //----------------------------
                     return internal_step(epsilon, done, batch, args...);
                     //----------------------------
@@ -294,7 +322,7 @@ namespace RL {
                  * double epsilon = std::get<1>(result);
                  * @endcode
                  */
-                std::tuple<torch::Tensor, double> get_first(const size_t& batch) {
+                virtual std::tuple<torch::Tensor, double> get_first(const size_t& batch) {
                     //----------------------------
                     return get_first_internal(batch);
                     //----------------------------
@@ -349,7 +377,7 @@ namespace RL {
                  * torch::Tensor batch = loader.get_first(epsilon, batch_size);
                  * @endcode
                  */
-                torch::Tensor get_first(OUT double& epsilon, const size_t& batch){
+                virtual torch::Tensor get_first(OUT double& epsilon, const size_t& batch){
                     //----------------------------
                     return get_first_internal(epsilon, batch);
                     //----------------------------
@@ -357,7 +385,7 @@ namespace RL {
                 //--------------------------------------------------------------
             protected:
                 //--------------------------------------------------------------
-                std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, const Args&... args){
+                virtual std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, const Args&... args){
                     //--------------------------------------------------------------
                     if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -403,7 +431,7 @@ namespace RL {
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args)
                 //--------------------------------------------------------------
-                std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args){
+                virtual std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args){
                     //--------------------------------------------------------------
                     if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -454,7 +482,7 @@ namespace RL {
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, Args... args)
                 //--------------------------------------------------------------
-                std::tuple<torch::Tensor, double> get_first_internal(const size_t& batch){
+                virtual std::tuple<torch::Tensor, double> get_first_internal(const size_t& batch){
                     //--------------------------
                     if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -485,7 +513,7 @@ namespace RL {
                     //--------------------------
                 }// end torch::Tensor get_first_internal(void)
                 //--------------------------------------------------------------
-                torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch){
+                virtual torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch){
                     //--------------------------
                     if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
                         //--------------------------

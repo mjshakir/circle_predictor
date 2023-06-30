@@ -10,13 +10,13 @@ namespace RL {
         //--------------------------------------------------------------
         template<typename T>
         //--------------------------------------------------------------
-        class EnvironmentDataLoader{
+        class EnvironmentTestLoader{
             //--------------------------------------------------------------
             public:
                 //--------------------------------------------------------------
-                EnvironmentDataLoader(void) = delete;
+                EnvironmentTestLoader(void) = delete;
                 //--------------------------------------------------------------
-                EnvironmentDataLoader(std::vector<T>&& data, const size_t& batch = 1) : m_data(std::move(data)),
+                EnvironmentTestLoader(std::vector<T>&& data, const size_t& batch = 1) : m_data(std::move(data)),
                                                                                         m_data_iter (m_data.begin()), 
                                                                                         m_enable_batch((batch > 1) ? true : false),
                                                                                         m_batch(batch){
@@ -27,7 +27,7 @@ namespace RL {
                         //--------------------------
                     }// end if(batch > m_data.size()/2)
                     //----------------------------
-                }// end EnvironmentDataLoader(std::vector<T>&& data, const size_t& batch = 1)
+                }// end EnvironmentTestLoader(std::vector<T>&& data, const size_t& batch = 1)
                 //--------------------------------------------------------------
                 std::tuple<torch::Tensor, bool> step(void){
                     //----------------------------
@@ -285,7 +285,7 @@ namespace RL {
                 //--------------------------
                 size_t m_batch;
             //--------------------------------------------------------------
-        };// end class EnvironmentDataLoader
+        };// end class EnvironmentTestLoader
         //--------------------------------------------------------------
     }// end namespace Environment
     //--------------------------------------------------------------

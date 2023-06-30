@@ -119,7 +119,8 @@ add_library(${PROJECT_NAME}_rl_environment SHARED
   src/Environment/RL/RLEnvironment.cpp
   src/Environment/RL/RLEnvironmentLoader.cpp
   src/Environment/RL/RLEnvironmentRandomLoader.cpp
-  src/Environment/RL/EnvironmentDataLoader.cpp
+  src/Environment/RL/EnvironmentTestLoader.cpp
+  src/Environment/RL/RLEnvironmentLoaderAtomic.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_rl_network SHARED

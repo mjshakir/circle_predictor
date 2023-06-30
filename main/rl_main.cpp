@@ -737,7 +737,7 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
-    // RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
+    // RL::Environment::RLEnvironmentLoaderAtomic<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device, false);
     // RLNetLSTM target_model({points_size, batch_size}, output_size, device, false);
@@ -1019,9 +1019,9 @@ int main(int argc, char const *argv[]){
     // table   << fort::header
     //         << "X_1" << "X" << "Y_1" << "Y" << "Original Target" << "Output" << "Loss" << fort::endr;
     //--------------------------------------------------------------
-    // RL::Environment::EnvironmentDataLoader<torch::Tensor> _environment_test(std::move(input_test), batch_size);
+    // RL::Environment::EnvironmentTestLoader<torch::Tensor> _environment_test(std::move(input_test), batch_size);
     //--------------------------
-    RL::Environment::EnvironmentDataLoader<torch::Tensor> _environment_test(std::move(input_test));
+    RL::Environment::EnvironmentTestLoader<torch::Tensor> _environment_test(std::move(input_test));
     //--------------------------
     TimeIT _test_timer;
     //--------------------------

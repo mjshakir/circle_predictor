@@ -16,6 +16,8 @@ namespace RL {
                 //--------------------------------------------------------------
                 RLEnvironmentLoader(void) = delete;
                 //--------------------------------------------------------------
+                virtual ~RLEnvironmentLoader(void) = default;
+                //--------------------------------------------------------------
                 /**
                 * @brief Constructs an RLEnvironmentLoader object.
                 * This class represents a loader for reinforcement learning environments. 

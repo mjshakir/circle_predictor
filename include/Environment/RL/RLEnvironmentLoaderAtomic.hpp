@@ -22,6 +22,8 @@ namespace RL {
                 //--------------------------------------------------------------
                 RLEnvironmentLoaderAtomic(void) = delete;
                 //--------------------------------------------------------------
+                virtual ~RLEnvironmentLoaderAtomic(void) = default;
+                //--------------------------------------------------------------
                 /**
                 * @brief Constructs an RLEnvironmentLoader object.
                 * This class represents a loader for reinforcement learning environments. 
@@ -511,7 +513,6 @@ namespace RL {
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
                     auto _data_iter = getIterator();
-                    // auto _data_iter = m_data.begin();
                     //--------------------------
                     if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end()){
                         //--------------------------

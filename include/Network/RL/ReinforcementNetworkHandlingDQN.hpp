@@ -12,6 +12,8 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------------------------------------------
         ReinforcementNetworkHandlingDQN(void) = delete;
         //--------------------------------------------------------------
+        virtual ~ReinforcementNetworkHandlingDQN(void) = default;
+        //--------------------------------------------------------------
         ReinforcementNetworkHandlingDQN(    Network&& model,
                                             Network&& target_model,
                                             const size_t& update_frequency,

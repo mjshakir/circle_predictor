@@ -24,6 +24,8 @@ namespace RL {
                 //--------------------------------------------------------------
                 RLEnvironment(void) = delete;
                 //--------------------------------------------------------------
+                virtual ~RLEnvironment(void) = default;
+                //--------------------------------------------------------------
                 /**
                  * @brief Construct to create a training environment for reinforcement learning 
                  * 

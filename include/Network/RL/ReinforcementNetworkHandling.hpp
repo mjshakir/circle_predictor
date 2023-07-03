@@ -14,7 +14,9 @@ class ReinforcementNetworkHandling{
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
-        // ReinforcementNetworkHandling(void) = delete;
+        ReinforcementNetworkHandling(void) = delete;
+        //--------------------------
+        virtual ~ReinforcementNetworkHandling(void) = default;
         //--------------------------
         ReinforcementNetworkHandling(   Network& model, 
                                         std::function<torch::Tensor(Args&...)> actions):    m_model(model), 

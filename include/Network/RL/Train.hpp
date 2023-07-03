@@ -41,13 +41,13 @@ namespace RL {
             //--------------------------------------------------------------
             Train(void) = delete;
             //--------------------------
-            Train(  ENVIRONMENT& environment, 
-                    HANDLER& handler, 
-                    MEMORY& memory, 
+            Train(  ENVIRONMENT&& environment, 
+                    HANDLER&& handler, 
+                    MEMORY&& memory, 
                     const torch::Device& device = torch::kCPU,
-                    const double& memory_percentage = 0.3) :    m_environment(environment),
-                                                                m_handler(handler),
-                                                                m_memory(memory),
+                    const double& memory_percentage = 0.3) :    m_environment(std::move(environment)),
+                                                                m_handler(std::move(handler)),
+                                                                m_memory(std::move(memory)),
                                                                 m_device(device),
                                                                 gen(std::random_device{}()), memory_activation(memory_percentage) {
                 //--------------------------
@@ -83,6 +83,39 @@ namespace RL {
                 // //--------------------------
                 // static_assert(  std::is_base_of<ExperienceReplay, MEMORY>::value,
                 //                 "MEMORY template must be ExperienceReplay class.");
+                //--------------------------
+                // static_assert(  std::is_same<ENVIRONMENT, RL::Environment::EnvironmentTestLoader<typename ENVIRONMENT::value_type>>::value or
+                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironment<typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type>>::value or
+                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironmentLoader<typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type>>::value or
+                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironmentRandomLoader<typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type>>::value,
+                //                 "ENVIRONMENT template must be one of EnvironmentTestLoader, RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class.");
+                // //--------------------------
+                // static_assert(  std::is_same<HANDLER, ReinforcementNetworkHandling<typename HANDLER::value_type, typename HANDLER::value_type>>::value or
+                //                 std::is_same<HANDLER, ReinforcementNetworkHandlingDQN<typename HANDLER::value_type, typename HANDLER::value_type>>::value,  
+                //                 "HANDLER template must be one of ReinforcementNetworkHandling, or ReinforcementNetworkHandlingDQN class.");
+                // //--------------------------
+                // static_assert(  std::is_same<MEMORY, ExperienceReplay<typename MEMORY::value_type>>::value,
+                //                 "MEMORY template must be ExperienceReplay class.");
+                //--------------------------
+                // static_assert(std::is_same_v<std::decay_t<ENVIRONMENT>, RL::Environment::RLEnvironment<typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type>> ||
+                //       std::is_same_v<std::decay_t<ENVIRONMENT>, RL::Environment::RLEnvironmentLoader<typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type>> ||
+                //       std::is_same_v<std::decay_t<ENVIRONMENT>, RL::Environment::RLEnvironmentRandomLoader<typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type>>,
+                //       "ENVIRONMENT template must be one of EnvironmentTestLoader, RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class.");
+                // //--------------------------
+                // static_assert(std::is_same_v<std::decay_t<HANDLER>, ReinforcementNetworkHandling<typename std::decay_t<HANDLER>::value_type, typename std::decay_t<HANDLER>::value_type>> ||
+                //             std::is_same_v<std::decay_t<HANDLER>, ReinforcementNetworkHandlingDQN<typename std::decay_t<HANDLER>::value_type, typename std::decay_t<HANDLER>::value_type>>,
+                //             "HANDLER template must be one of ReinforcementNetworkHandling or ReinforcementNetworkHandlingDQN class.");
+                // //--------------------------
+                // static_assert(std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::value_type>>,
+                //             "MEMORY template must be ExperienceReplay class.");
+                //--------------------------
+                // static_assert(std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::value_type>>, 
+                //                     "MEMORY template must be ExperienceReplay class.");
+
+                //--------------------------
+                // static_assert(std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::value_type>>, 
+                //                     "MEMORY template must be ExperienceReplay class.");
+
                 //--------------------------
             }//end  Train(ENVIRONMENT&& environment, HANDLER&& handler, MEMORY&& memory)
             //--------------------------
@@ -356,7 +389,7 @@ namespace RL {
                         //--------------------------
                         ENVIRONMENT _environment = m_environment;
                         //--------------------------
-                        threads.emplace_back([this,&_environment, &optimizer, &normalizing_function, &args...](){
+                        threads.emplace_back([this, &_environment, &optimizer, &normalizing_function, &args...](){
                             train_run(_environment, optimizer, normalizing_function, args...);});
                         //--------------------------
                     }// end for(size_t j = 0; j < jobs; ++j)
@@ -473,11 +506,11 @@ namespace RL {
             //--------------------------------------------------------------
         private:
             //--------------------------------------------------------------
-            ENVIRONMENT &m_environment;
+            ENVIRONMENT m_environment;
             //--------------------------
-            HANDLER     &m_handler;
+            HANDLER     m_handler;
             //--------------------------
-            MEMORY      &m_memory;
+            MEMORY      m_memory;
             //--------------------------
             torch::Device m_device;
             //--------------------------

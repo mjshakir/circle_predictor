@@ -4,15 +4,19 @@
 //--------------------------------------------------------------
 // Environment
 //--------------------------
-#include "Environment/RL/Environment.hpp"
+// #include "Environment/RL/Environment.hpp"
 //--------------------------
 // Network Handling
 //--------------------------
-#include "Network/RL/ReinforcementNetworkHandlingDQN.hpp"
+// #include "Network/RL/ReinforcementNetworkHandlingDQN.hpp"
 //--------------------------
 // Memory Replay
 //--------------------------
-#include "Network/RL/ExperienceReplay.hpp"
+// #include "Network/RL/ExperienceReplay.hpp"
+//--------------------------
+// Check utilities
+//--------------------------
+#include "Utilities/StaticCheck.hpp"
 //--------------------------
 #include "Generate/RL/RLNormalize.hpp"
 //--------------------------------------------------------------
@@ -33,6 +37,8 @@
 //--------------------------------------------------------------
 #include "fort.hpp"
 //--------------------------------------------------------------
+
+//--------------------------------------------------------------
 namespace RL {
     //--------------------------------------------------------------
     template <typename ENVIRONMENT, typename HANDLER, typename MEMORY>
@@ -50,93 +56,15 @@ namespace RL {
                                                                 m_memory(std::move(memory)),
                                                                 m_device(device),
                                                                 m_gen(std::random_device{}()), m_memory_activation(memory_percentage) {
-                //--------------------------
-                // static_assert(  std::is_same<ENVIRONMENT, RL::Environment::EnvironmentTestLoader<typename ENVIRONMENT::value_type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::EnvironmentTestLoader<typename std::decay<ENVIRONMENT>::type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironment<typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironment<typename std::decay<ENVIRONMENT>::type, typename std::decay<ENVIRONMENT>::type, typename std::decay<ENVIRONMENT>::type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironmentLoader<typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironmentLoader<typename std::decay<ENVIRONMENT>::type, typename std::decay<ENVIRONMENT>::type, typename std::decay<ENVIRONMENT>::type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironmentRandomLoader<typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironmentRandomLoader<typename std::decay<ENVIRONMENT>::type, typename std::decay<ENVIRONMENT>::type, typename std::decay<ENVIRONMENT>::type>>::value, 
-                //                 "ENVIRONMENT template must be one of EnvironmentTestLoader, RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class.");
-                // //--------------------------
-                // static_assert(  std::is_same<HANDLER, ReinforcementNetworkHandling<typename HANDLER::value_type, typename HANDLER::value_type>>::value or
-                //                 std::is_same<HANDLER, ReinforcementNetworkHandling<typename std::decay<HANDLER>::type, typename std::decay<HANDLER>::type>>::value or
-                //                 std::is_same<HANDLER, ReinforcementNetworkHandlingDQN<typename HANDLER::value_type, typename HANDLER::value_type>>::value or
-                //                 std::is_same<HANDLER, ReinforcementNetworkHandlingDQN<typename std::decay<HANDLER>::type, typename std::decay<HANDLER>::type>>::value,  
-                //                 "HANDLER template must be one of ReinforcementNetworkHandling, or ReinforcementNetworkHandlingDQN class.");
-                // //--------------------------
-                // static_assert(  std::is_same<MEMORY, ExperienceReplay<typename MEMORY::value_type>>::value or
-                //                 std::is_same<MEMORY, ExperienceReplay<typename std::decay<MEMORY>::type>>::value,
-                //                 "MEMORY template must be ExperienceReplay class.");
-                //--------------------------
-                // static_assert(  std::is_base_of<Environment::EnvironmentDataLoaderBase, ENVIRONMENT>::value or
-                //                 std::is_base_of<Environment::RLEnvironmentBase, ENVIRONMENT>::value or
-                //                 std::is_base_of<Environment::RLEnvironmentLoaderBase, ENVIRONMENT>::value or
-                //                 std::is_base_of<Environment::RLEnvironmentRandomLoaderBase, ENVIRONMENT>::value,
-                //                 "ENVIRONMENT template must be one of EnvironmentTestLoader, RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class.");
-                // //--------------------------
-                // static_assert(  std::is_base_of<ReinforcementNetworkHandling, HANDLER>::value or
-                //                 std::is_base_of<ReinforcementNetworkHandlingDQN, HANDLER>::value, 
-                //                 "HANDLER template must be one of ReinforcementNetworkHandling, or ReinforcementNetworkHandlingDQN class.");
-                // //--------------------------
-                // static_assert(  std::is_base_of<ExperienceReplay, MEMORY>::value,
-                //                 "MEMORY template must be ExperienceReplay class.");
-                //--------------------------
-                // static_assert(  std::is_same<ENVIRONMENT, RL::Environment::EnvironmentTestLoader<typename ENVIRONMENT::value_type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironment<typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironmentLoader<typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type>>::value or
-                //                 std::is_same<ENVIRONMENT, RL::Environment::RLEnvironmentRandomLoader<typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type, typename ENVIRONMENT::value_type>>::value,
-                //                 "ENVIRONMENT template must be one of EnvironmentTestLoader, RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class.");
-                // //--------------------------
-                // static_assert(  std::is_same<HANDLER, ReinforcementNetworkHandling<typename HANDLER::value_type, typename HANDLER::value_type>>::value or
-                //                 std::is_same<HANDLER, ReinforcementNetworkHandlingDQN<typename HANDLER::value_type, typename HANDLER::value_type>>::value,  
-                //                 "HANDLER template must be one of ReinforcementNetworkHandling, or ReinforcementNetworkHandlingDQN class.");
-                // //--------------------------
-                // static_assert(  std::is_same<MEMORY, ExperienceReplay<typename MEMORY::value_type>>::value,
-                //                 "MEMORY template must be ExperienceReplay class.");
-                //--------------------------
-                // static_assert(std::is_same_v<std::decay_t<ENVIRONMENT>, RL::Environment::RLEnvironment<typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type>> ||
-                //       std::is_same_v<std::decay_t<ENVIRONMENT>, RL::Environment::RLEnvironmentLoader<typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type>> ||
-                //       std::is_same_v<std::decay_t<ENVIRONMENT>, RL::Environment::RLEnvironmentRandomLoader<typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type, typename std::decay_t<ENVIRONMENT>::value_type>>,
-                //       "ENVIRONMENT template must be one of EnvironmentTestLoader, RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class.");
-                // //--------------------------
-                // static_assert(std::is_same_v<std::decay_t<HANDLER>, ReinforcementNetworkHandling<typename std::decay_t<HANDLER>::value_type, typename std::decay_t<HANDLER>::value_type>> ||
-                //             std::is_same_v<std::decay_t<HANDLER>, ReinforcementNetworkHandlingDQN<typename std::decay_t<HANDLER>::value_type, typename std::decay_t<HANDLER>::value_type>>,
-                //             "HANDLER template must be one of ReinforcementNetworkHandling or ReinforcementNetworkHandlingDQN class.");
-                // //--------------------------
-                // static_assert(std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::value_type>>,
-                //             "MEMORY template must be ExperienceReplay class.");
-                //--------------------------
-                // static_assert(std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::value_type>>, 
-                //                     "MEMORY template must be ExperienceReplay class.");
-
-                //--------------------------
-                // static_assert(std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::ValueAt<0>>> or
-                //               std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::ValueAt<0>, 
-                //                                                                     typename std::decay_t<MEMORY>::ValueAt<1>>> or  
-                //               std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::ValueAt<0>, 
-                //                                                                     typename std::decay_t<MEMORY>::ValueAt<1>
-                //                                                                     typename std::decay_t<MEMORY>::ValueAt<2>>> or
-                //               std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::ValueAt<0>, 
-                //                                                                     typename std::decay_t<MEMORY>::ValueAt<1>
-                //                                                                     typename std::decay_t<MEMORY>::ValueAt<2>
-                //                                                                     typename std::decay_t<MEMORY>::ValueAt<3>>>,
-                //                     "MEMORY template must be ExperienceReplay class.");
-                //--------------------------
-                static_assert(  std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::template ValueAt<0>>> or
-                                std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::template ValueAt<0>,
-                                                                                    typename std::decay_t<MEMORY>::template ValueAt<1>>> or  
-                                std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::template ValueAt<0>,
-                                                                                    typename std::decay_t<MEMORY>::template ValueAt<1>,
-                                                                                    typename std::decay_t<MEMORY>::template ValueAt<2>>> or
-                                std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::template ValueAt<0>,
-                                                                                    typename std::decay_t<MEMORY>::template ValueAt<1>,
-                                                                                    typename std::decay_t<MEMORY>::template ValueAt<2>,
-                                                                                    typename std::decay_t<MEMORY>::template ValueAt<3>>>,
-                                "MEMORY template must be ExperienceReplay class.");
-                std::cout << "MEMORY args size: " << MEMORY::Types <<std::endl;
+                //--------------------------             
+                static_assert(Utils::CheckEnvironment<std::decay_t<ENVIRONMENT>>::value, 
+                            "\x1b[36m ENVIRONMENT template must be one of RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class. \x1b[0m");
+                //--------------------
+                static_assert(Utils::CheckHandler<std::decay_t<HANDLER>>::value, 
+                                "\x1b[36m HANDLER template must be one of ReinforcementNetworkHandling, or ReinforcementNetworkHandlingDQN class.\x1b[0m");
+                //--------------------
+                static_assert(Utils::CheckExperienceReplay<std::decay_t<MEMORY>>::value, "\x1b[36m MEMORY template must be ExperienceReplay class. \x1b[0m");
+                //--------------------
             }//end  Train(ENVIRONMENT&& environment, HANDLER&& handler, MEMORY&& memory)
             //--------------------------
             template<typename... Args>

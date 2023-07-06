@@ -25,7 +25,7 @@
 //--------------------------
 #include "Network/RL/Train.hpp"
 //--------------------------
-#include "Utilities/Utils.hpp"
+#include "Utilities/CircleEquation.hpp"
 //--------------------------
 #include "Timing/Timing.hpp"
 #include "Timing/TimeIT.hpp"
@@ -514,12 +514,12 @@ int main(int argc, char const *argv[]){
     //         auto _reward = torch::zeros(batch_size);
     //         //--------------------------
     //         // Criterion 1: Points aligned
-    //         Utils::Aligned(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)).slice(1,1,2), 1E-1);
+    //         CircleEquation::Aligned(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)).slice(1,1,2), 1E-1);
     //         //--------------------------
     //         // std::cout << "Aligned: " << " _reward: " << _reward.sizes() << std::endl;
     //         //--------------------------
     //         // Criterion 2: Points close to the circumference of a circle
-    //         Utils::CloseToCircumference(_reward,
+    //         CircleEquation::CloseToCircumference(_reward,
     //                                     output.slice(0,(i*batch_size), ((i+1)*batch_size)),
     //                                     input.slice(1,0,2).slice(0,i,(i+1)),
     //                                     input.slice(1,2,3).slice(0,i,(i+1)).squeeze(),
@@ -528,27 +528,27 @@ int main(int argc, char const *argv[]){
     //         // std::cout << "CloseToCircumference: " << " _reward: " << _reward.sizes() << std::endl;
     //         //--------------------------
     //         // Criterion 3: Points equidistant
-    //         Utils::Equidistant(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+    //         CircleEquation::Equidistant(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
     //         //--------------------------
     //         // std::cout << "Equidistant: " << " _reward: " << _reward.sizes() << std::endl;
     //         //--------------------------
     //         // Criterion 4: Angle ratios consistent
-    //         Utils::AngleRatiosConsistent(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
+    //         CircleEquation::AngleRatiosConsistent(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size)), 1E-1);
     //         //--------------------------
     //         // std::cout << "AngleRatiosConsistent: " << " _reward: " << _reward.sizes() << std::endl;
     //         //--------------------------
     //         // Criterion 5: Symmetry of the points
-    //         Utils::Symmetric(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size))); 
+    //         CircleEquation::Symmetric(_reward, output.slice(0,(i*batch_size), ((i+1)*batch_size))); 
     //         //--------------------------
     //         // std::cout << "Symmetric: " << " _reward: " << _reward.sizes() << std::endl;
     //         //--------------------------
     //         // Criterion 6: Triangle area
-    //         _reward += Utils::TriangleArea(output.slice(0,(i*batch_size), ((i+1)*batch_size)));
+    //         _reward += CircleEquation::TriangleArea(output.slice(0,(i*batch_size), ((i+1)*batch_size)));
     //         //--------------------------
     //         // std::cout << "TriangleArea: " << " _reward: " << _reward.sizes() << std::endl;
     //         //--------------------------
     //         // Criterion 7: Circle smoothness
-    //         _reward /= Utils::CircleSmoothness( output.slice(0,(i*batch_size), ((i+1)*batch_size)),
+    //         _reward /= CircleEquation::CircleSmoothness( output.slice(0,(i*batch_size), ((i+1)*batch_size)),
     //                                             input.slice(1,0,2).slice(0,i,(i+1)),
     //                                             input.slice(1,2,3).slice(0,i,(i+1)).squeeze());
     //         //--------------------------
@@ -577,48 +577,48 @@ int main(int argc, char const *argv[]){
     //     for (size_t i = 0; i < static_cast<size_t>(output.size(0)); ++i){
     //         //--------------------------
     //         // Criterion 1: Points aligned
-    //         if(Utils::Aligned(output[i], 1E-1)){
+    //         if(CircleEquation::Aligned(output[i], 1E-1)){
     //             //--------------------------
     //             reward.at(i) += 1; 
     //             //--------------------------
-    //         }// end if(Utils::Aligned(output[i], 1E-1))
+    //         }// end if(CircleEquation::Aligned(output[i], 1E-1))
     //         //--------------------------
     //         // Criterion 2: Points close to the circumference of a circle
-    //         if(Utils::CloseToCircumference( output[i],
+    //         if(CircleEquation::CloseToCircumference( output[i],
     //                                         input.slice(1,0,2).slice(0,i,(i+1)),
     //                                         input.slice(1,2,3).slice(0,i,(i+1)).squeeze(),
     //                                         1E-1)){
     //             //--------------------------
     //             reward.at(i) += 1; 
     //             //--------------------------
-    //         }// end if(Utils::CloseToCircumference(output[i], input.slice(1,0,2).slice(0,i,(i+1)), input.slice(1,2,3).slice(0,i,(i+1)).squeeze(), 1E-1))
+    //         }// end if(CircleEquation::CloseToCircumference(output[i], input.slice(1,0,2).slice(0,i,(i+1)), input.slice(1,2,3).slice(0,i,(i+1)).squeeze(), 1E-1))
     //         //--------------------------
     //         // Criterion 3: Points equidistant
-    //         if(Utils::Equidistant(output[i], 1E-1)){
+    //         if(CircleEquation::Equidistant(output[i], 1E-1)){
     //             //--------------------------
     //             reward.at(i) += 1; 
     //             //--------------------------
-    //         }// end if(Utils::Equidistant(output[i], 1E-1))
+    //         }// end if(CircleEquation::Equidistant(output[i], 1E-1))
     //         //--------------------------
     //         // Criterion 4: Angle ratios consistent
-    //         if(Utils::AngleRatiosConsistent(output[i], 1E-1)){
+    //         if(CircleEquation::AngleRatiosConsistent(output[i], 1E-1)){
     //             //--------------------------
     //             reward.at(i) += 1; 
     //             //--------------------------
-    //         }// end if(Utils::AngleRatiosConsistent(output[i], 1E-1))
+    //         }// end if(CircleEquation::AngleRatiosConsistent(output[i], 1E-1))
     //         //--------------------------
     //         // Criterion 5: Symmetry of the points
-    //         if(Utils::Symmetric(output[i])){
+    //         if(CircleEquation::Symmetric(output[i])){
     //             //--------------------------
     //             reward.at(i) += 1; 
     //             //--------------------------
-    //         } // end if(Utils::Symmetric(output[i]))
+    //         } // end if(CircleEquation::Symmetric(output[i]))
     //         //--------------------------
     //         // Criterion 6: Triangle area
-    //         reward.at(i) += Utils::TriangleArea(output[i]).item<double>();
+    //         reward.at(i) += CircleEquation::TriangleArea(output[i]).item<double>();
     //         //--------------------------
     //         // Criterion 7: Circle smoothness
-    //         reward.at(i) /= Utils::CircleSmoothness(output[i],
+    //         reward.at(i) /= CircleEquation::CircleSmoothness(output[i],
     //                                                 input.slice(1,0,2).slice(0,i,(i+1)),
     //                                                 input.slice(1,2,3).slice(0,i,(i+1)).squeeze()).item<double>();
     //         //--------------------------
@@ -638,48 +638,48 @@ int main(int argc, char const *argv[]){
     //         size_t i = &r - &reward[0];  // Get the index of the current element
     //         //--------------------------
     //         // Criterion 1: Points aligned
-    //         if (Utils::Aligned(output[i], 1E-1)){
+    //         if (CircleEquation::Aligned(output[i], 1E-1)){
     //             //--------------------------
     //             r += 1.;
     //             //--------------------------
-    //         }// end if (Utils::Aligned(output[i], 1E-1))
+    //         }// end if (CircleEquation::Aligned(output[i], 1E-1))
     //         //--------------------------
     //         // Criterion 2: Points close to the circumference of a circle
-    //         if (Utils::CloseToCircumference(output[i],
+    //         if (CircleEquation::CloseToCircumference(output[i],
     //                                         input.slice(1, 0, 2).slice(0, i, (i + 1)),
     //                                         input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(),
     //                                         1E-1)){
     //             //--------------------------
     //             r += 1.;
     //             //--------------------------
-    //         }// end if (Utils::CloseToCircumference(output[i], input.slice(1, 0, 2).slice(0, i, (i + 1)),input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(), 1E-1))
+    //         }// end if (CircleEquation::CloseToCircumference(output[i], input.slice(1, 0, 2).slice(0, i, (i + 1)),input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(), 1E-1))
     //         //--------------------------
     //         // Criterion 3: Points equidistant
-    //         if (Utils::Equidistant(output[i], 1E-1)){
+    //         if (CircleEquation::Equidistant(output[i], 1E-1)){
     //             //--------------------------
     //             r += 1.;
     //             //--------------------------
-    //         }// end if (Utils::Equidistant(output[i], 1E-1))
+    //         }// end if (CircleEquation::Equidistant(output[i], 1E-1))
     //         //--------------------------
     //         // Criterion 4: Angle ratios consistent
-    //         if (Utils::AngleRatiosConsistent(output[i], 1E-1)){
+    //         if (CircleEquation::AngleRatiosConsistent(output[i], 1E-1)){
     //             //--------------------------
     //             r += 1.;
     //             //--------------------------
-    //         }// end if (Utils::AngleRatiosConsistent(output[i], 1E-1))
+    //         }// end if (CircleEquation::AngleRatiosConsistent(output[i], 1E-1))
     //         //--------------------------
     //         // Criterion 5: Symmetry of the points
-    //         if (Utils::Symmetric(output[i])){
+    //         if (CircleEquation::Symmetric(output[i])){
     //             //--------------------------
     //             r += 1.;
     //             //--------------------------
-    //         }// end if (Utils::Symmetric(output[i]))
+    //         }// end if (CircleEquation::Symmetric(output[i]))
     //         //--------------------------
     //         // Criterion 6: Triangle area
-    //         r += Utils::TriangleArea(output[i]).item<double>();
+    //         r += CircleEquation::TriangleArea(output[i]).item<double>();
     //         //--------------------------
     //         // Criterion 7: Circle smoothness
-    //         r /= Utils::CircleSmoothness(output[i],
+    //         r /= CircleEquation::CircleSmoothness(output[i],
     //                                     input.slice(1, 0, 2).slice(0, i, (i + 1)),
     //                                     input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze()).item<double>();
     //         //--------------------------
@@ -699,29 +699,29 @@ int main(int argc, char const *argv[]){
             size_t i = &r - &reward[0];  // Get the index of the current element
             //--------------------------
             // Criterion 1: Points aligned
-            Utils::Aligned(r, output[i], 1E-4);
+            Utils::CircleEquation::Aligned(r, output[i], 1E-4);
             //--------------------------
             // Criterion 2: Points close to the circumference of a circle
-            Utils::CloseToCircumference(r,
+            Utils::CircleEquation::CloseToCircumference(r,
                                         output[i],
                                         input.slice(1, 0, 2).slice(0, i, (i + 1)),
                                         input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(),
                                         1E-1);
             //--------------------------
             // Criterion 3: Points equidistant
-            Utils::Equidistant(r, output[i], 1E-4);
+            Utils::CircleEquation::Equidistant(r, output[i], 1E-4);
             //--------------------------
             // Criterion 4: Angle ratios consistent
-            Utils::AngleRatiosConsistent(r, output[i], 1E-4);
+            Utils::CircleEquation::AngleRatiosConsistent(r, output[i], 1E-4);
             //--------------------------
             // Criterion 5: Symmetry of the points
-            Utils::Symmetric(r, output[i]);
+            Utils::CircleEquation::Symmetric(r, output[i]);
             //--------------------------
             // Criterion 6: Triangle area
-            Utils::TriangleArea(r, output[i]);
+            Utils::CircleEquation::TriangleArea(r, output[i]);
             //--------------------------
             // Criterion 7: Circle smoothness
-            Utils::CircleSmoothness(r, 
+            Utils::CircleEquation::CircleSmoothness(r, 
                                     output[i],
                                     input.slice(1, 0, 2).slice(0, i, (i + 1)),
                                     input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze());
@@ -735,9 +735,9 @@ int main(int argc, char const *argv[]){
         //--------------------------
     };
     //--------------------------------------------------------------
-    RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
+    // RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
-    // RL::Environment::RLEnvironmentLoaderAtomic<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
+    RL::Environment::RLEnvironmentLoaderAtomic<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device, false);
     // RLNetLSTM target_model({points_size, batch_size}, output_size, device, false);
@@ -922,14 +922,14 @@ int main(int argc, char const *argv[]){
     // }// end for(const auto& x : _rewards)
     // // std::exit(1);
     //--------------------------------------------------------------
-    RL::Train<decltype(_environment), decltype(handler), decltype(memory)> _train(  _environment, 
-                                                                                    handler, 
-                                                                                    memory, 
+    RL::Train<decltype(_environment), decltype(handler), decltype(memory)> _train(  std::move(_environment),
+                                                                                    std::move(handler),
+                                                                                    std::move(memory),
                                                                                     device);
     //--------------------------
     // std::function<torch::Tensor(torch::Tensor)> normalizationFunction =
     //     [&_normalize](const torch::Tensor& input) {return _normalize.normalization(input);};
-    _train.run(epoch, optimizer, [&_normalize](const torch::Tensor& input) {return _normalize.normalization(input);} , batch_size*10, generated_points_size, output_size);
+    _train.run(epoch, 4, optimizer, [&_normalize](const torch::Tensor& input) {return _normalize.normalization(input);} , batch_size*10, generated_points_size, output_size);
     //--------------------------------------------------------------
     // std::vector<std::thread> _threads(epoch);
     // _threads.reserve(std::thread::hardware_concurrency() - 1);

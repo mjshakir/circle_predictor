@@ -1,7 +1,7 @@
 //--------------------------------------------------------------
 // Main Header 
 //--------------------------------------------------------------
-#include "Utilities/Utils.hpp"
+#include "Utilities/CircleEquation.hpp"
 //--------------------------------------------------------------
 // Standard library
 //--------------------------------------------------------------
@@ -11,123 +11,123 @@
 //--------------------------------------------------------------
 // public 
 //--------------------------
-void Utils::Aligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::Aligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     arePointsAligned(reward, points, tolerance);
     //--------------------------
-}// end void Utils::Aligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance)
+}// end void Utils::CircleEquation::Aligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-bool Utils::Aligned(const torch::Tensor& points, const double& tolerance){
+bool Utils::CircleEquation::Aligned(const torch::Tensor& points, const double& tolerance){
     //--------------------------
     return arePointsAligned(points, tolerance);
     //--------------------------
-}//end torch::Tensor Utils::Aligned(const torch::Tensor& points, const double& tolerance)
+}//end torch::Tensor Utils::CircleEquation::Aligned(const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::Aligned(double& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::Aligned(double& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     arePointsAligned(reward, points, tolerance);
     //--------------------------
-}// end void Utils::Aligned(double& reward, const torch::Tensor& points, const double& tolerance)
+}// end void Utils::CircleEquation::Aligned(double& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::CloseToCircumference(torch::Tensor& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
+void Utils::CircleEquation::CloseToCircumference(torch::Tensor& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
     //--------------------------
     arePointsCloseToCircumference(reward, points, center, radius, tolerance);
     //--------------------------
-}// end void Utils::CloseToCircumference(torch::Tensor& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
+}// end void Utils::CircleEquation::CloseToCircumference(torch::Tensor& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
 //--------------------------------------------------------------
-bool Utils::CloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
+bool Utils::CircleEquation::CloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
     //--------------------------
     return arePointsCloseToCircumference(points, center, radius, tolerance);
     //--------------------------
-}// end torch::Tensor Utils::CloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
+}// end torch::Tensor Utils::CircleEquation::CloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::CloseToCircumference(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
+void Utils::CircleEquation::CloseToCircumference(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
     //--------------------------
     arePointsCloseToCircumference(reward, points, center, radius, tolerance);
     //--------------------------
-}// end void Utils::CloseToCircumference(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
+}// end void Utils::CircleEquation::CloseToCircumference(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::Equidistant(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::Equidistant(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     arePointsEquidistant(reward, points, tolerance);
     //--------------------------
-}// end void Utils::Equidistant(torch::Tensor& reward, const torch::Tensor& points, double tolerance)
+}// end void Utils::CircleEquation::Equidistant(torch::Tensor& reward, const torch::Tensor& points, double tolerance)
 //--------------------------------------------------------------
-bool Utils::Equidistant(const torch::Tensor& points, const double& tolerance){
+bool Utils::CircleEquation::Equidistant(const torch::Tensor& points, const double& tolerance){
     //--------------------------
     return arePointsEquidistant(points, tolerance);
     //--------------------------
-}// end torch::Tensor Utils::Equidistant(const torch::Tensor& points, const double& tolerance)
+}// end torch::Tensor Utils::CircleEquation::Equidistant(const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::Equidistant(double& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::Equidistant(double& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     arePointsEquidistant(reward, points, tolerance);
     //--------------------------
-}// end void Utils::Equidistant(double& reward, const torch::Tensor& points, const double& tolerance)
+}// end void Utils::CircleEquation::Equidistant(double& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::AngleRatiosConsistent(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::AngleRatiosConsistent(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     areAngleRatiosConsistent(reward, points, tolerance);
     //--------------------------
-}//end void Utils::AngleRatiosConsistent(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance)
+}//end void Utils::CircleEquation::AngleRatiosConsistent(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-bool Utils::AngleRatiosConsistent(const torch::Tensor& points, const double& tolerance){
+bool Utils::CircleEquation::AngleRatiosConsistent(const torch::Tensor& points, const double& tolerance){
     //--------------------------
     return areAngleRatiosConsistent(points, tolerance);
     //--------------------------
-}//end torch::Tensor Utils::AngleRatiosConsistent(const torch::Tensor& points, const double& tolerance)
+}//end torch::Tensor Utils::CircleEquation::AngleRatiosConsistent(const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::AngleRatiosConsistent(double& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::AngleRatiosConsistent(double& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     areAngleRatiosConsistent(reward, points, tolerance);
     //--------------------------
-}//end void Utils::AngleRatiosConsistent(double& reward, const torch::Tensor& points, const double& tolerance)
+}//end void Utils::CircleEquation::AngleRatiosConsistent(double& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::Symmetric(torch::Tensor& reward, const torch::Tensor& points){
+void Utils::CircleEquation::Symmetric(torch::Tensor& reward, const torch::Tensor& points){
     //--------------------------
     arePointsSymmetric(reward, points);
     //--------------------------
-}// end void Utils::Symmetric(torch::Tensor& reward, const torch::Tensor& points)
+}// end void Utils::CircleEquation::Symmetric(torch::Tensor& reward, const torch::Tensor& points)
 //--------------------------------------------------------------
-bool Utils::Symmetric(const torch::Tensor& points){
+bool Utils::CircleEquation::Symmetric(const torch::Tensor& points){
     //--------------------------
     return arePointsSymmetric(points);
     //--------------------------
-}// end void Utils::Symmetric(torch::Tensor& reward, const torch::Tensor& points)
+}// end void Utils::CircleEquation::Symmetric(torch::Tensor& reward, const torch::Tensor& points)
 //--------------------------------------------------------------
-void Utils::Symmetric(double& reward, const torch::Tensor& points){
+void Utils::CircleEquation::Symmetric(double& reward, const torch::Tensor& points){
     //--------------------------
     arePointsSymmetric(reward, points);
     //--------------------------
-}// end void Utils::Symmetric(double& reward, const torch::Tensor& points)
+}// end void Utils::CircleEquation::Symmetric(double& reward, const torch::Tensor& points)
 //--------------------------------------------------------------
-torch::Tensor Utils::TriangleArea(const torch::Tensor& points){
+torch::Tensor Utils::CircleEquation::TriangleArea(const torch::Tensor& points){
     //--------------------------
     return calculateTriangleArea(points);
     //--------------------------
-}// end torch::Tensor Utils::TriangleArea(const torch::Tensor& points)
+}// end torch::Tensor Utils::CircleEquation::TriangleArea(const torch::Tensor& points)
 //--------------------------------------------------------------
-void Utils::TriangleArea(double& reward, const torch::Tensor& points){
+void Utils::CircleEquation::TriangleArea(double& reward, const torch::Tensor& points){
     //--------------------------
     calculateTriangleArea(reward, points);
     //--------------------------
-}// end torch::Tensor Utils::TriangleArea(const torch::Tensor& points)
+}// end torch::Tensor Utils::CircleEquation::TriangleArea(const torch::Tensor& points)
 //--------------------------------------------------------------
-torch::Tensor Utils::CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius){
+torch::Tensor Utils::CircleEquation::CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius){
     //--------------------------
     return calculateCircleSmoothness(points, center, radius);
     //--------------------------    
-}// end torch::Tensor Utils::CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, torch::Tensor radius)
+}// end torch::Tensor Utils::CircleEquation::CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, torch::Tensor radius)
 //--------------------------------------------------------------
-void Utils::CircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius){
+void Utils::CircleEquation::CircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius){
     //--------------------------
     calculateCircleSmoothness(reward, points, center, radius);
     //--------------------------    
-}// end torch::Tensor Utils::CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, torch::Tensor radius)
+}// end torch::Tensor Utils::CircleEquation::CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, torch::Tensor radius)
 //--------------------------------------------------------------
 // protected
 //--------------------------
-void Utils::arePointsAligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::arePointsAligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 2){
         //--------------------------
@@ -159,10 +159,10 @@ void Utils::arePointsAligned(torch::Tensor& reward, const torch::Tensor& points,
         //--------------------------
     });
     //--------------------------
-}// end void Utils::arePointsAligned(torch::Tensor& reward, const torch::Tensor& center_points, const torch::Tensor& points, double tolerance)
+}// end void Utils::CircleEquation::arePointsAligned(torch::Tensor& reward, const torch::Tensor& center_points, const torch::Tensor& points, double tolerance)
 //--------------------------------------------------------------
 /*
-torch::Tensor Utils::arePointsAligned(const torch::Tensor& points, const double& tolerance) {
+torch::Tensor Utils::CircleEquation::arePointsAligned(const torch::Tensor& points, const double& tolerance) {
     if (points.size(0) < 2){
         //--------------------------
         return torch::ones({points.size(0)}, torch::kBool);
@@ -198,10 +198,10 @@ torch::Tensor Utils::arePointsAligned(const torch::Tensor& points, const double&
     //--------------------------
     return aligned;
     //--------------------------
-}// end torch::Tensor Utils::arePointsAligned(const torch::Tensor& points, const double& tolerance)
+}// end torch::Tensor Utils::CircleEquation::arePointsAligned(const torch::Tensor& points, const double& tolerance)
 */
 //--------------------------------------------------------------
-bool Utils::arePointsAligned(const torch::Tensor& points, const double& tolerance) {
+bool Utils::CircleEquation::arePointsAligned(const torch::Tensor& points, const double& tolerance) {
     //--------------------------
     if (points.size(0) < 2){
         //--------------------------
@@ -235,9 +235,9 @@ bool Utils::arePointsAligned(const torch::Tensor& points, const double& toleranc
     //--------------------------
     return aligned;
     //--------------------------
-}// end bool Utils::arePointsAligned(const torch::Tensor& points, const double& tolerance)
+}// end bool Utils::CircleEquation::arePointsAligned(const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::arePointsAligned(double& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::arePointsAligned(double& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 2){
         //--------------------------
@@ -273,9 +273,9 @@ void Utils::arePointsAligned(double& reward, const torch::Tensor& points, const 
     //--------------------------
     reward += aligned;
     //--------------------------
-}// end void Utils::arePointsAligned(double& reward, const torch::Tensor& points, const double& tolerance)
+}// end void Utils::CircleEquation::arePointsAligned(double& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::arePointsCloseToCircumference(torch::Tensor& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
+void Utils::CircleEquation::arePointsCloseToCircumference(torch::Tensor& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
     //--------------------------
     torch::Tensor distances = torch::hypot(points.select(1, 0) - center.select(1, 0), points.select(1, 1) - center.select(1, 1));
     torch::Tensor diff = torch::abs(distances - radius);
@@ -294,10 +294,10 @@ void Utils::arePointsCloseToCircumference(torch::Tensor& reward, const torch::Te
         //--------------------------
     });
     //--------------------------
-}// void Utils::arePointsCloseToCircumference(torch::Tensor& reward, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
+}// void Utils::CircleEquation::arePointsCloseToCircumference(torch::Tensor& reward, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
 //--------------------------------------------------------------
 /*
-torch::Tensor Utils::arePointsCloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
+torch::Tensor Utils::CircleEquation::arePointsCloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
     //--------------------------
     auto close = torch::ones({points.size(0)}, torch::kBool);
     //--------------------------
@@ -319,10 +319,10 @@ torch::Tensor Utils::arePointsCloseToCircumference(const torch::Tensor& points, 
     });
     //--------------------------
     return close;
-}// end torch::Tensor Utils::arePointsCloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
+}// end torch::Tensor Utils::CircleEquation::arePointsCloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
 */
 //--------------------------------------------------------------
-bool Utils::arePointsCloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
+bool Utils::CircleEquation::arePointsCloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance){
     //--------------------------
     if (points.size(0) < 3) {
         //--------------------------
@@ -353,9 +353,9 @@ bool Utils::arePointsCloseToCircumference(const torch::Tensor& points, const tor
     //--------------------------
     return close;
     //--------------------------
-}// end bool Utils::arePointsCloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
+}// end bool Utils::CircleEquation::arePointsCloseToCircumference(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::arePointsCloseToCircumference(  double& reward,
+void Utils::CircleEquation::arePointsCloseToCircumference(  double& reward,
                                             const torch::Tensor& points,
                                             const torch::Tensor& center,
                                             const torch::Tensor& radius,
@@ -392,9 +392,9 @@ void Utils::arePointsCloseToCircumference(  double& reward,
     //--------------------------
     reward += close;
     //--------------------------
-}// end void Utils::arePointsCloseToCircumference
+}// end void Utils::CircleEquation::arePointsCloseToCircumference
 //--------------------------------------------------------------
-void Utils::arePointsEquidistant(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::arePointsEquidistant(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -423,10 +423,10 @@ void Utils::arePointsEquidistant(torch::Tensor& reward, const torch::Tensor& poi
         //--------------------------
     });
     //--------------------------
-}// end void Utils::arePointsEquidistant(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance)
+}// end void Utils::CircleEquation::arePointsEquidistant(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
 /*
-torch::Tensor Utils::arePointsEquidistant(const torch::Tensor& points, const double& tolerance){
+torch::Tensor Utils::CircleEquation::arePointsEquidistant(const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -457,10 +457,10 @@ torch::Tensor Utils::arePointsEquidistant(const torch::Tensor& points, const dou
     //--------------------------
     return equidistant;
     //--------------------------
-}// end torch::Tensor Utils::arePointsEquidistant(const torch::Tensor& points, const double& tolerance)
+}// end torch::Tensor Utils::CircleEquation::arePointsEquidistant(const torch::Tensor& points, const double& tolerance)
 */
 //--------------------------------------------------------------
-bool Utils::arePointsEquidistant(const torch::Tensor& points, const double& tolerance){
+bool Utils::CircleEquation::arePointsEquidistant(const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -493,9 +493,9 @@ bool Utils::arePointsEquidistant(const torch::Tensor& points, const double& tole
     //--------------------------
     return equidistant;
     //--------------------------
-}// end bool Utils::arePointsEquidistant(const torch::Tensor& points, const double& tolerance)
+}// end bool Utils::CircleEquation::arePointsEquidistant(const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::arePointsEquidistant(double& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::arePointsEquidistant(double& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -530,9 +530,9 @@ void Utils::arePointsEquidistant(double& reward, const torch::Tensor& points, co
     //--------------------------
     reward += equidistant;
     //--------------------------
-}// end void Utils::arePointsEquidistant(double& reward, const torch::Tensor& points, const double& tolerance)
+}// end void Utils::CircleEquation::arePointsEquidistant(double& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::areAngleRatiosConsistent(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::areAngleRatiosConsistent(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -564,10 +564,10 @@ void Utils::areAngleRatiosConsistent(torch::Tensor& reward, const torch::Tensor&
         //--------------------------
     });
     //--------------------------
-}// end void Utils::areAngleRatiosConsistent(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance)
+}// end void Utils::CircleEquation::areAngleRatiosConsistent(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
 /*
-torch::Tensor Utils::areAngleRatiosConsistent(const torch::Tensor& points, const double& tolerance){
+torch::Tensor Utils::CircleEquation::areAngleRatiosConsistent(const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -607,10 +607,10 @@ torch::Tensor Utils::areAngleRatiosConsistent(const torch::Tensor& points, const
     //--------------------------
     return consistent;
     //--------------------------
-}// end torch::Tensor Utils::areAngleRatiosConsistent(const torch::Tensor& points, const double& tolerance)
+}// end torch::Tensor Utils::CircleEquation::areAngleRatiosConsistent(const torch::Tensor& points, const double& tolerance)
 */
 //--------------------------------------------------------------
-bool Utils::areAngleRatiosConsistent(const torch::Tensor& points, const double& tolerance){
+bool Utils::CircleEquation::areAngleRatiosConsistent(const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -646,9 +646,9 @@ bool Utils::areAngleRatiosConsistent(const torch::Tensor& points, const double& 
     //--------------------------
     return consistent;
     //--------------------------
-}// end torch::Tensor Utils::areAngleRatiosConsistent(const torch::Tensor& points, const double& tolerance)
+}// end torch::Tensor Utils::CircleEquation::areAngleRatiosConsistent(const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::areAngleRatiosConsistent(double& reward, const torch::Tensor& points, const double& tolerance){
+void Utils::CircleEquation::areAngleRatiosConsistent(double& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -686,9 +686,9 @@ void Utils::areAngleRatiosConsistent(double& reward, const torch::Tensor& points
     //--------------------------
     reward += consistent;
     //--------------------------
-}// end void Utils::areAngleRatiosConsistent(double& reward, const torch::Tensor& points, const double& tolerance)
+}// end void Utils::CircleEquation::areAngleRatiosConsistent(double& reward, const torch::Tensor& points, const double& tolerance)
 //--------------------------------------------------------------
-void Utils::arePointsSymmetric(torch::Tensor& reward, const torch::Tensor& points){
+void Utils::CircleEquation::arePointsSymmetric(torch::Tensor& reward, const torch::Tensor& points){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -728,10 +728,10 @@ void Utils::arePointsSymmetric(torch::Tensor& reward, const torch::Tensor& point
         //--------------------------
     });
     //--------------------------
-}// end void Utils::arePointsSymmetric(torch::Tensor& reward, const torch::Tensor& points)
+}// end void Utils::CircleEquation::arePointsSymmetric(torch::Tensor& reward, const torch::Tensor& points)
 //--------------------------------------------------------------
 /*
-torch::Tensor Utils::arePointsSymmetric(const torch::Tensor& points){
+torch::Tensor Utils::CircleEquation::arePointsSymmetric(const torch::Tensor& points){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -773,10 +773,10 @@ torch::Tensor Utils::arePointsSymmetric(const torch::Tensor& points){
     //--------------------------
     return symmetric;
     //--------------------------
-}// end bool Utils::arePointsSymmetric(const torch::Tensor& points)
+}// end bool Utils::CircleEquation::arePointsSymmetric(const torch::Tensor& points)
 */
 //--------------------------------------------------------------
-bool Utils::arePointsSymmetric(const torch::Tensor& points){
+bool Utils::CircleEquation::arePointsSymmetric(const torch::Tensor& points){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -818,9 +818,9 @@ bool Utils::arePointsSymmetric(const torch::Tensor& points){
     //--------------------------
     return symmetric;
     //--------------------------
-}// end bool Utils::arePointsSymmetric(const torch::Tensor& points)
+}// end bool Utils::CircleEquation::arePointsSymmetric(const torch::Tensor& points)
 //--------------------------------------------------------------
-void Utils::arePointsSymmetric(double& reward, const torch::Tensor& points){
+void Utils::CircleEquation::arePointsSymmetric(double& reward, const torch::Tensor& points){
     //--------------------------
     if (points.size(0) < 3){
         //--------------------------
@@ -864,9 +864,9 @@ void Utils::arePointsSymmetric(double& reward, const torch::Tensor& points){
     //--------------------------
     reward += symmetric;
     //--------------------------
-}// end void Utils::arePointsSymmetric(double& reward, const torch::Tensor& points)
+}// end void Utils::CircleEquation::arePointsSymmetric(double& reward, const torch::Tensor& points)
 //--------------------------------------------------------------
-torch::Tensor Utils::calculateTriangleArea(const torch::Tensor& points) {
+torch::Tensor Utils::CircleEquation::calculateTriangleArea(const torch::Tensor& points) {
     if (points.size(0) < 3){
         //--------------------------
         return torch::zeros({}, torch::kFloat64);
@@ -894,15 +894,15 @@ torch::Tensor Utils::calculateTriangleArea(const torch::Tensor& points) {
     //--------------------------
     return area;
     //--------------------------
-}// end torch::Tensor Utils::calculateTriangleArea(const torch::Tensor& points)
+}// end torch::Tensor Utils::CircleEquation::calculateTriangleArea(const torch::Tensor& points)
 //--------------------------------------------------------------
-void Utils::calculateTriangleArea(double& reward, const torch::Tensor& points){
+void Utils::CircleEquation::calculateTriangleArea(double& reward, const torch::Tensor& points){
     //-------------------------
     reward += calculateTriangleArea(points).item<double>();
     //--------------------------
-}// end void Utils::calculateTriangleArea(double& reward, const torch::Tensor& points)
+}// end void Utils::CircleEquation::calculateTriangleArea(double& reward, const torch::Tensor& points)
 //--------------------------------------------------------------
-torch::Tensor Utils::calculateCircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius) {
+torch::Tensor Utils::CircleEquation::calculateCircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius) {
     //--------------------------
     torch::Tensor smoothness = torch::zeros({}, torch::kFloat64);
     //--------------------------
@@ -921,13 +921,13 @@ torch::Tensor Utils::calculateCircleSmoothness(const torch::Tensor& points, cons
     //--------------------------
     return smoothness;
     //--------------------------
-}// end torch::Tensor Utils::calculateCircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, torch::Tensor radius) 
+}// end torch::Tensor Utils::CircleEquation::calculateCircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, torch::Tensor radius) 
 //--------------------------------------------------------------
-void Utils::calculateCircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius){
+void Utils::CircleEquation::calculateCircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius){
     //--------------------------
     auto smoothness = calculateCircleSmoothness(points, center, radius).item<double>();
     //--------------------------
     (smoothness <= 1E-9) ? reward /= 1. : reward /= smoothness;
     //--------------------------
-}// end void Utils::calculateCircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius)
+}// end void Utils::CircleEquation::calculateCircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius)
 //--------------------------------------------------------------

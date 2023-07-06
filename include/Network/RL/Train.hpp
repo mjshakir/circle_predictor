@@ -49,7 +49,7 @@ namespace RL {
                                                                 m_handler(std::move(handler)),
                                                                 m_memory(std::move(memory)),
                                                                 m_device(device),
-                                                                gen(std::random_device{}()), memory_activation(memory_percentage) {
+                                                                m_gen(std::random_device{}()), m_memory_activation(memory_percentage) {
                 //--------------------------
                 // static_assert(  std::is_same<ENVIRONMENT, RL::Environment::EnvironmentTestLoader<typename ENVIRONMENT::value_type>>::value or
                 //                 std::is_same<ENVIRONMENT, RL::Environment::EnvironmentTestLoader<typename std::decay<ENVIRONMENT>::type>>::value or
@@ -113,10 +113,30 @@ namespace RL {
                 //                     "MEMORY template must be ExperienceReplay class.");
 
                 //--------------------------
-                // static_assert(std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::value_type>>, 
+                // static_assert(std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::ValueAt<0>>> or
+                //               std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::ValueAt<0>, 
+                //                                                                     typename std::decay_t<MEMORY>::ValueAt<1>>> or  
+                //               std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::ValueAt<0>, 
+                //                                                                     typename std::decay_t<MEMORY>::ValueAt<1>
+                //                                                                     typename std::decay_t<MEMORY>::ValueAt<2>>> or
+                //               std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::ValueAt<0>, 
+                //                                                                     typename std::decay_t<MEMORY>::ValueAt<1>
+                //                                                                     typename std::decay_t<MEMORY>::ValueAt<2>
+                //                                                                     typename std::decay_t<MEMORY>::ValueAt<3>>>,
                 //                     "MEMORY template must be ExperienceReplay class.");
-
                 //--------------------------
+                static_assert(  std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::template ValueAt<0>>> or
+                                std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::template ValueAt<0>,
+                                                                                    typename std::decay_t<MEMORY>::template ValueAt<1>>> or  
+                                std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::template ValueAt<0>,
+                                                                                    typename std::decay_t<MEMORY>::template ValueAt<1>,
+                                                                                    typename std::decay_t<MEMORY>::template ValueAt<2>>> or
+                                std::is_same_v<std::decay_t<MEMORY>, ExperienceReplay<typename std::decay_t<MEMORY>::template ValueAt<0>,
+                                                                                    typename std::decay_t<MEMORY>::template ValueAt<1>,
+                                                                                    typename std::decay_t<MEMORY>::template ValueAt<2>,
+                                                                                    typename std::decay_t<MEMORY>::template ValueAt<3>>>,
+                                "MEMORY template must be ExperienceReplay class.");
+                std::cout << "MEMORY args size: " << MEMORY::Types <<std::endl;
             }//end  Train(ENVIRONMENT&& environment, HANDLER&& handler, MEMORY&& memory)
             //--------------------------
             template<typename... Args>
@@ -181,13 +201,13 @@ namespace RL {
                     //--------------------------
                     try{
                         //--------------------------
-                        if(memory_activation(gen)){
+                        if(m_memory_activation(m_gen)){
                             //--------------------------
                             auto [_memory_input, _memory_next_input, _memory_reward, _done] = m_memory.sample();
                             //--------------------------
                             m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
                             //--------------------------
-                        }//end if(memory_activation(gen))
+                        }//end if(m_memory_activation(m_gen))
                         else{
                             //--------------------------
                             m_handler.agent(training_input, next_input, optimizer, reward, done);
@@ -217,14 +237,12 @@ namespace RL {
                             std::function<torch::Tensor(const torch::Tensor&)> normalizing_function,
                             const Args&... args){
                 //--------------------------
-                // std::lock_guard<std::mutex> _lock_guard(m_mutex);
+                std::lock_guard<std::mutex> _lock_guard(m_mutex);
                 //--------------------------
                 bool done = false;
                 double epsilon = 0.;
                 //--------------------------
                 auto _input = environment.get_first(epsilon).to(m_device);
-                //--------------------------
-                // std::cout << "_input: " << _input.sizes() << std::endl;
                 //--------------------------
                 auto output = m_handler.action(_input, epsilon, args...).to(m_device);
                 //--------------------------
@@ -246,13 +264,13 @@ namespace RL {
                     //--------------------------
                     try{
                         //--------------------------
-                        if(memory_activation(gen)){
+                        if(m_memory_activation(m_gen)){
                             //--------------------------
                             auto [_memory_input, _memory_next_input, _memory_reward, _done] = m_memory.sample();
                             //--------------------------
                             m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
                             //--------------------------
-                        }//end if(memory_activation(gen))
+                        }//end if(m_memory_activation(m_gen))
                         else{
                             //--------------------------
                             m_handler.agent(training_input, next_input, optimizer, reward, done);
@@ -276,6 +294,134 @@ namespace RL {
                 //--------------------------
             }// end void train_run(void)
             //--------------------------------------------------------------
+            template<typename... Args>
+            void train_run( std::shared_ptr<ENVIRONMENT> environment,
+                            torch::optim::Optimizer& optimizer,
+                            std::function<torch::Tensor(const torch::Tensor&)> normalizing_function,
+                            const Args&... args){
+                //--------------------------
+                std::lock_guard<std::mutex> _lock_guard(m_mutex);
+                //--------------------------
+                bool done = false;
+                double epsilon = 0.;
+                //--------------------------
+                auto _input = environment->get_first(epsilon).to(m_device);
+                //--------------------------
+                auto output = m_handler.action(_input, epsilon, args...).to(m_device);
+                //--------------------------
+                auto [next_input, reward] = environment->step(epsilon, done, _input, normalizing_function(output));
+                //--------------------------
+                m_handler.agent(_input, next_input.to(m_device), optimizer, reward, done);
+                //--------------------------
+                m_memory.push(_input, next_input, reward, done);
+                //--------------------------
+                torch::Tensor training_input = next_input;
+                //--------------------------
+                while(!done){
+                    //--------------------------
+                    output = m_handler.action(training_input, epsilon, args...);
+                    //--------------------------
+                    std::tie(next_input, reward) = environment->step(epsilon, done, training_input,  normalizing_function(output));
+                    //--------------------------
+                    m_memory.push(training_input, next_input.to(m_device), reward, done);
+                    //--------------------------
+                    try{
+                        //--------------------------
+                        if(m_memory_activation(m_gen)){
+                            //--------------------------
+                            auto [_memory_input, _memory_next_input, _memory_reward, _done] = m_memory.sample();
+                            //--------------------------
+                            m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
+                            //--------------------------
+                        }//end if(m_memory_activation(m_gen))
+                        else{
+                            //--------------------------
+                            m_handler.agent(training_input, next_input, optimizer, reward, done);
+                            //--------------------------
+                        }// end else
+                        //--------------------------
+                    }// end try
+                    catch(std::overflow_error& e) {
+                        //--------------------------
+                        std::cerr << "\n" << e.what() << std::endl;
+                        //--------------------------
+                        std::exit(-1);
+                        //--------------------------
+                    }// end catch(std::out_of_range& e)
+                    //--------------------------
+                    training_input = next_input;
+                    //--------------------------
+                }// end while(!_done)
+                //--------------------------
+                environment->reset();
+                //--------------------------
+            }// end void train_run(void)
+            //-------------------------------------------------------------
+            template<typename... Args>
+            void train_local_run(   torch::optim::Optimizer& optimizer,
+                                    std::function<torch::Tensor(const torch::Tensor&)> normalizing_function,
+                                    const Args&... args){
+                //--------------------------
+                auto environment = m_environment;
+                auto memory = m_memory;
+                //--------------------------
+                std::lock_guard<std::mutex> _lock_guard(m_mutex);
+                //--------------------------
+                bool done = false;
+                double epsilon = 0.;
+                //--------------------------
+                auto _input = environment.get_first(epsilon).to(m_device);
+                //--------------------------
+                auto output = m_handler.action(_input, epsilon, args...).to(m_device);
+                //--------------------------
+                auto [next_input, reward] = environment.step(epsilon, done, _input, normalizing_function(output));
+                //--------------------------
+                m_handler.agent(_input, next_input.to(m_device), optimizer, reward, done);
+                //--------------------------
+                memory.push(_input, next_input, reward, done);
+                //--------------------------
+                torch::Tensor training_input = next_input;
+                //--------------------------
+                while(!done){
+                    //--------------------------
+                    output = m_handler.action(training_input, epsilon, args...);
+                    //--------------------------
+                    std::tie(next_input, reward) = environment.step(epsilon, done, training_input,  normalizing_function(output));
+                    //--------------------------
+                    memory.push(training_input, next_input.to(m_device), reward, done);
+                    //--------------------------
+                    try{
+                        //--------------------------
+                        if(m_memory_activation(m_gen)){
+                            //--------------------------
+                            auto [_memory_input, _memory_next_input, _memory_reward, _done] = memory.sample();
+                            //--------------------------
+                            m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
+                            //--------------------------
+                        }//end if(m_memory_activation(m_gen))
+                        else{
+                            //--------------------------
+                            m_handler.agent(training_input, next_input, optimizer, reward, done);
+                            //--------------------------
+                        }// end else
+                        //--------------------------
+                    }// end try
+                    catch(std::overflow_error& e) {
+                        //--------------------------
+                        std::cerr << "\n" << e.what() << std::endl;
+                        //--------------------------
+                        std::exit(-1);
+                        //--------------------------
+                    }// end catch(std::out_of_range& e)
+                    //--------------------------
+                    training_input = next_input;
+                    //--------------------------
+                }// end while(!_done)
+                //--------------------------
+                environment.reset();
+                //--------------------------
+            }// end void train_run(void)
+            //---------------------------------------------------------------
             template<typename... Args>
             void train_run( ENVIRONMENT environment,
                             MEMORY memory,
@@ -308,13 +454,13 @@ namespace RL {
                     //--------------------------
                     try{
                         //--------------------------
-                        if(memory_activation(gen)){
+                        if(m_memory_activation(m_gen)){
                             //--------------------------
                             auto [_memory_input, _memory_next_input, _memory_reward, _done] = memory.sample();
                             //--------------------------
                             m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
                             //--------------------------
-                        }//end if(memory_activation(gen))
+                        }//end if(m_memory_activation(m_gen))
                         else{
                             //--------------------------
                             m_handler.agent(training_input, next_input, optimizer, reward, done);
@@ -345,14 +491,11 @@ namespace RL {
                 //--------------------------
                 for (size_t i = 0; i < epoch; ++i) {
                     //--------------------------
-                    // ENVIRONMENT _environment = m_environment;
-                    // MEMORY _memory = m_memory;
+                    ENVIRONMENT _environment = m_environment;
                     //--------------------------
-                    // train_run(_environment, _memory, optimizer, normalizing_function, args...);
+                    train_run(_environment, optimizer, normalizing_function, args...);
                     //--------------------------
-                    // train_run(_environment, optimizer, normalizing_function, args...);
-                    //--------------------------
-                    train_run(optimizer, normalizing_function, args...);
+                    // train_run(optimizer, normalizing_function, args...);
                     //--------------------------
                     bar.update();
                     //--------------------------
@@ -363,14 +506,14 @@ namespace RL {
             template<typename... Args>
             void train_run(const size_t& epoch, const size_t jobs, torch::optim::Optimizer& optimizer, std::function<torch::Tensor(torch::Tensor)> normalizing_function, const Args&... args){
                 //--------------------------
-                // if(jobs > std::thread::hardware_concurrency()){
-                //     //--------------------------
-                //     throw std::out_of_range("jobs Size: [" + std::to_string(jobs) + 
-                //                             "] Must Be Less or Equal Hardware cores size: [" + std::to_string(std::thread::hardware_concurrency()) + "]");
-                //     //--------------------------
-                // }// end if(jobs > std::thread::hardware_concurrency())
+                if(jobs > std::thread::hardware_concurrency()){
+                    //--------------------------
+                    throw std::out_of_range("jobs Size: [" + std::to_string(jobs) + 
+                                            "] Must Be Less or Equal Hardware cores size: [" + std::to_string(std::thread::hardware_concurrency()) + "]");
+                    //--------------------------
+                }// end if(jobs > std::thread::hardware_concurrency())
                 //--------------------------
-                std::vector<std::thread> threads;
+                std::vector<std::jthread> threads;
                 threads.reserve(jobs);
                 //--------------------------
                 auto _epoch = static_cast<size_t>(epoch/jobs);
@@ -379,33 +522,11 @@ namespace RL {
                 //--------------------------
                 for (size_t i = 0; i < _epoch; ++i) {
                     //--------------------------
-                    // for(size_t j = 0; j < jobs; ++j){
-                    //     //--------------------------
-                    //     threads.emplace_back([this, &optimizer, &normalizing_function, &args...](){train_run(optimizer, normalizing_function, args...);});
-                    //     //--------------------------
-                    // }// end for(size_t j = 0; j < jobs; ++j)
-                    //--------------------------
                     for(size_t j = 0; j < jobs; ++j){
                         //--------------------------
-                        ENVIRONMENT _environment = m_environment;
-                        //--------------------------
-                        threads.emplace_back([this, &_environment, &optimizer, &normalizing_function, &args...](){
-                            train_run(_environment, optimizer, normalizing_function, args...);});
+                        threads.emplace_back([this, &optimizer, &normalizing_function, &args...](){train_local_run(optimizer, normalizing_function, args...);});
                         //--------------------------
                     }// end for(size_t j = 0; j < jobs; ++j)
-                    // //--------------------------
-                    // std::generate_n(std::execution::par, std::back_inserter(threads), jobs,
-                    //         [this, &optimizer, &normalizing_function, &args...](){ 
-                    //             return std::thread([this, &optimizer, &normalizing_function, &args...](){train_run(optimizer, normalizing_function, args...);});});
-                    //--------------------------
-                    // std::generate_n(std::execution::par, std::back_inserter(threads), jobs,
-                    //         [this, &optimizer, &normalizing_function, &args...](){ 
-                    //             ENVIRONMENT _environment = m_environment;
-                    //             MEMORY _memory = m_memory;
-                    //             return std::thread([this,&_environment, &_memory, &optimizer, &normalizing_function, &args...](){
-                    //                 train_run(_environment, _memory, optimizer,  normalizing_function, args...);});});
-                    //--------------------------
-                    std::for_each(std::execution::par, threads.begin(), threads.end(), [](auto& _thread){_thread.join();});
                     //--------------------------
                     threads.clear();
                     //--------------------------
@@ -514,8 +635,8 @@ namespace RL {
             //--------------------------
             torch::Device m_device;
             //--------------------------
-            std::mt19937 gen;
-            std::bernoulli_distribution memory_activation;
+            std::mt19937 m_gen;
+            std::bernoulli_distribution m_memory_activation;
             //--------------------------
             std::mutex m_mutex;
             //--------------------------------------------------------------

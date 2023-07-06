@@ -58,12 +58,12 @@ namespace RL {
                                                                 m_gen(std::random_device{}()), m_memory_activation(memory_percentage) {
                 //--------------------------             
                 static_assert(Utils::CheckEnvironment<std::decay_t<ENVIRONMENT>>::value, 
-                            "\x1b[36m ENVIRONMENT template must be one of RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class. \x1b[0m");
+                            "ENVIRONMENT template must be one of RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class.");
                 //--------------------
                 static_assert(Utils::CheckHandler<std::decay_t<HANDLER>>::value, 
-                                "\x1b[36m HANDLER template must be one of ReinforcementNetworkHandling, or ReinforcementNetworkHandlingDQN class.\x1b[0m");
+                                "HANDLER template must be one of ReinforcementNetworkHandling, or ReinforcementNetworkHandlingDQN class.");
                 //--------------------
-                static_assert(Utils::CheckExperienceReplay<std::decay_t<MEMORY>>::value, "\x1b[36m MEMORY template must be ExperienceReplay class. \x1b[0m");
+                static_assert(Utils::CheckExperienceReplay<std::decay_t<MEMORY>>::value, "MEMORY template must be ExperienceReplay class.");
                 //--------------------
             }//end  Train(ENVIRONMENT&& environment, HANDLER&& handler, MEMORY&& memory)
             //--------------------------

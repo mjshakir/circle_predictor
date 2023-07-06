@@ -134,7 +134,8 @@ add_library(${PROJECT_NAME}_rl_network SHARED
 # Miscellaneous Library
 #----------------------------------
 add_library(${PROJECT_NAME}_utilities SHARED
-  src/Utilities/Utils.cpp
+  src/Utilities/CircleEquation.cpp
+  src/Utilities/StaticCheck.cpp
 )
 #------------------------------------------------------------------------------------------
 if(USE_TTB)

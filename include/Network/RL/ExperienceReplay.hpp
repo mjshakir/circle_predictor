@@ -5,6 +5,7 @@
 #include <iostream>
 //-------------------
 #include <unordered_map>
+#include <tuple>
 #include <climits>
 #include <random>
 //--------------------------------------------------------------
@@ -38,6 +39,8 @@ class ExperienceReplay{
             // Perform a deep copy of the data
             m_capacity  = other.m_capacity;
             m_position  = other.m_position;
+            //--------------------------
+            m_memory.reserve(m_capacity);
             //--------------------------
             return *this;
             //--------------------------

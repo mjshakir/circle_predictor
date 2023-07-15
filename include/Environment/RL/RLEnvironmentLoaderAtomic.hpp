@@ -2,7 +2,7 @@
 //--------------------------------------------------------------
 // User Defined library
 //--------------------------------------------------------------
-#include "Environment/RL/RLEnvironmentLoader.hpp"
+#include "Environment/RL/RLEnvironmentAtomic.hpp"
 //--------------------------------------------------------------
 // Standard library
 //--------------------------------------------------------------
@@ -16,7 +16,7 @@ namespace RL {
         //--------------------------------------------------------------
         template<typename T, typename COST_OUTPUT, typename... Args>
         //--------------------------------------------------------------
-        class RLEnvironmentLoaderAtomic : public RLEnvironmentLoader<T, COST_OUTPUT, Args...>{
+        class RLEnvironmentLoaderAtomic : public RLEnvironmentAtomic<T, COST_OUTPUT, Args...>{
             //--------------------------------------------------------------
             public:
                 //--------------------------------------------------------------
@@ -54,33 +54,27 @@ namespace RL {
                 */
                 explicit RLEnvironmentLoaderAtomic( std::vector<T>&& data, 
                                                     std::function<COST_OUTPUT(const Args&...)> costFunction,
+                                                    const size_t& batch = 2UL,
                                                     const double& egreedy = 0.9,
                                                     const double& egreedy_final = 0.02,
-                                                    const double& egreedy_decay = 500.,
-                                                    const size_t& batch = 2UL) : RLEnvironmentLoader<T, COST_OUTPUT, Args...>(std::move(data),
-                                                                                                                              std::move(costFunction),
-                                                                                                                              egreedy,
-                                                                                                                              egreedy_final,
-                                                                                                                              egreedy_decay,
-                                                                                                                              batch),
+                                                    const double& egreedy_decay = 500.) : RLEnvironmentAtomic<T, COST_OUTPUT, Args...>( std::move(data),
+                                                                                                                                        std::move(costFunction),
+                                                                                                                                        egreedy,
+                                                                                                                                        egreedy_final,
+                                                                                                                                        egreedy_decay),
                                                                                 m_data(this->get_data()),
                                                                                 m_CostFunction(this->get_cost_function()),
-                                                                                m_egreedy(egreedy),
-                                                                                m_egreedy_final(egreedy_final),
-                                                                                m_egreedy_decay(egreedy_decay),
+                                                                                m_data_iter(this->getIterator()),
                                                                                 m_batch(batch){
-                    //----------------------------
-                    setIterator(this->get_iterator());
                     //----------------------------
                 }// end RLEnvironmentLoaderAtomic(Dataset&& data_loader)
                 //--------------------------------------------------------------
-                // Option 2: Define copy constructor explicitly
-                RLEnvironmentLoaderAtomic(const RLEnvironmentLoaderAtomic& other) : RLEnvironmentLoader<T, COST_OUTPUT, Args...>(other),
+                //Define copy constructor explicitly
+                RLEnvironmentLoaderAtomic(const RLEnvironmentLoaderAtomic& other) : RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(other),
                                                                                     m_data(other.m_data),
                                                                                     m_CostFunction(other.m_CostFunction),
+                                                                                    m_data_iter(this->getIterator()),
                                                                                     m_batch(other.m_batch) {
-                    //--------------------------
-                    setIterator(this->get_iterator());
                     //--------------------------
                 }// end RLEnvironmentLoaderAtomic(const RLEnvironmentLoaderAtomic& other)
                 //--------------------------------------------------------------
@@ -93,12 +87,11 @@ namespace RL {
                     }// end if (this == &other)
                     //--------------------------
                     // Perform a deep copy of the data
-                    RLEnvironmentLoader<T, COST_OUTPUT, Args...>::operator=(other);
+                    RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::operator=(other);
                     m_data          = other.m_data;
                     m_CostFunction  = other.m_CostFunction;
+                    m_data_iter     = this->getIterator(); 
                     m_batch         = other.m_batch;
-                    //--------------------------
-                    setIterator(this->get_iterator());
                     //--------------------------
                     return *this;
                     //--------------------------
@@ -221,7 +214,7 @@ namespace RL {
                 * double epsilon = std::get<2>(result);
                 * bool isComplete = std::get<3>(result);
                 */
-                virtual std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(const size_t& batch, const Args&... args) override {
+                std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(const size_t& batch, const Args&... args) {
                     //----------------------------
                     return internal_step(batch, args...);
                     //----------------------------
@@ -282,7 +275,7 @@ namespace RL {
                 * COST_OUTPUT cost = std::get<1>(result);
                 * @endcode
                 */
-                virtual std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args) override {
+                std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args) {
                     //----------------------------
                     return internal_step(epsilon, done, batch, args...);
                     //----------------------------
@@ -334,7 +327,7 @@ namespace RL {
                  * double epsilon = std::get<1>(result);
                  * @endcode
                  */
-                virtual std::tuple<torch::Tensor, double> get_first(const size_t& batch) override {
+                std::tuple<torch::Tensor, double> get_first(const size_t& batch) {
                     //----------------------------
                     return get_first_internal(batch);
                     //----------------------------
@@ -389,7 +382,7 @@ namespace RL {
                  * torch::Tensor batch = loader.get_first(epsilon, batch_size);
                  * @endcode
                  */
-                virtual torch::Tensor get_first(OUT double& epsilon, const size_t& batch) override {
+                torch::Tensor get_first(OUT double& epsilon, const size_t& batch) {
                     //----------------------------
                     return get_first_internal(epsilon, batch);
                     //----------------------------
@@ -397,11 +390,15 @@ namespace RL {
                 //--------------------------------------------------------------
             protected:
                 //--------------------------------------------------------------
-                virtual std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, const Args&... args) override {
+                using RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::internal_step;  // Bring base class functions into scope
+                //--------------------------
+                using RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_first_internal;  // Bring base class functions into scope
+                //--------------------------------------------------------------
+                std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, const Args&... args) {
                     //--------------------------------------------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = getIterator();
+                    auto _data_iter = this->getIterator();
                     //--------------------------------------------------------------
                     if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -433,9 +430,9 @@ namespace RL {
                             //--------------------------
                         }// end for(; _data_iter != _data_end; ++_data_iter)
                         //--------------------------
-                        setIterator(_data_iter);
+                        this->setIterator(_data_iter);
                         //--------------------------
-                        return {torch::cat(_data, 0), m_CostFunction(args...), calculate_epsilon(_data_iter), true};
+                        return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(_data_iter), true};
                         //--------------------------
                     }// if(_data_iter == m_data.end())
                     //--------------------------------------------------------------
@@ -445,17 +442,17 @@ namespace RL {
                         //--------------------------
                     }// end for(; _data_iter != _data_end; ++_data_iter)
                     //--------------------------
-                    setIterator(_data_iter);
+                    this->setIterator(_data_iter);
                     //--------------------------
-                    return {torch::cat(_data, 0), m_CostFunction(args...), calculate_epsilon(_data_iter), false};
+                    return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(_data_iter), false};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args)
                 //--------------------------------------------------------------
-                virtual std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args) override {
+                std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args) {
                     //--------------------------------------------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = getIterator();
+                    auto _data_iter = this->getIterator();
                     //--------------------------------------------------------------
                     if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -486,8 +483,8 @@ namespace RL {
                             //--------------------------
                         }// end for(; _data_iter != _data_end; ++_data_iter)
                         //--------------------------
-                        setIterator(_data_iter);
-                        epsilon = calculate_epsilon(_data_iter);
+                        this->setIterator(_data_iter);
+                        epsilon = this->calculate_epsilon(_data_iter);
                         done = true;
                         //--------------------------
                         return {torch::cat(_data, 0), m_CostFunction(args...)};
@@ -500,19 +497,19 @@ namespace RL {
                         //--------------------------
                     }// end for(; m_data_iter != _data_end; ++m_data_iter)
                     //--------------------------
-                    setIterator(_data_iter);
-                    epsilon = calculate_epsilon(_data_iter);
+                    this->setIterator(_data_iter);
+                    epsilon = this->calculate_epsilon(_data_iter);
                     done = false;
                     //--------------------------
                     return {torch::cat(_data, 0), m_CostFunction(args...)};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, Args... args)
                 //--------------------------------------------------------------
-                virtual std::tuple<torch::Tensor, double> get_first_internal(const size_t& batch) override {
+                std::tuple<torch::Tensor, double> get_first_internal(const size_t& batch) {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = getIterator();
+                    auto _data_iter = this->getIterator();
                     //--------------------------
                     if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -525,7 +522,7 @@ namespace RL {
                         std::vector<torch::Tensor> _data;
                         _data.reserve(batch);
                         //--------------------------
-                        auto epsilon = calculate_epsilon(_data_iter);
+                        auto epsilon = this->calculate_epsilon(_data_iter);
                         //--------------------------
                         _data.push_back(*_data_iter);
                         //--------------------------
@@ -535,7 +532,7 @@ namespace RL {
                             //--------------------------
                         }// end for(size_t i = 0; i < batch; ++i)
                         //--------------------------
-                        setIterator(_data_iter);
+                        this->setIterator(_data_iter);
                         //--------------------------
                         return {torch::cat(_data, 0), epsilon};
                         //--------------------------
@@ -545,11 +542,11 @@ namespace RL {
                     //--------------------------
                 }// end torch::Tensor get_first_internal(void)
                 //--------------------------------------------------------------
-                virtual torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch) override {
+                torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch) {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = getIterator();
+                    auto _data_iter = this->getIterator();
                     //--------------------------
                     if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -562,7 +559,7 @@ namespace RL {
                         std::vector<torch::Tensor> _data;
                         _data.reserve(batch);
                         //--------------------------
-                        epsilon = calculate_epsilon(_data_iter);
+                        epsilon = this->calculate_epsilon(_data_iter);
                         //--------------------------
                         _data.push_back(*_data_iter);
                         //--------------------------
@@ -572,7 +569,7 @@ namespace RL {
                             //--------------------------
                         }// end for(size_t i = 0; i < batch; ++i)
                         //--------------------------
-                        setIterator(_data_iter);
+                        this->setIterator(_data_iter);
                         //--------------------------
                         return torch::cat(_data, 0);
                         //--------------------------
@@ -584,35 +581,15 @@ namespace RL {
                     //--------------------------
                 }// end torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch)
                 //--------------------------------------------------------------
-                void setIterator(const typename std::vector<T>::iterator& iterator){
-                    //--------------------------
-                    m_data_iter.store(iterator);
-                    //--------------------------
-                }// end void set_iterator(const std::vector<T>::iterator& iterator)
-                //--------------------------------------------------------------
-                typename std::vector<T>::iterator getIterator(void) const {
-                    //--------------------------
-                    return m_data_iter.load();
-                    //--------------------------
-                }// end std::vector<torch::Tensor>::iterator get_iterator(void) const
-                //--------------------------------------------------------------
-                constexpr double calculate_epsilon(const typename std::vector<T>::iterator& data_iter) {
-                    //--------------------------
-                    return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * std::distance(m_data.begin(), data_iter) / m_egreedy_decay);
-                    //--------------------------
-                }// end constexpr double calculate_epsilon(typename std::vector<T>::iterator data_iter)
-                //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
                 std::vector<T>& m_data;
                 //--------------------------
                 std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
                 //--------------------------
-                double m_egreedy, m_egreedy_final, m_egreedy_decay;
+                std::atomic<typename std::vector<T>::iterator> m_data_iter;
                 //--------------------------
                 size_t m_batch;
-                //--------------------------
-                std::atomic<typename std::vector<T>::iterator> m_data_iter;
                 //--------------------------
                 std::mutex m_mutex;
             //--------------------------------------------------------------

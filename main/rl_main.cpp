@@ -689,7 +689,12 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // };
     //--------------------------------------------------------------
-    auto _circle_reward = [](const torch::Tensor& input, const torch::Tensor& output){
+    const torch::Tensor local_min = _normalize.get_min(), local_max =_normalize.get_max();
+    //--------------------------
+    auto _circle_reward = [&local_min, &local_max](const torch::Tensor& input, const torch::Tensor& output){
+        //--------------------------
+        torch::Tensor _input  =  RL::RLNormalize::unnormalization(input, local_min, local_max),
+                      _output =  RL::RLNormalize::unnormalization(output, local_min, local_max);        
         //--------------------------
         std::vector<double> reward(output.size(0), 0.);
         //--------------------------
@@ -699,45 +704,49 @@ int main(int argc, char const *argv[]){
             size_t i = &r - &reward[0];  // Get the index of the current element
             //--------------------------
             // Criterion 1: Points aligned
-            Utils::CircleEquation::Aligned(r, output[i], 1E-4);
+            Utils::CircleEquation::Aligned(r, _output[i], 1E-4);
             //--------------------------
             // Criterion 2: Points close to the circumference of a circle
             Utils::CircleEquation::CloseToCircumference(r,
-                                        output[i],
-                                        input.slice(1, 0, 2).slice(0, i, (i + 1)),
-                                        input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(),
-                                        1E-1);
+                                                        _output[i],
+                                                        _input.slice(1, 0, 2).slice(0, i, (i + 1)),
+                                                        _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(),
+                                                        1E-4);
             //--------------------------
             // Criterion 3: Points equidistant
-            Utils::CircleEquation::Equidistant(r, output[i], 1E-4);
+            Utils::CircleEquation::Equidistant(r, _output[i], 1E-4);
             //--------------------------
             // Criterion 4: Angle ratios consistent
-            Utils::CircleEquation::AngleRatiosConsistent(r, output[i], 1E-4);
+            Utils::CircleEquation::AngleRatiosConsistent(r, _output[i], 1E-4);
             //--------------------------
             // Criterion 5: Symmetry of the points
-            Utils::CircleEquation::Symmetric(r, output[i]);
+            Utils::CircleEquation::Symmetric(r, _output[i]);
             //--------------------------
             // Criterion 6: Triangle area
-            Utils::CircleEquation::TriangleArea(r, output[i]);
+            Utils::CircleEquation::TriangleArea(r, _output[i]);
             //--------------------------
             // Criterion 7: Circle smoothness
             Utils::CircleEquation::CircleSmoothness(r, 
-                                    output[i],
-                                    input.slice(1, 0, 2).slice(0, i, (i + 1)),
-                                    input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze());
+                                                    _output[i],
+                                                    _input.slice(1, 0, 2).slice(0, i, (i + 1)),
+                                                    _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze());
             //--------------------------
         });      
         //--------------------------
-        auto _reward_results = torch::tensor(reward);
-        return Normalize::normalization(_reward_results);
+        // auto _reward_results = torch::tensor(reward);
+        // return Normalize::normalization(_reward_results);
         //--------------------------
-        // return torch::tensor(reward);
+        // return Normalize::normalization(torch::tensor(reward));
+        //--------------------------
+        return torch::tensor(reward);
         //--------------------------
     };
     //--------------------------------------------------------------
-    // RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
+    // RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, batch_size, 0.9, 0.02, 500.);
     //--------------------------
-    RL::Environment::RLEnvironmentLoaderAtomic<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, 0.9, 0.02, 500., batch_size);
+    // RL::Environment::RLEnvironmentLoaderAtomic<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, batch_size, 0.9, 0.02, 500.);
+    //--------------------------
+    RL::Environment::RLEnvironmentShuffleLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, batch_size, 0.9, 0.02, 500.);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device, false);
     // RLNetLSTM target_model({points_size, batch_size}, output_size, device, false);
@@ -927,9 +936,7 @@ int main(int argc, char const *argv[]){
                                                                                     std::move(memory),
                                                                                     device);
     //--------------------------
-    // std::function<torch::Tensor(torch::Tensor)> normalizationFunction =
-    //     [&_normalize](const torch::Tensor& input) {return _normalize.normalization(input);};
-    _train.run(epoch, 4, optimizer, [&_normalize](const torch::Tensor& input) {return _normalize.normalization(input);} , batch_size*10, generated_points_size, output_size);
+    _train.run(epoch, optimizer, [&_normalize](const torch::Tensor& input) {return _normalize.normalization(input);} , batch_size*10, generated_points_size, output_size);
     //--------------------------------------------------------------
     // std::vector<std::thread> _threads(epoch);
     // _threads.reserve(std::thread::hardware_concurrency() - 1);

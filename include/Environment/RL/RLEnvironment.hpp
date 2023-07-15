@@ -58,7 +58,39 @@ namespace RL {
                     //----------------------------
                 }// end RLEnvironment(Dataset&& data_loader)
                 //--------------------------------------------------------------
-                // Option 2: Define copy constructor explicitly
+                /**
+                 * @brief Construct to create a training environment for reinforcement learning 
+                 * 
+                 * @param data          [in] : Data Vector of the template type T                             
+                 *                          @example: RLEnvironment<torch::Tensor,..., ...> foo(data, ...) this will results in std::vector<torch::Tensor>
+                 * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters 
+                 *                          @example: RLEnvironment<..., torch::Tensor,double, int> foo(..., [](double x, int y){return torch::tensor(x*y);})
+                 * @param egreedy       [in] : The starting egreedy                        @default: 0.9
+                 * @param egreedy_final [in] : The egreedy number where it will change     @default: 0.02
+                 * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor  @default: 500.
+                 * 
+                 * @throws std::runtime_error
+                 */
+                explicit RLEnvironment( const std::vector<T>& data, 
+                                        const std::function<COST_OUTPUT(const Args&...)>& costFunction,
+                                        const double& egreedy = 0.9,
+                                        const double& egreedy_final = 0.02,
+                                        const double& egreedy_decay = 500.) :   m_data(data),
+                                                                                m_data_iter(m_data.begin()), 
+                                                                                m_CostFunction(costFunction),
+                                                                                m_egreedy(egreedy),
+                                                                                m_egreedy_final(egreedy_final),
+                                                                                m_egreedy_decay(egreedy_decay){
+                    //----------------------------
+                    if(egreedy_decay == 0.){
+                        //----------------------------
+                        throw std::runtime_error("Egreedy Decay Cannot Be Zero. egreedy_decay Value: [" + std::to_string(egreedy_decay) + "]");
+                        //----------------------------
+                    }// end if(egreedy_decay == 0.)
+                    //----------------------------
+                }// end RLEnvironment(Dataset&& data_loader)
+                //--------------------------------------------------------------
+                //Define copy constructor explicitly
                 RLEnvironment(const RLEnvironment& other) : m_data(other.m_data),
                                                             m_data_iter(other.m_data_iter),
                                                             m_CostFunction(other.m_CostFunction),
@@ -147,9 +179,19 @@ namespace RL {
                     //--------------------------
                 }// end void reset(void)
                 //--------------------------------------------------------------
+                /**
+                 * @brief 
+                 * 
+                 */
+                constexpr size_t size(void) const{
+                    //--------------------------
+                    return vector_size();
+                    //--------------------------
+                }// end constexpr size_t size(void) const
+                //--------------------------------------------------------------
             protected:
                 //--------------------------------------------------------------
-                std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const Args&... args){
+                virtual std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const Args&... args){
                     //--------------------------
                     if (m_data_iter == m_data.end()){
                         //--------------------------
@@ -159,12 +201,12 @@ namespace RL {
                     //--------------------------
                     if (m_data_iter == m_data.begin()){
                         //--------------------------
-                        auto input = *m_data_iter;
-                        auto epsilon = calculate_epsilon();
+                        torch::Tensor _data;
+                        double epsilon;
                         //--------------------------
-                        ++m_data_iter;
+                        std::tie(_data, epsilon) = get_first_internal();
                         //--------------------------
-                        return {input, torch::tensor(NULL), epsilon, false};
+                        return {_data, torch::tensor(0), epsilon, false};
                         //--------------------------
                     }// end if (m_data_iter == m_data.begin())
                     //--------------------------
@@ -174,17 +216,11 @@ namespace RL {
                         //--------------------------
                     }// if(m_data_iter == m_data.end())
                     //--------------------------
-                    if(m_data_iter != m_data.end()-1){
-                        //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                    }// if(m_data_iter == m_data.end())
-                    //--------------------------
-                    return {*m_data_iter, m_CostFunction(args...), calculate_epsilon(), false};
+                    return {*m_data_iter++, m_CostFunction(args...), calculate_epsilon(), false};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(Args... args))
                 //--------------------------------------------------------------
-                std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const Args&... args){
+                virtual std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const Args&... args){
                     //--------------------------
                     if (m_data_iter == m_data.end()){
                         //--------------------------
@@ -194,13 +230,11 @@ namespace RL {
                     //--------------------------
                     if (m_data_iter == m_data.begin()){
                         //--------------------------
-                        auto input = *m_data_iter;
-                        epsilon = calculate_epsilon();
                         done = false;
                         //--------------------------
-                        ++m_data_iter;
+                        torch::Tensor _data = get_first_internal(epsilon);
                         //--------------------------
-                        return {input, torch::tensor(0)};
+                        return {_data, torch::tensor(0)};
                         //--------------------------
                     }// end if (m_data_iter == m_data.begin())
                     //--------------------------
@@ -213,20 +247,14 @@ namespace RL {
                         //--------------------------
                     }// if(m_data_iter == m_data.end())
                     //--------------------------
-                    if(m_data_iter != m_data.end()-1){
-                        //--------------------------
-                        ++m_data_iter;
-                        //--------------------------
-                    }// if(m_data_iter == m_data.end())
-                    //--------------------------
                     epsilon = calculate_epsilon();
                     done = false;
                     //--------------------------
-                    return {*m_data_iter, m_CostFunction(args...)};
+                    return {*m_data_iter++, m_CostFunction(args...)};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, Args... args)
                 //--------------------------------------------------------------
-                std::tuple<torch::Tensor, double> get_first_internal(void){
+                virtual std::tuple<torch::Tensor, double> get_first_internal(void){
                     //--------------------------
                     if (m_data_iter == m_data.end()){
                         //--------------------------
@@ -250,7 +278,7 @@ namespace RL {
                     //--------------------------
                 }// end torch::Tensor get_first_internal(void)
                 //--------------------------------------------------------------
-                torch::Tensor get_first_internal(OUT double& epsilon){
+                virtual torch::Tensor get_first_internal(OUT double& epsilon){
                     //--------------------------
                     if (m_data_iter == m_data.end()){
                         //--------------------------
@@ -303,6 +331,12 @@ namespace RL {
                 typename std::vector<T>::iterator& get_iterator(void){
                     //--------------------------
                     return m_data_iter;
+                    //--------------------------
+                }// end typename std::vector<T>::iterator& get_iterator(void)
+                //--------------------------------------------------------------
+                constexpr size_t vector_size(void) const{
+                    //--------------------------
+                    return m_data.size();
                     //--------------------------
                 }// end typename std::vector<T>::iterator& get_iterator(void)
                 //--------------------------------------------------------------

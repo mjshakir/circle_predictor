@@ -1,5 +1,5 @@
 //--------------------------------------------------------------
 // Main Header 
 //--------------------------------------------------------------
-#include "Environment/RL/RLEnvironmentRandomLoader.hpp"
+#include "Environment/RL/RLEnvironmentShuffleLoader.hpp"
 //--------------------------------------------------------------

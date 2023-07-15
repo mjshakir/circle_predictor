@@ -2,18 +2,6 @@
 //--------------------------------------------------------------
 // User defind library
 //--------------------------------------------------------------
-// Environment
-//--------------------------
-// #include "Environment/RL/Environment.hpp"
-//--------------------------
-// Network Handling
-//--------------------------
-// #include "Network/RL/ReinforcementNetworkHandlingDQN.hpp"
-//--------------------------
-// Memory Replay
-//--------------------------
-// #include "Network/RL/ExperienceReplay.hpp"
-//--------------------------
 // Check utilities
 //--------------------------
 #include "Utilities/StaticCheck.hpp"
@@ -26,8 +14,6 @@
 #include <random>
 #include <optional>
 #include <thread>
-#include <algorithm>
-#include <execution>
 //--------------------------------------------------------------
 // Progressbar library
 //--------------------------------------------------------------
@@ -43,6 +29,7 @@ namespace RL {
     //--------------------------------------------------------------
     template <typename ENVIRONMENT, typename HANDLER, typename MEMORY>
     class Train {
+        //--------------------------------------------------------------
         public:
             //--------------------------------------------------------------
             Train(void) = delete;
@@ -58,7 +45,7 @@ namespace RL {
                                                                 m_gen(std::random_device{}()), m_memory_activation(memory_percentage) {
                 //--------------------------             
                 static_assert(Utils::CheckEnvironment<std::decay_t<ENVIRONMENT>>::value, 
-                            "ENVIRONMENT template must be one of RLEnvironment, RLEnvironmentLoader, or RLEnvironmentRandomLoader class.");
+                            "ENVIRONMENT template must be one of RLEnvironment, RLEnvironmentLoader, or RLEnvironmentShuffleLoader class.");
                 //--------------------
                 static_assert(Utils::CheckHandler<std::decay_t<HANDLER>>::value, 
                                 "HANDLER template must be one of ReinforcementNetworkHandling, or ReinforcementNetworkHandlingDQN class.");
@@ -160,138 +147,12 @@ namespace RL {
             }// end void train_run(void)
             //--------------------------------------------------------------
             template<typename... Args>
-            void train_run( ENVIRONMENT environment,
-                            torch::optim::Optimizer& optimizer,
-                            std::function<torch::Tensor(const torch::Tensor&)> normalizing_function,
-                            const Args&... args){
-                //--------------------------
-                std::lock_guard<std::mutex> _lock_guard(m_mutex);
-                //--------------------------
-                bool done = false;
-                double epsilon = 0.;
-                //--------------------------
-                auto _input = environment.get_first(epsilon).to(m_device);
-                //--------------------------
-                auto output = m_handler.action(_input, epsilon, args...).to(m_device);
-                //--------------------------
-                auto [next_input, reward] = environment.step(epsilon, done, _input, normalizing_function(output));
-                //--------------------------
-                m_handler.agent(_input, next_input.to(m_device), optimizer, reward, done);
-                //--------------------------
-                m_memory.push(_input, next_input, reward, done);
-                //--------------------------
-                torch::Tensor training_input = next_input;
-                //--------------------------
-                while(!done){
-                    //--------------------------
-                    output = m_handler.action(training_input, epsilon, args...);
-                    //--------------------------
-                    std::tie(next_input, reward) = environment.step(epsilon, done, training_input,  normalizing_function(output));
-                    //--------------------------
-                    m_memory.push(training_input, next_input.to(m_device), reward, done);
-                    //--------------------------
-                    try{
-                        //--------------------------
-                        if(m_memory_activation(m_gen)){
-                            //--------------------------
-                            auto [_memory_input, _memory_next_input, _memory_reward, _done] = m_memory.sample();
-                            //--------------------------
-                            m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
-                            //--------------------------
-                        }//end if(m_memory_activation(m_gen))
-                        else{
-                            //--------------------------
-                            m_handler.agent(training_input, next_input, optimizer, reward, done);
-                            //--------------------------
-                        }// end else
-                        //--------------------------
-                    }// end try
-                    catch(std::overflow_error& e) {
-                        //--------------------------
-                        std::cerr << "\n" << e.what() << std::endl;
-                        //--------------------------
-                        std::exit(-1);
-                        //--------------------------
-                    }// end catch(std::out_of_range& e)
-                    //--------------------------
-                    training_input = next_input;
-                    //--------------------------
-                }// end while(!_done)
-                //--------------------------
-                environment.reset();
-                //--------------------------
-            }// end void train_run(void)
-            //--------------------------------------------------------------
-            template<typename... Args>
-            void train_run( std::shared_ptr<ENVIRONMENT> environment,
-                            torch::optim::Optimizer& optimizer,
-                            std::function<torch::Tensor(const torch::Tensor&)> normalizing_function,
-                            const Args&... args){
-                //--------------------------
-                std::lock_guard<std::mutex> _lock_guard(m_mutex);
-                //--------------------------
-                bool done = false;
-                double epsilon = 0.;
-                //--------------------------
-                auto _input = environment->get_first(epsilon).to(m_device);
-                //--------------------------
-                auto output = m_handler.action(_input, epsilon, args...).to(m_device);
-                //--------------------------
-                auto [next_input, reward] = environment->step(epsilon, done, _input, normalizing_function(output));
-                //--------------------------
-                m_handler.agent(_input, next_input.to(m_device), optimizer, reward, done);
-                //--------------------------
-                m_memory.push(_input, next_input, reward, done);
-                //--------------------------
-                torch::Tensor training_input = next_input;
-                //--------------------------
-                while(!done){
-                    //--------------------------
-                    output = m_handler.action(training_input, epsilon, args...);
-                    //--------------------------
-                    std::tie(next_input, reward) = environment->step(epsilon, done, training_input,  normalizing_function(output));
-                    //--------------------------
-                    m_memory.push(training_input, next_input.to(m_device), reward, done);
-                    //--------------------------
-                    try{
-                        //--------------------------
-                        if(m_memory_activation(m_gen)){
-                            //--------------------------
-                            auto [_memory_input, _memory_next_input, _memory_reward, _done] = m_memory.sample();
-                            //--------------------------
-                            m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
-                            //--------------------------
-                        }//end if(m_memory_activation(m_gen))
-                        else{
-                            //--------------------------
-                            m_handler.agent(training_input, next_input, optimizer, reward, done);
-                            //--------------------------
-                        }// end else
-                        //--------------------------
-                    }// end try
-                    catch(std::overflow_error& e) {
-                        //--------------------------
-                        std::cerr << "\n" << e.what() << std::endl;
-                        //--------------------------
-                        std::exit(-1);
-                        //--------------------------
-                    }// end catch(std::out_of_range& e)
-                    //--------------------------
-                    training_input = next_input;
-                    //--------------------------
-                }// end while(!_done)
-                //--------------------------
-                environment->reset();
-                //--------------------------
-            }// end void train_run(void)
-            //-------------------------------------------------------------
-            template<typename... Args>
             void train_local_run(   torch::optim::Optimizer& optimizer,
                                     std::function<torch::Tensor(const torch::Tensor&)> normalizing_function,
                                     const Args&... args){
                 //--------------------------
                 auto environment = m_environment;
-                auto memory = m_memory;
+                // auto memory = m_memory;
                 //--------------------------
                 std::lock_guard<std::mutex> _lock_guard(m_mutex);
                 //--------------------------
@@ -306,7 +167,7 @@ namespace RL {
                 //--------------------------
                 m_handler.agent(_input, next_input.to(m_device), optimizer, reward, done);
                 //--------------------------
-                memory.push(_input, next_input, reward, done);
+                m_memory.push(_input, next_input, reward, done);
                 //--------------------------
                 torch::Tensor training_input = next_input;
                 //--------------------------
@@ -316,13 +177,13 @@ namespace RL {
                     //--------------------------
                     std::tie(next_input, reward) = environment.step(epsilon, done, training_input,  normalizing_function(output));
                     //--------------------------
-                    memory.push(training_input, next_input.to(m_device), reward, done);
+                    m_memory.push(training_input, next_input.to(m_device), reward, done);
                     //--------------------------
                     try{
                         //--------------------------
                         if(m_memory_activation(m_gen)){
                             //--------------------------
-                            auto [_memory_input, _memory_next_input, _memory_reward, _done] = memory.sample();
+                            auto [_memory_input, _memory_next_input, _memory_reward, _done] = m_memory.sample();
                             //--------------------------
                             m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
                             //--------------------------
@@ -351,79 +212,13 @@ namespace RL {
             }// end void train_run(void)
             //---------------------------------------------------------------
             template<typename... Args>
-            void train_run( ENVIRONMENT environment,
-                            MEMORY memory,
-                            torch::optim::Optimizer& optimizer,
-                            std::function<torch::Tensor(const torch::Tensor&)> normalizing_function,
-                            const Args&... args){
-                //--------------------------
-                bool done = false;
-                double epsilon = 0.;
-                //--------------------------
-                auto _input = environment.get_first(epsilon).to(m_device);
-                //--------------------------
-                auto output = m_handler.action(_input, epsilon, args...).to(m_device);
-                //--------------------------
-                auto [next_input, reward] = environment.step(epsilon, done, _input, normalizing_function(output));
-                //--------------------------
-                m_handler.agent(_input, next_input.to(m_device), optimizer, reward, done);
-                //--------------------------
-                memory.push(_input, next_input, reward, done);
-                //--------------------------
-                torch::Tensor training_input = next_input;
-                //--------------------------
-                while(!done){
-                    //--------------------------
-                    output = m_handler.action(training_input, epsilon, args...);
-                    //--------------------------
-                    std::tie(next_input, reward) = environment.step(epsilon, done, training_input,  normalizing_function(output));
-                    //--------------------------
-                    memory.push(training_input, next_input.to(m_device), reward, done);
-                    //--------------------------
-                    try{
-                        //--------------------------
-                        if(m_memory_activation(m_gen)){
-                            //--------------------------
-                            auto [_memory_input, _memory_next_input, _memory_reward, _done] = memory.sample();
-                            //--------------------------
-                            m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
-                            //--------------------------
-                        }//end if(m_memory_activation(m_gen))
-                        else{
-                            //--------------------------
-                            m_handler.agent(training_input, next_input, optimizer, reward, done);
-                            //--------------------------
-                        }// end else
-                        //--------------------------
-                    }// end try
-                    catch(std::overflow_error& e) {
-                        //--------------------------
-                        std::cerr << "\n" << e.what() << std::endl;
-                        //--------------------------
-                        std::exit(-1);
-                        //--------------------------
-                    }// end catch(std::out_of_range& e)
-                    //--------------------------
-                    training_input = next_input;
-                    //--------------------------
-                }// end while(!_done)
-                //--------------------------
-                environment.reset();
-                //--------------------------
-            }// end void train_run(void)
-            //--------------------------------------------------------------
-            template<typename... Args>
             void train_run(const size_t& epoch, torch::optim::Optimizer& optimizer, std::function<torch::Tensor(torch::Tensor)> normalizing_function, const Args&... args){
                 //--------------------------
                 progressbar bar(epoch);
                 //--------------------------
                 for (size_t i = 0; i < epoch; ++i) {
                     //--------------------------
-                    ENVIRONMENT _environment = m_environment;
-                    //--------------------------
-                    train_run(_environment, optimizer, normalizing_function, args...);
-                    //--------------------------
-                    // train_run(optimizer, normalizing_function, args...);
+                    train_local_run(optimizer, normalizing_function, args...);
                     //--------------------------
                     bar.update();
                     //--------------------------
@@ -503,46 +298,63 @@ namespace RL {
                 //--------------------------
                 while (!done){
                     //--------------------------
-                    auto _test = test_environment.step(done);
-                    //--------------------------
-                    auto _test_result = m_handler.test(_test);
-                    //--------------------------
-                    auto _circle = torch::pow((_test_result[0].slice(1,0,1) - _test.slice(1,0,1)),2) + (torch::pow((_test_result[0].slice(1,1,2)-_test.slice(1,1,2)),2));
-                    //--------------------------
-                    auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3));
-                    //--------------------------
-                    if(varbos){
-                        //--------------------------
-                        *table  << RL::RLNormalize::unnormalization(_test_result[0].slice(1,0,1), t_min, t_max) 
-                                << RL::RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
-                                << RL::RLNormalize::unnormalization(_test_result[0].slice(1,1,2), t_min, t_max) 
-                                << RL::RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
-                                << RL::RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
-                                << RL::RLNormalize::unnormalization(_circle, t_min, t_max)
-                                << _loss << fort::endr;
-                        //--------------------------
-                    }// end if(varbos)
-                    //--------------------------
-                    // auto _circle = torch::pow((_test_result.slice(1,0,1) - _test.slice(1,0,1)),2)+ (torch::pow((_test_result.slice(1,1,2)-_test.slice(1,1,2)),2));
+                    // auto _test = test_environment.step(done);
+                    // //--------------------------
+                    // auto _test_result = m_handler.test(_test);
+                    // //--------------------------
+                    // auto _circle = torch::pow((_test_result[0].slice(1,0,1) - _test.slice(1,0,1)),2) + (torch::pow((_test_result[0].slice(1,1,2)-_test.slice(1,1,2)),2));
                     // //--------------------------
                     // auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3));
                     // //--------------------------
-                    // table   << RL::RLNormalize::unnormalization(_test_result.slice(1,0,1), t_min, t_max) 
-                    //         << RL::RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
-                    //         << RL::RLNormalize::unnormalization(_test_result.slice(1,1,2), t_min, t_max) 
-                    //         << RL::RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
-                    //         << RL::RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
-                    //         << RL::RLNormalize::unnormalization(_circle, t_min, t_max)
-                    //         << _loss << fort::endr;
-                    // //--------------------------
-                    // table   << _test_result.slice(1,0,1)
-                    //         << _test.slice(1,0,1)
-                    //         << _test_result.slice(1,1,2)
-                    //         << _test.slice(1,1,2)
-                    //         << _test.slice(1,2,3)
-                    //         << _circle
-                    //         << _loss*100 << fort::endr;
-                    // //--------------------------
+                    // if(varbos){
+                    //     //--------------------------
+                    //     *table  << RL::RLNormalize::unnormalization(_test_result[0].slice(1,0,1), t_min, t_max) 
+                    //             << RL::RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
+                    //             << RL::RLNormalize::unnormalization(_test_result[0].slice(1,1,2), t_min, t_max) 
+                    //             << RL::RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
+                    //             << RL::RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
+                    //             << RL::RLNormalize::unnormalization(_circle, t_min, t_max)
+                    //             << _loss << fort::endr;
+                    //     //--------------------------
+                    // }// end if(varbos)
+                    //--------------------------
+                    auto _test = test_environment.step(done);
+                    //--------------------------
+                    auto _test_result = RL::RLNormalize::unnormalization(m_handler.test(_test), t_min, t_max);
+                    _test = RL::RLNormalize::unnormalization(_test, t_min, t_max);
+                    //--------------------------
+                    // auto _test_result = m_handler.test(_test);
+                    // _test_result = RL::RLNormalize::unnormalization(_test_result, t_min, t_max);
+                    // std::cout << "_test_result: " << _test_result << std::endl;
+                    //--------------------------
+                    auto _circle = torch::pow((_test_result[0].slice(1,0,1) - _test.slice(1,0,1)),2)+ (torch::pow((_test_result[0].slice(1,1,2)-_test.slice(1,1,2)),2));
+                    //--------------------------
+                    auto _loss = torch::mse_loss(_circle, _test.slice(1,2,3));
+                    //--------------------------
+                    // if(varbos){
+                    //     //--------------------------
+                    //     table   << RL::RLNormalize::unnormalization(_test_result.slice(1,0,1), t_min, t_max) 
+                    //             << RL::RLNormalize::unnormalization(_test.slice(1,0,1), t_min, t_max)
+                    //             << RL::RLNormalize::unnormalization(_test_result.slice(1,1,2), t_min, t_max) 
+                    //             << RL::RLNormalize::unnormalization(_test.slice(1,1,2), t_min, t_max)
+                    //             << RL::RLNormalize::unnormalization(_test.slice(1,2,3), t_min, t_max)
+                    //             << RL::RLNormalize::unnormalization(_circle, t_min, t_max)
+                    //             << _loss << fort::endr;
+                    //     //--------------------------
+                    // }//end if(varbos)
+                    //--------------------------
+                    if(varbos){
+                        //--------------------------
+                        *table  << _test_result[0].slice(1,0,1)
+                                << _test.slice(1,0,1)
+                                << _test_result[0].slice(1,1,2)
+                                << _test.slice(1,1,2)
+                                << _test.slice(1,2,3)
+                                << _circle
+                                << _loss << fort::endr;
+                        //--------------------------
+                    }//end if(varbos)
+                    //--------------------------
                 }// end while (!done)
                 //--------------------------
                 if(varbos){

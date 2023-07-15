@@ -68,6 +68,20 @@ namespace RL {
              *  @return A unnormalize a torch tensor
              */
             static torch::Tensor unnormalization(const torch::Tensor& input, const torch::Tensor& t_min, const torch::Tensor& t_max);
+            //--------------------------
+            /**
+             *  @brief  Unnormalize the input tensor. This uses inverse Min-max feature scaling.
+             * 
+             *  @return A unnormalize a torch tensor
+             */
+            torch::Tensor get_min(void) const;
+            //--------------------------
+            /**
+             *  @brief  Unnormalize the input tensor. This uses inverse Min-max feature scaling.
+             * 
+             *  @return A unnormalize a torch tensor
+             */
+            torch::Tensor get_max(void) const;
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------

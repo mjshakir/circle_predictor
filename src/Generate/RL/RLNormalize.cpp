@@ -58,6 +58,18 @@ torch::Tensor RL::RLNormalize::unnormalization(const torch::Tensor& input, const
     //--------------------------
 }// end torch::Tensor RL::RLNormalize::unnormalization(const torch::Tensor& input, const torch::Tensor min, const torch::Tensor max)
 //--------------------------------------------------------------
+torch::Tensor RL::RLNormalize::get_min(void) const{
+    //--------------------------
+    return m_min;
+    //--------------------------
+}// end torch::Tensor torch::Tensor RL::RLNormalize::get_min(void) const
+//--------------------------------------------------------------
+torch::Tensor RL::RLNormalize::get_max(void) const{
+    //--------------------------
+    return m_max;
+    //--------------------------
+}// end torch::Tensor torch::Tensor RL::RLNormalize::get_min(void) const
+//--------------------------------------------------------------
 std::vector<torch::Tensor> RL::RLNormalize::normalization_data(void){
     //--------------------------
     std::vector<torch::Tensor> _data(m_input.size());

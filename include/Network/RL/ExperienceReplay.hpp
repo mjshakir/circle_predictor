@@ -8,6 +8,7 @@
 #include <tuple>
 #include <climits>
 #include <random>
+#include <mutex>
 //--------------------------------------------------------------
 template<typename... Args>
 class ExperienceReplay{
@@ -64,7 +65,7 @@ class ExperienceReplay{
             //--------------------------
         }// end std::tuple<Args...> sample(const size_t& key)
         //--------------------------
-        size_t size(void) const{
+        constexpr size_t size(void) const{
             //--------------------------
             return map_size();
             //--------------------------
@@ -73,6 +74,8 @@ class ExperienceReplay{
     protected:
         //--------------------------------------------------------------
         void push_data(const Args&... args){
+            //--------------------------
+            std::lock_guard<std::mutex> date_lock(m_mutex);
             //--------------------------
             m_memory.try_emplace(m_position, args...);
             //--------------------------
@@ -108,7 +111,7 @@ class ExperienceReplay{
             //--------------------------
         }// end std::tuple<Args...> sample_data(const size_t& key)
         //--------------------------------------------------------------
-        size_t map_size(void) const {
+        constexpr size_t map_size(void) const {
             //--------------------------
             return m_memory.size();
             //--------------------------
@@ -119,5 +122,7 @@ class ExperienceReplay{
         size_t m_capacity, m_position;
         //--------------------------
         std::unordered_map<size_t, std::tuple<Args...>> m_memory;
+        //--------------------------
+        std::mutex m_mutex;
     //--------------------------------------------------------------
 }; // end class ExperienceReplay

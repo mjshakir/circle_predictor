@@ -53,8 +53,8 @@ namespace RL {
                                                                                   m_data(this->get_data()),
                                                                                   m_data_iter(this->get_iterator()),
                                                                                   m_CostFunction(this->get_cost_function()),
-                                                                                  m_batch(batch),
-                                                                                  m_distribution(this->get_distribution()){
+                                                                                  m_distribution(this->get_distribution()),
+                                                                                  m_batch(batch){
                     //--------------------------
                     if(batch >= m_data.size()/2){
                         //--------------------------
@@ -69,8 +69,8 @@ namespace RL {
                                                                                         m_data(other.m_data),
                                                                                         m_data_iter(other.m_data_iter),
                                                                                         m_CostFunction(other.m_CostFunction),
-                                                                                        m_batch(other.m_batch),
-                                                                                        m_distribution(other.m_distribution) {
+                                                                                        m_distribution(other.m_distribution),
+                                                                                        m_batch(other.m_batch){
                     //--------------------------
                 }// end RLEnvironmentLoaderAtomic(const RLEnvironmentLoaderAtomic& other)
                 //--------------------------------------------------------------
@@ -87,6 +87,7 @@ namespace RL {
                     m_data          = other.m_data;
                     m_data_iter     = other.m_data_iter;
                     m_CostFunction  = other.m_CostFunction;
+                    m_distribution  = other.m_distribution;
                     m_batch         = other.m_batch;
                     //--------------------------
                     return *this;
@@ -381,9 +382,9 @@ namespace RL {
                 //--------------------------
                 std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
                 //--------------------------
-                size_t m_batch;
-                //--------------------------
                 std::vector<uint8_t>& m_distribution;
+                //--------------------------
+                size_t m_batch;
             //--------------------------------------------------------------
         };// end class RLEnvironmentShuffleLoader
         //--------------------------------------------------------------

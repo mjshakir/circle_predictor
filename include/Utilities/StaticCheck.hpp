@@ -33,7 +33,8 @@ namespace Utils{
                                         (std::is_same_v<ENVIRONMENT<T, COST_OUTPUT, Args...>, RL::Environment::RLEnvironment <T, COST_OUTPUT, Args...>> or
                                         std::is_same_v<ENVIRONMENT<T, COST_OUTPUT, Args...>, RL::Environment::RLEnvironmentLoader <T, COST_OUTPUT, Args...>> or
                                         std::is_same_v<ENVIRONMENT<T, COST_OUTPUT, Args...>, RL::Environment::RLEnvironmentLoaderAtomic <T, COST_OUTPUT, Args...>> or
-                                        std::is_same_v<ENVIRONMENT<T, COST_OUTPUT, Args...>, RL::Environment::RLEnvironmentShuffleLoader <T, COST_OUTPUT, Args...>>);
+                                        std::is_same_v<ENVIRONMENT<T, COST_OUTPUT, Args...>, RL::Environment::RLEnvironmentShuffleLoader <T, COST_OUTPUT, Args...>> or
+                                        std::is_same_v<ENVIRONMENT<T, COST_OUTPUT, Args...>, RL::Environment::RLEnvironmentShuffleAtomicLoader <T, COST_OUTPUT, Args...>>);
         //--------------------------
     };// end struct CheckEnvironment<ENVIRONMENT<T, COST_OUTPUT, Args...>>
     //--------------------------

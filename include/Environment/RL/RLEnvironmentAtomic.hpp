@@ -172,7 +172,7 @@ namespace RL {
                 *
                 * @example
                 * size_t batchSize = 4;
-                * RLEnvironmentLoader loader(data, costFunction, 0.9, 0.02, 500.0, batchSize);
+                * RLEnvironmentLoader loader(data, costFunction, batchSize, 0.9, 0.02, 500.0);
                 * 
                 * auto result = loader.step(arg1, arg2);
                 *

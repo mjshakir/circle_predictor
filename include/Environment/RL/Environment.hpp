@@ -9,4 +9,6 @@
 #include "Environment/RL/RLEnvironmentShuffleLoader.hpp"
 #include "Environment/RL/RLEnvironmentAtomic.hpp"
 #include "Environment/RL/RLEnvironmentLoaderAtomic.hpp"
+#include "Environment/RL/RLEnvironmentShuffleAtomic.hpp"
+#include "Environment/RL/RLEnvironmentShuffleAtomicLoader.hpp"
 //--------------------------------------------------------------

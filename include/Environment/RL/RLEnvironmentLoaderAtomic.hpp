@@ -524,11 +524,11 @@ namespace RL {
                         //--------------------------
                         auto epsilon = this->calculate_epsilon(_data_iter);
                         //--------------------------
-                        _data.push_back(*_data_iter);
+                        auto _data_end = std::next(_data_iter, batch);
                         //--------------------------
-                        for(size_t i = 1; i < batch; ++i){
+                        for(; _data_iter != _data_end; ++_data_iter){
                             //--------------------------
-                            _data.push_back(*++_data_iter);
+                            _data.push_back(*_data_iter);
                             //--------------------------
                         }// end for(size_t i = 0; i < batch; ++i)
                         //--------------------------
@@ -561,11 +561,11 @@ namespace RL {
                         //--------------------------
                         epsilon = this->calculate_epsilon(_data_iter);
                         //--------------------------
-                        _data.push_back(*_data_iter);
+                        auto _data_end = std::next(_data_iter, batch);
                         //--------------------------
-                        for(size_t i = 1; i < batch; ++i){
+                        for(; _data_iter != _data_end; ++_data_iter){
                             //--------------------------
-                            _data.push_back(*++_data_iter);
+                            _data.push_back(*_data_iter);
                             //--------------------------
                         }// end for(size_t i = 0; i < batch; ++i)
                         //--------------------------

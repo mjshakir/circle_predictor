@@ -47,18 +47,19 @@ auto RL::Environment::Environment::generate_environment( std::vector<T>&& data,
         //----------------------------
         default:
             //----------------------------
-            std::invalid_argument("TYPE be between" std:to_string(TYPE::NORMAL) " and " std:to_string(TYPE::ATOMIC_SHUFFLE));
+            std::invalid_argument("TYPE be between" + std::to_string(TYPE::NORMAL) + " and " + std::to_string(TYPE::ATOMIC_SHUFFLE));
             //----------------------------
     }//end switch(type)
     //----------------------------
     return std::make_unique<RL::Environment::RLEnvironment>( std::move(data),
-                                            std::move(costFunctionß),
+                                            std::move(costFunction),
                                             egreedy,
                                             egreedy_final,
                                             egreedy_decay);
     //----------------------------
 }//end auto RL::Environment::Environment::generate_environment
 //--------------------------------------------------------------
+template<typename T, typename COST_FUNCTION, typename... Args>
 auto RL::Environment:: Environment::generate_environment( std::vector<T>&& data, 
                                         COST_FUNCTION&& costFunction,
                                         const size_t batch,
@@ -103,11 +104,10 @@ auto RL::Environment:: Environment::generate_environment( std::vector<T>&& data,
         //----------------------------
         default:
             //----------------------------
-            std::invalid_argument("TYPE be between" std:to_string(TYPE::NORMAL) " and " std:to_string(TYPE::ATOMIC_SHUFFLE));
+            std::invalid_argument("TYPE be between" + std::to_string(TYPE::NORMAL) + " and " + std::to_string(TYPE::ATOMIC_SHUFFLE));
             //----------------------------
     }//end switch(type)
     //----------------------------
-    template<typename T, typename COST_FUNCTION, typename... Args>
     return std::make_unique<RL::Environment::RLEnvironmentLoader>(   std::move(data),
                                                     std::move(costFunction),
                                                     batch,
@@ -120,7 +120,7 @@ auto RL::Environment:: Environment::generate_environment( std::vector<T>&& data,
 template<typename T>
 auto RL::Environment::Environment::generate_environment(std::vector<T>&& data, const size_t batch){
     //----------------------------
-    return std::make_unique<RL::Environment::EnvironmentTestLoader<T>> _environment_test(std::move(data), batch);
+    return std::make_unique<RL::Environment::EnvironmentTestLoader<T>>(std::move(data), batch);
     //----------------------------
 }// end auto RL::Environment::Environment::generate_environment(std::vector<T>&& data, const size_t batch)
 //--------------------------------------------------------------

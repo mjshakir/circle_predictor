@@ -530,9 +530,9 @@ namespace RL {
                             //--------------------------
                             _data.push_back(*_data_iter);
                             //--------------------------
-                        }// end for(size_t i = 0; i < batch; ++i)
+                        }// for(; _data_iter != _data_end; ++_data_iter)
                         //--------------------------
-                        this->setIterator(_data_iter);
+                        this->setIterator(--_data_iter);
                         //--------------------------
                         return {torch::cat(_data, 0), epsilon};
                         //--------------------------
@@ -567,9 +567,9 @@ namespace RL {
                             //--------------------------
                             _data.push_back(*_data_iter);
                             //--------------------------
-                        }// end for(size_t i = 0; i < batch; ++i)
+                        }// end for(; _data_iter != _data_end; ++_data_iter)
                         //--------------------------
-                        this->setIterator(_data_iter);
+                        this->setIterator(--_data_iter);
                         //--------------------------
                         return torch::cat(_data, 0);
                         //--------------------------
@@ -589,7 +589,7 @@ namespace RL {
                 //--------------------------
                 std::atomic<typename std::vector<T>::iterator> m_data_iter;
                 //--------------------------
-                size_t m_batch;
+                const size_t m_batch;
                 //--------------------------
                 std::mutex m_mutex;
             //--------------------------------------------------------------

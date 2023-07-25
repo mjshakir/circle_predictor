@@ -744,9 +744,9 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, batch_size, 0.9, 0.02, 500.);
     //--------------------------
-    // RL::Environment::RLEnvironmentLoaderAtomic<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, batch_size, 0.9, 0.02, 500.);
+    RL::Environment::RLEnvironmentLoaderAtomic<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, batch_size, 0.9, 0.02, 500.);
     //--------------------------
-    RL::Environment::RLEnvironmentShuffleAtomicLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, batch_size, 0.9, 0.02, 500.);
+    // RL::Environment::RLEnvironmentShuffleAtomicLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), _circle_reward, batch_size, 0.9, 0.02, 500.);
     //--------------------------
     // RLNetLSTM model({points_size, batch_size}, output_size, device, false);
     // RLNetLSTM target_model({points_size, batch_size}, output_size, device, false);

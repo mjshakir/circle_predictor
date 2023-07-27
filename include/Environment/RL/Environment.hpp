@@ -29,7 +29,7 @@ namespace RL {
             //--------------------------------------------------------------
             public:
                 //--------------------------------------------------------------
-                template<typename T, typename COST_FUNCTION, typename... Args>
+                template<typename T, typename COST_OUTPUT, typename... Args>
                 static auto CreateEnvironment(  std::vector<T>&& data, 
                                                 std::function<COST_OUTPUT(const Args&...)> costFunction,
                                                 const TYPE& type = TYPE::NORMAL,
@@ -37,7 +37,7 @@ namespace RL {
                                                 const double& egreedy_final = 0.02,
                                                 const double& egreedy_decay = 500.);
                 //----------------------------
-                template<typename T, typename COST_FUNCTION, typename... Args>
+                template<typename T, typename COST_OUTPUT, typename... Args>
                 static auto CreateEnvironment(  std::vector<T>&& data, 
                                                 std::function<COST_OUTPUT(const Args&...)> costFunction,
                                                 const TYPE& type = TYPE::NORMAL,
@@ -51,7 +51,7 @@ namespace RL {
                 //--------------------------------------------------------------
             protected:
                 //--------------------------------------------------------------
-                template<typename T, typename COST_FUNCTION, typename... Args>
+                template<typename T, typename COST_OUTPUT, typename... Args>
                 static auto generate_environment(   std::vector<T>&& data, 
                                                     std::function<COST_OUTPUT(const Args&...)> costFunction,
                                                     const double& egreedy,
@@ -59,7 +59,7 @@ namespace RL {
                                                     const double& egreedy_decay ,
                                                     const TYPE& type);
                 //----------------------------
-                template<typename T, typename COST_FUNCTION, typename... Args>
+                template<typename T, typename COST_OUTPUT, typename... Args>
                 static auto generate_environment(   std::vector<T>&& data, 
                                                     std::function<COST_OUTPUT(const Args&...)> costFunction,
                                                     const size_t batch,

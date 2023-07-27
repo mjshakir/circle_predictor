@@ -7,7 +7,7 @@
 //--------------------------------------------------------------
 #include <memory>
 //--------------------------------------------------------------
-template<typename T, typename COST_FUNCTION, typename... Args>
+template<typename T, typename COST_OUTPUT, typename... Args>
 auto RL::Environment::Environment::CreateEnvironment(   std::vector<T>&& data, 
                                                         std::function<COST_OUTPUT(const Args&...)> costFunction,
                                                         const TYPE& type,
@@ -15,11 +15,11 @@ auto RL::Environment::Environment::CreateEnvironment(   std::vector<T>&& data,
                                                         const double& egreedy_final,
                                                         const double& egreedy_decay){
     //----------------------------
-    return generate_environment(std::move(data), std::move(costFunction), egreedy, egreedy_final, egreedy_decay, type)
+    return generate_environment(std::move(data), std::move(costFunction), egreedy, egreedy_final, egreedy_decay, type);
     //----------------------------
 }//end auto RL::Environment::Environment::Environment::CreateEnvironment
 //--------------------------------------------------------------
-template<typename T, typename COST_FUNCTION, typename... Args>
+template<typename T, typename COST_OUTPUT, typename... Args>
 auto RL::Environment::Environment::CreateEnvironment(   std::vector<T>&& data, 
                                                         std::function<COST_OUTPUT(const Args&...)> costFunction,
                                                         const TYPE& type,
@@ -28,24 +28,24 @@ auto RL::Environment::Environment::CreateEnvironment(   std::vector<T>&& data,
                                                         const double& egreedy_final,
                                                         const double& egreedy_decay){
     //----------------------------
-    return generate_environment(std::move(data), std::move(costFunction), batch, egreedy, egreedy_final, egreedy_decay, type)
+    return generate_environment(std::move(data), std::move(costFunction), batch, egreedy, egreedy_final, egreedy_decay, type);
     //----------------------------
 }// end auto RL::Environment::Environment::CreateEnvironmen
 //--------------------------------------------------------------
 template<typename T>
 auto RL::Environment::Environment::CreateEnvironment(std::vector<T>&& data, const size_t& batch){
     //----------------------------
-    return generate_environment(std::move(data), batch)
+    return generate_environment(std::move(data), batch);
     //----------------------------
 }//end auto RL::Environment::Environment::CreateEnvironment(std::vector<T>&& data, const size_t batch)
 //--------------------------------------------------------------
-template<typename T, typename COST_FUNCTION, typename... Args>
-auto RL::Environment::Environment::generate_environment( std::vector<T>&& data, 
-                                        std::function<COST_OUTPUT(const Args&...)> costFunction,
-                                        const double& egreedy,
-                                        const double& egreedy_final,
-                                        const double& egreedy_decay,
-                                        const TYPE& type){
+template<typename T, typename COST_OUTPUT, typename... Args>
+auto RL::Environment::Environment::generate_environment(std::vector<T>&& data, 
+                                                        std::function<COST_OUTPUT(const Args&...)> costFunction,
+                                                        const double& egreedy,
+                                                        const double& egreedy_final,
+                                                        const double& egreedy_decay,
+                                                        const TYPE& type){
     //----------------------------
     switch(type){
         //----------------------------
@@ -85,7 +85,7 @@ auto RL::Environment::Environment::generate_environment( std::vector<T>&& data,
     //----------------------------
 }//end auto RL::Environment::Environment::generate_environment
 //--------------------------------------------------------------
-template<typename T, typename COST_FUNCTION, typename... Args>
+template<typename T, typename COST_OUTPUT, typename... Args>
 auto RL::Environment:: Environment::generate_environment(   std::vector<T>&& data, 
                                                             std::function<COST_OUTPUT(const Args&...)> costFunction,
                                                             const size_t batch,

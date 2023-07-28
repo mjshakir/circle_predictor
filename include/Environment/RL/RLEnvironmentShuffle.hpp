@@ -39,41 +39,12 @@ namespace RL {
                  * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor                     @default: 500.
                  * @param batch         [in] : The batch number (needs to be less then half of the data size) @default: 1ul   
                  */
-                explicit RLEnvironmentShuffle(   std::vector<T>&& data, 
-                                        std::function<COST_OUTPUT(const Args&...)> costFunction,
-                                        const double& egreedy = 0.9,
-                                        const double& egreedy_final = 0.02,
-                                        const double& egreedy_decay = 500.) :   RLEnvironment<T, COST_OUTPUT, Args...>( std::move(data), 
-                                                                                                                        std::move(costFunction), 
-                                                                                                                        egreedy, 
-                                                                                                                        egreedy_final, 
-                                                                                                                        egreedy_decay),
-                                                                                m_data(this->get_data()),
-                                                                                m_data_iter(this->get_iterator()),
-                                                                                m_CostFunction(this->get_cost_function()),
-                                                                                m_egreedy(egreedy),
-                                                                                m_egreedy_final(egreedy_final),
-                                                                                m_egreedy_decay(egreedy_decay),
-                                                                                m_distribution(create_distribution(m_data.size())){
-                    //-------------------------- 
-                }// end RLEnvironmentShuffle(Dataset&& data_loader)
-                //--------------------------------------------------------------
-                /**
-                 * @brief Construct to create a training environment for reinforcement learning 
-                 * 
-                 * @param data          [in] : Data Vector of the template type T
-                 * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters
-                 * @param egreedy       [in] : The starting egreedy                                           @default: 0.9
-                 * @param egreedy_final [in] : The egreedy number where it will change                        @default: 0.02
-                 * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor                     @default: 500.
-                 * @param batch         [in] : The batch number (needs to be less then half of the data size) @default: 1ul   
-                 */
-                explicit RLEnvironmentShuffle(  const std::vector<T>& data, 
-                                                const std::function<COST_OUTPUT(const Args&...)>& costFunction,
+                explicit RLEnvironmentShuffle(  std::vector<T>&& data, 
+                                                std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                                 const double& egreedy = 0.9,
                                                 const double& egreedy_final = 0.02,
-                                                const double& egreedy_decay = 500.) :   RLEnvironment<T, COST_OUTPUT, Args...>( data, 
-                                                                                                                                costFunction, 
+                                                const double& egreedy_decay = 500.) :   RLEnvironment<T, COST_OUTPUT, Args...>( std::move(data), 
+                                                                                                                                std::move(costFunction), 
                                                                                                                                 egreedy, 
                                                                                                                                 egreedy_final, 
                                                                                                                                 egreedy_decay),
@@ -181,6 +152,35 @@ namespace RL {
                 }// end void reset(void)
                 //--------------------------------------------------------------
             protected:
+                //--------------------------------------------------------------
+                /**
+                 * @brief Construct to create a training environment for reinforcement learning 
+                 * 
+                 * @param data          [in] : Data Vector of the template type T
+                 * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters
+                 * @param egreedy       [in] : The starting egreedy                                           @default: 0.9
+                 * @param egreedy_final [in] : The egreedy number where it will change                        @default: 0.02
+                 * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor                     @default: 500.
+                 * @param batch         [in] : The batch number (needs to be less then half of the data size) @default: 1ul   
+                 */
+                explicit RLEnvironmentShuffle(  std::vector<T>& data, 
+                                                std::function<COST_OUTPUT(const Args&...)>& costFunction,
+                                                const double& egreedy = 0.9,
+                                                const double& egreedy_final = 0.02,
+                                                const double& egreedy_decay = 500.) :   RLEnvironment<T, COST_OUTPUT, Args...>(std::move(data), 
+                                                                                                                               std::move(costFunction), 
+                                                                                                                               egreedy, 
+                                                                                                                               egreedy_final, 
+                                                                                                                               egreedy_decay),
+                                                                                        m_data(this->get_data()),
+                                                                                        m_data_iter(this->get_iterator()),
+                                                                                        m_CostFunction(this->get_cost_function()),
+                                                                                        m_egreedy(egreedy),
+                                                                                        m_egreedy_final(egreedy_final),
+                                                                                        m_egreedy_decay(egreedy_decay),
+                                                                                        m_distribution(create_distribution(m_data.size())){
+                    //-------------------------- 
+                }// end end RLEnvironmentShuffle(Dataset&& data_loader)
                 //--------------------------------------------------------------
                 virtual std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const Args&... args) override{
                     //--------------------------

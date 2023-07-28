@@ -40,44 +40,12 @@ namespace RL {
                  * @throws std::runtime_error
                  */
                 explicit RLEnvironment( std::vector<T>&& data, 
-                                        std::function<COST_OUTPUT(const Args&...)> costFunction,
+                                        std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                         const double& egreedy = 0.9,
                                         const double& egreedy_final = 0.02,
                                         const double& egreedy_decay = 500.) :   m_data(std::move(data)),
                                                                                 m_data_iter(m_data.begin()), 
                                                                                 m_CostFunction(std::move(costFunction)),
-                                                                                m_egreedy(egreedy),
-                                                                                m_egreedy_final(egreedy_final),
-                                                                                m_egreedy_decay(egreedy_decay){
-                    //----------------------------
-                    if(egreedy_decay == 0.){
-                        //----------------------------
-                        throw std::runtime_error("Egreedy Decay Cannot Be Zero. egreedy_decay Value: [" + std::to_string(egreedy_decay) + "]");
-                        //----------------------------
-                    }// end if(egreedy_decay == 0.)
-                    //----------------------------
-                }// end RLEnvironment(Dataset&& data_loader)
-                //--------------------------------------------------------------
-                /**
-                 * @brief Construct to create a training environment for reinforcement learning 
-                 * 
-                 * @param data          [in] : Data Vector of the template type T                             
-                 *                          @example: RLEnvironment<torch::Tensor,..., ...> foo(data, ...) this will results in std::vector<torch::Tensor>
-                 * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters 
-                 *                          @example: RLEnvironment<..., torch::Tensor,double, int> foo(..., [](double x, int y){return torch::tensor(x*y);})
-                 * @param egreedy       [in] : The starting egreedy                        @default: 0.9
-                 * @param egreedy_final [in] : The egreedy number where it will change     @default: 0.02
-                 * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor  @default: 500.
-                 * 
-                 * @throws std::runtime_error
-                 */
-                explicit RLEnvironment( const std::vector<T>& data, 
-                                        const std::function<COST_OUTPUT(const Args&...)>& costFunction,
-                                        const double& egreedy = 0.9,
-                                        const double& egreedy_final = 0.02,
-                                        const double& egreedy_decay = 500.) :   m_data(data),
-                                                                                m_data_iter(m_data.begin()), 
-                                                                                m_CostFunction(costFunction),
                                                                                 m_egreedy(egreedy),
                                                                                 m_egreedy_final(egreedy_final),
                                                                                 m_egreedy_decay(egreedy_decay){

@@ -47,7 +47,7 @@ namespace RL {
                 *          The exception message provides details about the expected range for the batch size.
                 */
                 explicit RLEnvironmentLoader(   std::vector<T>&& data, 
-                                                std::function<COST_OUTPUT(const Args&...)> costFunction,
+                                                std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                                 const size_t& batch = 2UL,
                                                 const double& egreedy = 0.9,
                                                 const double& egreedy_final = 0.02,

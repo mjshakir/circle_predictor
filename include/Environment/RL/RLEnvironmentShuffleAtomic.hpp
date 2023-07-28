@@ -47,23 +47,23 @@ namespace RL {
                 *  @throws std::out_of_range If the specified batch size is greater than or equal to half the size of the data vector.
                 *          The exception message provides details about the expected range for the batch size.
                 */
-                explicit RLEnvironmentShuffleAtomic(const std::vector<T>& data, 
-                                                    const std::function<COST_OUTPUT(const Args&...)>& costFunction,
+                explicit RLEnvironmentShuffleAtomic(std::vector<T>&& data, 
+                                                    std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                                     const double& egreedy = 0.9,
                                                     const double& egreedy_final = 0.02,
-                                                    const double& egreedy_decay = 500.) :   RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(data,
-                                                                                                                                         costFunction,
-                                                                                                                                         egreedy,
-                                                                                                                                         egreedy_final,
-                                                                                                                                         egreedy_decay),
-                                                                                            RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(data,
-                                                                                                                                         costFunction,
-                                                                                                                                         egreedy,
-                                                                                                                                         egreedy_final,
-                                                                                                                                         egreedy_decay),
+                                                    const double& egreedy_decay = 500.) :   RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(   std::move(data),
+                                                                                                                                            std::move(costFunction),
+                                                                                                                                            egreedy,
+                                                                                                                                            egreedy_final,
+                                                                                                                                            egreedy_decay),
+                                                                                            RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(  this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_data(),
+                                                                                                                                            this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_cost_function(),
+                                                                                                                                            egreedy,
+                                                                                                                                            egreedy_final,
+                                                                                                                                            egreedy_decay),
                                                                                             m_data(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_data()),
+                                                                                            m_data_iter(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_iterator()),
                                                                                             m_CostFunction(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_cost_function()),
-                                                                                            m_data_iter(this->getIterator()),
                                                                                             m_distribution(this->get_distribution()){
                     //----------------------------
                 }// end RLEnvironmentShuffleAtomic(Dataset&& data_loader)
@@ -72,8 +72,8 @@ namespace RL {
                 RLEnvironmentShuffleAtomic(const RLEnvironmentShuffleAtomic& other) :   RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(other),
                                                                                         RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(other),
                                                                                         m_data(other.m_data),
+                                                                                        m_data_iter(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_iterator()),
                                                                                         m_CostFunction(other.m_CostFunction),
-                                                                                        m_data_iter(this->getIterator()),
                                                                                         m_distribution(other.m_distribution){
                     //--------------------------
                 }// end RLEnvironmentShuffleAtomic(const RLEnvironmentShuffleAtomic& other)
@@ -90,8 +90,8 @@ namespace RL {
                     RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::operator=(other);
                     RLEnvironmentShuffle<T, COST_OUTPUT, Args...>::operator=(other);
                     m_data          = other.m_data;
+                    m_data_iter     = this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_iterator();
                     m_CostFunction  = other.m_CostFunction;
-                    m_data_iter     = this->getIterator();
                     m_distribution  = other.m_distribution;
                     //--------------------------
                     return *this;
@@ -252,7 +252,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = this->getIterator();
+                    auto _data_iter = this->get_atomic_iterator();
                     //--------------------------------------------------------------
                     if (_data_iter == m_data.end()){
                         //--------------------------
@@ -284,7 +284,7 @@ namespace RL {
                     }// if(_data_iter == m_data.end())
                     //--------------------------------------------------------------
                     ++_data_iter;
-                    this->setIterator(_data_iter);
+                    this->set_atomic_iterator(_data_iter);
                     //--------------------------
                     m_distribution.at(_random_position) = 0;
                     //--------------------------
@@ -296,7 +296,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = this->getIterator();
+                    auto _data_iter = this->get_atomic_iterator();
                     //--------------------------------------------------------------
                     if (_data_iter == m_data.end()){
                         //--------------------------
@@ -333,7 +333,7 @@ namespace RL {
                     done = false;
                     //--------------------------
                     ++_data_iter;
-                    this->setIterator(_data_iter);
+                    this->set_atomic_iterator(_data_iter);
                     //--------------------------
                     m_distribution.at(_random_position) = 0;
                     //--------------------------
@@ -345,7 +345,7 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = this->getIterator();
+                    auto _data_iter = this->get_atomic_iterator();
                     //--------------------------
                     if (_data_iter == m_data.end()){
                         //--------------------------
@@ -365,7 +365,7 @@ namespace RL {
                         //--------------------------
                         ++_data_iter;
                         //--------------------------
-                        this->setIterator(_data_iter);
+                        this->set_atomic_iterator(_data_iter);
                         //--------------------------
                         m_distribution.at(_random_position) = 0;
                         //--------------------------
@@ -381,7 +381,7 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = this->getIterator();
+                    auto _data_iter = this->get_atomic_iterator();
                     //--------------------------
                     if (_data_iter == m_data.end()){
                         //--------------------------
@@ -401,7 +401,7 @@ namespace RL {
                         //--------------------------
                         ++_data_iter;
                         //--------------------------
-                        this->setIterator(_data_iter);
+                        this->set_atomic_iterator(_data_iter);
                         //--------------------------
                         return *std::next(m_data.begin(), _random_position);
                         //--------------------------
@@ -417,7 +417,7 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    this->setIterator(m_data.begin());
+                    this->set_atomic_iterator(m_data.begin());
                     //--------------------------
                     std::fill(std::execution::par, m_distribution.begin(), m_distribution.end(), 1u);
                     //--------------------------
@@ -427,9 +427,9 @@ namespace RL {
                 //--------------------------------------------------------------
                 std::vector<T>& m_data;
                 //--------------------------
-                std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
-                //--------------------------
                 std::atomic<typename std::vector<T>::iterator> m_data_iter;
+                //--------------------------
+                std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
                 //--------------------------
                 std::vector<uint8_t>& m_distribution;
                 //--------------------------

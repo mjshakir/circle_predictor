@@ -53,7 +53,7 @@ namespace RL {
                 *          The exception message provides details about the expected range for the batch size.
                 */
                 explicit RLEnvironmentAtomic(   std::vector<T>&& data, 
-                                                std::function<COST_OUTPUT(const Args&...)> costFunction,
+                                                std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                                 const double& egreedy = 0.9,
                                                 const double& egreedy_final = 0.02,
                                                 const double& egreedy_decay = 500.) : RLEnvironment<T, COST_OUTPUT, Args...>(std::move(data),
@@ -62,59 +62,13 @@ namespace RL {
                                                                                                                              egreedy_final,
                                                                                                                              egreedy_decay),
                                                                                       m_data(this->get_data()),
+                                                                                      m_data_iter(this->get_iterator()),
                                                                                       m_CostFunction(this->get_cost_function()),
                                                                                       m_egreedy(egreedy),
                                                                                       m_egreedy_final(egreedy_final),
                                                                                       m_egreedy_decay(egreedy_decay){
                     //----------------------------
-                    setIterator(this->get_iterator());
-                    //----------------------------
-                }// end RLEnvironmentAtomic(Dataset&& data_loader)
-                //--------------------------------------------------------------
-                /**
-                * @brief Constructs an RLEnvironmentLoader object.
-                * This class represents a loader for reinforcement learning environments. 
-                * It takes as input a vector of data, a cost function, 
-                * and optional parameters for epsilon-greedy exploration. 
-                * The data is moved into the object, and the cost function and other parameters are stored for later use.
-                * 
-                * @tparam data The vector of data representing the RL environment.
-                * @tparam costFunction The cost function to evaluate the RL environment.
-                * @param egreedy The initial value of epsilon-greedy exploration @default: 0.9.
-                * @param egreedy_final The final value of epsilon-greedy exploration @default: 0.02.
-                * @param egreedy_decay The decay rate of epsilon-greedy exploration @default: 500.0.
-                * @param batch The size of the batch for RL training @default: 1.
-                * 
-                * @note The template arguments T and Args represent the data type and additional argument types required by the cost function, respectively.
-                * @note The data vector is moved into the RLEnvironmentLoader object, ensuring efficient data transfer.
-                * @note The RLEnvironmentLoader class is derived from RLEnvironment and initializes its base class using the given parameters.
-                * 
-                * @example
-                * // Create a vector of data representing the RL environment
-                * std::vector<int> data = {1, 2, 3, 4, 5};
-                * // Define a cost function
-                * auto costFunction = [](const int& state) { return state * state; };
-                * // Create an RLEnvironmentLoader object
-                * RLEnvironmentLoader<int, int> loader(std::move(data), costFunction, 0.9, 0.02, 500.0, 1);
-                *  @throws std::out_of_range If the specified batch size is greater than or equal to half the size of the data vector.
-                *          The exception message provides details about the expected range for the batch size.
-                */
-                explicit RLEnvironmentAtomic(   const std::vector<T>& data, 
-                                                const std::function<COST_OUTPUT(const Args&...)>& costFunction,
-                                                const double& egreedy = 0.9,
-                                                const double& egreedy_final = 0.02,
-                                                const double& egreedy_decay = 500.) : RLEnvironment<T, COST_OUTPUT, Args...>(data,
-                                                                                                                             costFunction,
-                                                                                                                             egreedy,
-                                                                                                                             egreedy_final,
-                                                                                                                             egreedy_decay),
-                                                                                      m_data(this->get_data()),
-                                                                                      m_CostFunction(this->get_cost_function()),
-                                                                                      m_egreedy(egreedy),
-                                                                                      m_egreedy_final(egreedy_final),
-                                                                                      m_egreedy_decay(egreedy_decay){
-                    //----------------------------
-                    setIterator(this->get_iterator());
+                    // set_atomic_iterator(this->get_iterator());
                     //----------------------------
                 }// end RLEnvironmentAtomic(Dataset&& data_loader)
                 //--------------------------------------------------------------
@@ -126,7 +80,7 @@ namespace RL {
                                                                         m_egreedy_final(other.m_egreedy_final),
                                                                         m_egreedy_decay(other.m_egreedy_decay){
                     //--------------------------
-                    setIterator(this->get_iterator());
+                    set_atomic_iterator(this->get_iterator());
                     //--------------------------
                 }// end RLEnvironmentAtomic(const RLEnvironmentAtomic& other)
                 //--------------------------------------------------------------
@@ -146,7 +100,7 @@ namespace RL {
                     m_egreedy_final = other.m_egreedy_final;
                     m_egreedy_decay = other.m_egreedy_decay;
                     //--------------------------
-                    setIterator(this->get_iterator());
+                    set_atomic_iterator(this->get_iterator());
                     //--------------------------
                     return *this;
                     //--------------------------
@@ -306,7 +260,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = getIterator();
+                    auto _data_iter = get_atomic_iterator();
                     //--------------------------------------------------------------
                     if (_data_iter == m_data.end()){
                         //--------------------------
@@ -333,7 +287,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     auto input = *_data_iter;
                     ++_data_iter;
-                    setIterator(_data_iter);
+                    set_atomic_iterator(_data_iter);
                     //--------------------------
                     return {input, m_CostFunction(args...), calculate_epsilon(_data_iter), false};
                     //--------------------------
@@ -343,7 +297,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = getIterator();
+                    auto _data_iter = get_atomic_iterator();
                     //--------------------------------------------------------------
                     if (_data_iter == m_data.end()){
                         //--------------------------
@@ -375,7 +329,7 @@ namespace RL {
                     //--------------------------
                     auto input = *_data_iter;
                     ++_data_iter;
-                    setIterator(_data_iter);
+                    set_atomic_iterator(_data_iter);
                     //--------------------------
                     return {input, m_CostFunction(args...)};
                     //--------------------------
@@ -385,7 +339,7 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = getIterator();
+                    auto _data_iter = get_atomic_iterator();
                     //--------------------------
                     if (_data_iter == m_data.end()){
                         //--------------------------
@@ -401,7 +355,7 @@ namespace RL {
                         //--------------------------
                         ++_data_iter;
                         //--------------------------
-                        setIterator(_data_iter);
+                        set_atomic_iterator(_data_iter);
                         //--------------------------
                         return {input, epsilon};
                         //--------------------------
@@ -415,7 +369,7 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = getIterator();
+                    auto _data_iter = get_atomic_iterator();
                     //--------------------------
                     if (_data_iter == m_data.end()){
                         //--------------------------
@@ -431,7 +385,7 @@ namespace RL {
                         //--------------------------
                         ++_data_iter;
                         //--------------------------
-                        setIterator(_data_iter);
+                        set_atomic_iterator(_data_iter);
                         //--------------------------
                         return input;
                         //--------------------------
@@ -443,17 +397,17 @@ namespace RL {
                     //--------------------------
                 }// end torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch)
                 //--------------------------------------------------------------
-                void setIterator(const typename std::vector<T>::iterator& iterator){
+                void set_atomic_iterator(const typename std::vector<T>::iterator& iterator){
                     //--------------------------
                     m_data_iter.store(iterator);
                     //--------------------------
                 }// end void set_iterator(const std::vector<T>::iterator& iterator)
                 //--------------------------------------------------------------
-                typename std::vector<T>::iterator getIterator(void) const {
+                typename std::vector<T>::iterator get_atomic_iterator(void) const {
                     //--------------------------
                     return m_data_iter.load();
                     //--------------------------
-                }// end std::vector<torch::Tensor>::iterator get_iterator(void) const
+                }// end std::vector<torch::Tensor>::iterator get_atomic_iterator(void) const
                 //--------------------------------------------------------------
                 constexpr double calculate_epsilon(const typename std::vector<T>::iterator& data_iter) {
                     //--------------------------
@@ -465,7 +419,7 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    setIterator(m_data.begin());
+                    set_atomic_iterator(m_data.begin());
                     //--------------------------
                 }// end void rest_iterator(void)
                 //--------------------------------------------------------------
@@ -473,12 +427,12 @@ namespace RL {
                 //--------------------------------------------------------------
                 std::vector<T>& m_data;
                 //--------------------------
+                std::atomic<typename std::vector<T>::iterator> m_data_iter;
+                //--------------------------
                 std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
                 //--------------------------
                 double m_egreedy, m_egreedy_final, m_egreedy_decay;
-                //--------------------------
-                std::atomic<typename std::vector<T>::iterator> m_data_iter;
-                //--------------------------
+                //--------------------------                
                 std::mutex m_mutex;
             //--------------------------------------------------------------
         };// end class RLEnvironmentAtomic

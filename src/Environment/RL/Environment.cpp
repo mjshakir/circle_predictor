@@ -3,6 +3,18 @@
 //--------------------------------------------------------------
 #include "Environment/RL/Environment.hpp"
 //--------------------------------------------------------------
+// User Defined library
+//--------------------------------------------------------------
+#include "Environment/RL/EnvironmentTestLoader.hpp"
+#include "Environment/RL/RLEnvironment.hpp"
+#include "Environment/RL/RLEnvironmentLoader.hpp"
+#include "Environment/RL/RLEnvironmentShuffle.hpp"
+#include "Environment/RL/RLEnvironmentShuffleLoader.hpp"
+#include "Environment/RL/RLEnvironmentAtomic.hpp"
+#include "Environment/RL/RLEnvironmentLoaderAtomic.hpp"
+#include "Environment/RL/RLEnvironmentShuffleAtomic.hpp"
+#include "Environment/RL/RLEnvironmentShuffleAtomicLoader.hpp"
+//--------------------------------------------------------------
 // Standard cpp library
 //--------------------------------------------------------------
 #include <memory>
@@ -23,7 +35,7 @@ template<typename T, typename COST_OUTPUT, typename... Args>
 auto RL::Environment::Environment::CreateEnvironment(   std::vector<T>&& data, 
                                                         std::function<COST_OUTPUT(const Args&...)> costFunction,
                                                         const TYPE& type,
-                                                        const size_t batch,
+                                                        const size_t& batch,
                                                         const double& egreedy,
                                                         const double& egreedy_final,
                                                         const double& egreedy_decay){
@@ -88,7 +100,7 @@ auto RL::Environment::Environment::generate_environment(std::vector<T>&& data,
 template<typename T, typename COST_OUTPUT, typename... Args>
 auto RL::Environment:: Environment::generate_environment(   std::vector<T>&& data, 
                                                             std::function<COST_OUTPUT(const Args&...)> costFunction,
-                                                            const size_t batch,
+                                                            const size_t& batch,
                                                             const double& egreedy,
                                                             const double& egreedy_final,
                                                             const double& egreedy_decay,

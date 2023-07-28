@@ -89,30 +89,32 @@ namespace RL {
                 //--------------------------
                 std::lock_guard<std::mutex> _lock_guard(m_mutex);
                 //--------------------------
+                m_environment.reset();
+                //--------------------------
                 bool done = false;
                 double epsilon = 0.;
                 //--------------------------
-                auto _input = m_environment.get_first(epsilon).to(m_device);
+                auto initial_input = m_environment.get_first(epsilon).to(m_device);
                 //--------------------------
-                // std::cout << "_input: " << _input.sizes() << std::endl;
+                std::cout << "initial_input: " << initial_input.sizes() << std::endl;
                 //--------------------------
-                auto output = m_handler.action(_input, epsilon, args...).to(m_device);
+                auto action_output = m_handler.action(initial_input, epsilon, args...).to(m_device);
                 //--------------------------
-                auto [next_input, reward] = m_environment.step(epsilon, done, _input, normalizing_function(output));
+                auto [next_input, reward] = m_environment.step(epsilon, done, initial_input, normalizing_function(action_output));
                 //--------------------------
-                m_handler.agent(_input, next_input.to(m_device), optimizer, reward, done);
+                m_handler.agent(initial_input, next_input.to(m_device), optimizer, reward, done);
                 //--------------------------
-                m_memory.push(_input, next_input, reward, done);
+                m_memory.push(initial_input, next_input, reward, done);
                 //--------------------------
-                torch::Tensor training_input = next_input;
+                torch::Tensor current_input = next_input;
                 //--------------------------
                 while(!done){
                     //--------------------------
-                    output = m_handler.action(training_input, epsilon, args...);
+                    action_output = m_handler.action(current_input, epsilon, args...);
                     //--------------------------
-                    std::tie(next_input, reward) = m_environment.step(epsilon, done, training_input,  normalizing_function(output));
+                    std::tie(next_input, reward) = m_environment.step(epsilon, done, current_input,  normalizing_function(action_output));
                     //--------------------------
-                    m_memory.push(training_input, next_input.to(m_device), reward, done);
+                    m_memory.push(current_input, next_input.to(m_device), reward, done);
                     //--------------------------
                     try{
                         //--------------------------
@@ -125,7 +127,7 @@ namespace RL {
                         }//end if(m_memory_activation(m_gen))
                         else{
                             //--------------------------
-                            m_handler.agent(training_input, next_input, optimizer, reward, done);
+                            m_handler.agent(current_input, next_input, optimizer, reward, done);
                             //--------------------------
                         }// end else
                         //--------------------------
@@ -134,15 +136,15 @@ namespace RL {
                         //--------------------------
                         std::cerr << "\n" << e.what() << std::endl;
                         //--------------------------
-                        std::exit(-1);
+                        throw;
                         //--------------------------
                     }// end catch(std::out_of_range& e)
                     //--------------------------
-                    training_input = next_input;
+                    current_input = next_input;
                     //--------------------------
                 }// end while(!_done)
                 //--------------------------
-                m_environment.reset();
+                // m_environment.reset();
                 //--------------------------
             }// end void train_run(void)
             //--------------------------------------------------------------
@@ -199,7 +201,7 @@ namespace RL {
                         //--------------------------
                         std::cerr << "\n" << e.what() << std::endl;
                         //--------------------------
-                        std::exit(-1);
+                        throw;
                         //--------------------------
                     }// end catch(std::out_of_range& e)
                     //--------------------------
@@ -218,7 +220,9 @@ namespace RL {
                 //--------------------------
                 for (size_t i = 0; i < epoch; ++i) {
                     //--------------------------
-                    train_local_run(optimizer, normalizing_function, args...);
+                    train_run(optimizer, normalizing_function, args...);
+                    //--------------------------
+                    // train_local_run(optimizer, normalizing_function, args...);
                     //--------------------------
                     bar.update();
                     //--------------------------

@@ -46,29 +46,35 @@ namespace RL {
                 *  @throws std::out_of_range If the specified batch size is greater than or equal to half the size of the data vector.
                 *          The exception message provides details about the expected range for the batch size.
                 */
-                explicit RLEnvironmentShuffleAtomicLoader(const std::vector<T>& data, 
-                                                          const std::function<COST_OUTPUT(const Args&...)>& costFunction,
+                explicit RLEnvironmentShuffleAtomicLoader(std::vector<T>&& data, 
+                                                          std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                                           const size_t& batch = 2UL,
                                                           const double& egreedy = 0.9,
                                                           const double& egreedy_final = 0.02,
-                                                          const double& egreedy_decay = 500.) : RLEnvironmentShuffleAtomic<T, COST_OUTPUT, Args...>(data,
-                                                                                                                                                    costFunction,
+                                                          const double& egreedy_decay = 500.) : RLEnvironmentShuffleAtomic<T, COST_OUTPUT, Args...>(std::move(data),
+                                                                                                                                                    std::move(costFunction),
                                                                                                                                                     egreedy,
                                                                                                                                                     egreedy_final,
                                                                                                                                                     egreedy_decay),
-                                                                                                m_data(data),
+                                                                                                m_data(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_data()),
+                                                                                                m_data_iter(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_iterator()),
                                                                                                 m_CostFunction(costFunction),
-                                                                                                m_data_iter(this->getIterator()),
                                                                                                 m_distribution(this->get_distribution()),
                                                                                                 m_batch(batch){
+                    //----------------------------
+                    if(this->get_atomic_iterator() != m_data.begin()){
+                        //----------------------------
+                        throw std::out_of_range("Iterator is not in the beginning");
+                        //----------------------------
+                    }// end if(this->get_atomic_iterator() != m_data.begin())
                     //----------------------------
                 }// end RLEnvironmentShuffleAtomicLoader(Dataset&& data_loader)
                 //--------------------------------------------------------------
                 //Define copy constructor explicitly
                 RLEnvironmentShuffleAtomicLoader(const RLEnvironmentShuffleAtomicLoader& other) :   RLEnvironmentShuffleAtomic<T, COST_OUTPUT, Args...>(other),
                                                                                                     m_data(other.m_data),
+                                                                                                    m_data_iter(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_iterator()),
                                                                                                     m_CostFunction(other.m_CostFunction),
-                                                                                                    m_data_iter(this->RLEnvironmentShuffleAtomic<T, COST_OUTPUT, Args...>::getIterator()),
                                                                                                     m_distribution(other.m_distribution),
                                                                                                     m_batch(other.m_batch) {
                     //--------------------------
@@ -85,8 +91,8 @@ namespace RL {
                     // Perform a deep copy of the data
                     RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::operator=(other);
                     m_data          = other.m_data;
+                    m_data_iter     = this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_iterator();
                     m_CostFunction  = other.m_CostFunction;
-                    m_data_iter     = this->RLEnvironmentShuffleAtomic<T, COST_OUTPUT, Args...>::getIterator();
                     m_distribution  = other.m_distribution;
                     m_batch         = other.m_batch;
                     //--------------------------
@@ -395,7 +401,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = this->getIterator();
+                    auto _data_iter = this->get_atomic_iterator();
                     //--------------------------------------------------------------
                     if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -435,7 +441,7 @@ namespace RL {
                             //--------------------------
                         }// end for(; _data_iter != _data_end; ++_data_iter)
                         //--------------------------
-                        this->setIterator(_data_iter);
+                        this->set_atomic_iterator(_data_iter);
                         //--------------------------
                         return {torch::cat(_data, 0), m_CostFunction(args...), this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter), true};
                         //--------------------------
@@ -451,7 +457,7 @@ namespace RL {
                         //--------------------------
                     }// end for(; _data_iter != _data_end; ++_data_iter)
                     //--------------------------
-                    this->setIterator(_data_iter);
+                    this->set_atomic_iterator(_data_iter);
                     //--------------------------
                     return {torch::cat(_data, 0), m_CostFunction(args...), this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter), false};
                     //--------------------------
@@ -461,7 +467,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = this->getIterator();
+                    auto _data_iter = this->get_atomic_iterator();
                     //--------------------------------------------------------------
                     if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -500,7 +506,7 @@ namespace RL {
                             //--------------------------
                         }// end for(; _data_iter != _data_end; ++_data_iter)
                         //--------------------------
-                        this->setIterator(_data_iter);
+                        this->set_atomic_iterator(_data_iter);
                         epsilon = this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter);
                         done = true;
                         //--------------------------
@@ -518,7 +524,7 @@ namespace RL {
                         //--------------------------
                     }// end for(; m_data_iter != _data_end; ++m_data_iter)
                     //--------------------------
-                    this->setIterator(_data_iter);
+                    this->set_atomic_iterator(_data_iter);
                     epsilon = this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter);
                     done = false;
                     //--------------------------
@@ -530,7 +536,7 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = this->getIterator();
+                    auto _data_iter = this->get_atomic_iterator();
                     //--------------------------
                     if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -561,7 +567,7 @@ namespace RL {
                             //--------------------------
                         }// end for(; _data_iter != _data_end; ++_data_iter)
                         //--------------------------
-                        this->setIterator(_data_iter);
+                        this->set_atomic_iterator(--_data_iter);
                         //--------------------------
                         return {torch::cat(_data, 0), epsilon};
                         //--------------------------
@@ -575,7 +581,7 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    auto _data_iter = this->getIterator();
+                    auto _data_iter = this->get_atomic_iterator();
                     //--------------------------
                     if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end()){
                         //--------------------------
@@ -606,7 +612,7 @@ namespace RL {
                             //--------------------------
                         }// end for(size_t i = 0; i < batch; ++i)
                         //--------------------------
-                        this->setIterator(_data_iter);
+                        this->set_atomic_iterator(--_data_iter);
                         //--------------------------
                         return torch::cat(_data, 0);
                         //--------------------------
@@ -620,11 +626,11 @@ namespace RL {
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::vector<T> m_data;
-                //--------------------------
-                std::function<COST_OUTPUT(const Args&...)> m_CostFunction;
+                std::vector<T>& m_data;
                 //--------------------------
                 std::atomic<typename std::vector<T>::iterator> m_data_iter;
+                //--------------------------
+                std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
                 //--------------------------
                 std::vector<uint8_t>& m_distribution;
                 //--------------------------

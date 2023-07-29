@@ -61,9 +61,7 @@ namespace RL {
                                                                                                                              egreedy,
                                                                                                                              egreedy_final,
                                                                                                                              egreedy_decay),
-                                                                                      m_data(this->get_data()),
                                                                                       m_data_iter(this->get_iterator()),
-                                                                                      m_CostFunction(this->get_cost_function()),
                                                                                       m_egreedy(egreedy),
                                                                                       m_egreedy_final(egreedy_final),
                                                                                       m_egreedy_decay(egreedy_decay){
@@ -74,8 +72,6 @@ namespace RL {
                 //--------------------------------------------------------------
                 //Define copy constructor explicitly
                 RLEnvironmentAtomic(const RLEnvironmentAtomic& other) : RLEnvironment<T, COST_OUTPUT, Args...>(other),
-                                                                        m_data(other.m_data),
-                                                                        m_CostFunction(other.m_CostFunction),
                                                                         m_egreedy(other.m_egreedy),
                                                                         m_egreedy_final(other.m_egreedy_final),
                                                                         m_egreedy_decay(other.m_egreedy_decay){
@@ -94,8 +90,6 @@ namespace RL {
                     //--------------------------
                     // Perform a deep copy of the data
                     RLEnvironment<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_data          = other.m_data;
-                    m_CostFunction  = other.m_CostFunction;
                     m_egreedy       = other.m_egreedy;
                     m_egreedy_final = other.m_egreedy_final;
                     m_egreedy_decay = other.m_egreedy_decay;
@@ -176,13 +170,13 @@ namespace RL {
                 *
                 * If the end of the batch is the end of the data iterator, the function iterates over the remaining data tensors, adds them
                 * to `_data`, calculates the epsilon value, sets the done flag to true, and returns a tuple containing the concatenated
-                * tensor of `_data` along with the cost output obtained by invoking the `m_CostFunction` member function with the provided
+                * tensor of `_data` along with the cost output obtained by invoking the `this->cost_function` member function with the provided
                 * arguments `args`.
                 *
                 * If neither of the above cases is true, the function assumes that there are remaining data tensors to process. It iterates
                 * over the batch size, adding the next data tensors to `_data`. It then calculates the epsilon value, sets the done flag to
                 * false, and returns a tuple containing the concatenated tensor of `_data` along with the cost output obtained by invoking
-                * the `m_CostFunction` member function with the provided arguments `args`.
+                * the `this->cost_function` member function with the provided arguments `args`.
                 *
                 * @note Make sure that the data iterator is properly initialized before calling this function.
                 */
@@ -262,13 +256,13 @@ namespace RL {
                     //--------------------------
                     auto _data_iter = get_atomic_iterator();
                     //--------------------------------------------------------------
-                    if (_data_iter == m_data.end()){
+                    if (_data_iter == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (_data_iter == m_data.end())
+                    }// end if (_data_iter == this->get_data().end())
                     //--------------------------------------------------------------
-                    if (_data_iter == m_data.begin()){
+                    if (_data_iter == this->get_data().begin()){
                         //--------------------------
                         torch::Tensor _data;
                         double epsilon;
@@ -277,19 +271,19 @@ namespace RL {
                         //--------------------------
                         return {_data, torch::tensor(0), epsilon, false};
                         //--------------------------
-                    }// end if (_data_iter == m_data.begin())
+                    }// end if (_data_iter == this->get_data().begin())
                     //--------------------------------------------------------------
-                    if(_data_iter == m_data.end()-1){
+                    if(_data_iter == this->get_data().end()-1){
                         //--------------------------
-                        return {*_data_iter, m_CostFunction(args...), calculate_epsilon(_data_iter), true};
+                        return {*_data_iter, this->cost_function(args...), calculate_epsilon(_data_iter), true};
                         //--------------------------
-                    }// if(_data_iter == m_data.end())
+                    }// if(_data_iter == this->get_data().end())
                     //--------------------------------------------------------------
                     auto input = *_data_iter;
                     ++_data_iter;
                     set_atomic_iterator(_data_iter);
                     //--------------------------
-                    return {input, m_CostFunction(args...), calculate_epsilon(_data_iter), false};
+                    return {input, this->cost_function(args...), calculate_epsilon(_data_iter), false};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args)
                 //--------------------------------------------------------------
@@ -299,13 +293,13 @@ namespace RL {
                     //--------------------------
                     auto _data_iter = get_atomic_iterator();
                     //--------------------------------------------------------------
-                    if (_data_iter == m_data.end()){
+                    if (_data_iter == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end())
+                    }// end if (_data_iter == this->get_data().end() or std::next(_data_iter, batch) == this->get_data().end())
                     //--------------------------------------------------------------
-                    if (_data_iter == m_data.begin()){
+                    if (_data_iter == this->get_data().begin()){
                         //--------------------------
                         done = false;
                         //--------------------------
@@ -313,16 +307,16 @@ namespace RL {
                         //--------------------------
                         return {_data, torch::tensor(0)};
                         //--------------------------
-                    }// end if (_data_iter == m_data.begin() and std::next(_data_iter, batch) != m_data.end()-1)
+                    }// end if (_data_iter == this->get_data().begin() and std::next(_data_iter, batch) != this->get_data().end()-1)
                     //--------------------------------------------------------------
-                    if(_data_iter == m_data.end()-1){
+                    if(_data_iter == this->get_data().end()-1){
                         //--------------------------
                         epsilon = calculate_epsilon(_data_iter);
                         done = true;
                         //--------------------------
-                        return {*_data_iter, m_CostFunction(args...)};
+                        return {*_data_iter, this->cost_function(args...)};
                         //--------------------------
-                    }// if(_data_iter == m_data.end()-1)
+                    }// if(_data_iter == this->get_data().end()-1)
                     //--------------------------------------------------------------
                     epsilon = calculate_epsilon(_data_iter);
                     done = false;
@@ -331,7 +325,7 @@ namespace RL {
                     ++_data_iter;
                     set_atomic_iterator(_data_iter);
                     //--------------------------
-                    return {input, m_CostFunction(args...)};
+                    return {input, this->cost_function(args...)};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, Args... args)
                 //--------------------------------------------------------------
@@ -341,13 +335,13 @@ namespace RL {
                     //--------------------------
                     auto _data_iter = get_atomic_iterator();
                     //--------------------------
-                    if (_data_iter == m_data.end()){
+                    if (_data_iter == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end())
+                    }// end if (_data_iter == this->get_data().end() or std::next(_data_iter, batch) == this->get_data().end())
                     //--------------------------
-                    if (_data_iter == m_data.begin()){
+                    if (_data_iter == this->get_data().begin()){
                         //--------------------------
                         auto input = *_data_iter;
                         //--------------------------
@@ -359,7 +353,7 @@ namespace RL {
                         //--------------------------
                         return {input, epsilon};
                         //--------------------------
-                    }// end if (_data_iter == m_data.begin())
+                    }// end if (_data_iter == this->get_data().begin())
                     //--------------------------
                     return {torch::tensor(0), 0};
                     //--------------------------
@@ -371,13 +365,13 @@ namespace RL {
                     //--------------------------
                     auto _data_iter = get_atomic_iterator();
                     //--------------------------
-                    if (_data_iter == m_data.end()){
+                    if (_data_iter == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (_data_iter == m_data.end())
+                    }// end if (_data_iter == this->get_data().end())
                     //--------------------------
-                    if (_data_iter == m_data.begin()){
+                    if (_data_iter == this->get_data().begin()){
                         //--------------------------
                         auto input = *_data_iter;
                         //--------------------------
@@ -389,7 +383,7 @@ namespace RL {
                         //--------------------------
                         return input;
                         //--------------------------
-                    }// end (_data_iter == m_data.begin() and std::next(_data_iter, batch) != m_data.end()-1)
+                    }// end (_data_iter == this->get_data().begin() and std::next(_data_iter, batch) != this->get_data().end()-1)
                     //--------------------------
                     epsilon = 0.;
                     //--------------------------
@@ -411,7 +405,7 @@ namespace RL {
                 //--------------------------------------------------------------
                 constexpr double calculate_epsilon(const typename std::vector<T>::iterator& data_iter) {
                     //--------------------------
-                    return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * std::distance(m_data.begin(), data_iter) / m_egreedy_decay);
+                    return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * std::distance(this->get_data().begin(), data_iter) / m_egreedy_decay);
                     //--------------------------
                 }// end constexpr double calculate_epsilon(typename std::vector<T>::iterator data_iter)
                 //--------------------------------------------------------------
@@ -419,19 +413,15 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    set_atomic_iterator(m_data.begin());
+                    set_atomic_iterator(this->get_data().begin());
                     //--------------------------
                 }// end void rest_iterator(void)
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::vector<T>& m_data;
-                //--------------------------
                 std::atomic<typename std::vector<T>::iterator> m_data_iter;
                 //--------------------------
-                std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
-                //--------------------------
-                double m_egreedy, m_egreedy_final, m_egreedy_decay;
+                const double m_egreedy, m_egreedy_final, m_egreedy_decay;
                 //--------------------------                
                 std::mutex m_mutex;
             //--------------------------------------------------------------

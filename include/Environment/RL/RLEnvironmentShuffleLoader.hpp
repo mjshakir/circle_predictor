@@ -50,26 +50,18 @@ namespace RL {
                                                                                                                                         egreedy, 
                                                                                                                                         egreedy_final, 
                                                                                                                                         egreedy_decay),
-                                                                                        m_data(this->get_data()),
-                                                                                        m_data_iter(this->get_iterator()),
-                                                                                        m_CostFunction(this->get_cost_function()),
-                                                                                        m_distribution(this->get_distribution()),
                                                                                         m_batch(batch){
                     //--------------------------
-                    if(batch >= m_data.size()/2){
+                    if(batch >= this->get_data().size()/2){
                         //--------------------------
-                        throw std::out_of_range("Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(m_data.size()/2) + "]");
+                        throw std::out_of_range("Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(this->get_data().size()/2) + "]");
                         //--------------------------
-                    }// end if(batch >= m_data.size()/2)
+                    }// end if(batch >= this->get_data().size()/2)
                     //----------------------------        
                 }// end RLEnvironmentShuffleLoader(Dataset&& data_loader)
                 //--------------------------------------------------------------
                 //Define copy constructor explicitly
                 RLEnvironmentShuffleLoader(const RLEnvironmentShuffleLoader& other) :   RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(other),
-                                                                                        m_data(other.m_data),
-                                                                                        m_data_iter(other.m_data_iter),
-                                                                                        m_CostFunction(other.m_CostFunction),
-                                                                                        m_distribution(other.m_distribution),
                                                                                         m_batch(other.m_batch){
                     //--------------------------
                 }// end RLEnvironmentLoaderAtomic(const RLEnvironmentLoaderAtomic& other)
@@ -84,10 +76,6 @@ namespace RL {
                     //--------------------------
                     // Perform a deep copy of the data
                     RLEnvironmentShuffle<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_data          = other.m_data;
-                    m_data_iter     = other.m_data_iter;
-                    m_CostFunction  = other.m_CostFunction;
-                    m_distribution  = other.m_distribution;
                     m_batch         = other.m_batch;
                     //--------------------------
                     return *this;
@@ -179,13 +167,13 @@ namespace RL {
                 //--------------------------------------------------------------
                 std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, const Args&... args){
                     //--------------------------------------------------------------
-                    if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
+                    if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
+                    }// end if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end())
                     //--------------------------
-                    if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
+                    if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1){
                         //--------------------------
                         torch::Tensor _data;
                         double epsilon;
@@ -194,141 +182,144 @@ namespace RL {
                         //--------------------------
                         return {_data, torch::tensor(NULL), epsilon, false};
                         //--------------------------
-                    }// end if (m_data_iter == m_data.begin())
+                    }// end if (this->get_iterator() == this->get_data().begin())
                     //--------------------------------------------------------------
                     std::vector<torch::Tensor> _data;
                     _data.reserve(batch);
                     //--------------------------
-                    auto _data_end = std::next(m_data_iter, batch);
+                    auto _data_end = std::next(this->get_iterator(), batch);
                     //--------------------------
                     std::random_device rd;
                     std::mt19937 gen(rd());
-                    std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
+                    std::discrete_distribution<> random_distribution(this->get_distribution().begin(), this->get_distribution().end());
                     //--------------------------------------------------------------
-                    if(_data_end == m_data.end()-1){
+                    if(_data_end == this->get_data().end()-1){
                         //--------------------------
-                        for(; m_data_iter != _data_end; ++m_data_iter) {
+                        for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
                             auto _random_position = random_distribution(gen);
                             //--------------------------
-                            _data.push_back(*std::next(m_data.begin(), _random_position));
+                            _data.push_back(*std::next(this->get_data().begin(), _random_position));
                             //--------------------------
-                            m_distribution.at(_random_position) = 0;
+                            this->get_distribution().at(_random_position) = 0;
                             //--------------------------
-                        }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                        }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
                         //--------------------------
-                        return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(), true};
+                        return {torch::cat(_data, 0), this->cost_function(args...), this->calculate_epsilon(), true};
                         //--------------------------
-                    }// if(m_data_iter == m_data.end())
+                    }// if(this->get_iterator() == this->get_data().end())
                     //--------------------------------------------------------------
-                    for(; m_data_iter != _data_end; ++m_data_iter) {
+                    for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                         //--------------------------
                         auto _random_position = random_distribution(gen);
                         //--------------------------
-                        _data.push_back(*std::next(m_data.begin(), _random_position));
+                        _data.push_back(*std::next(this->get_data().begin(), _random_position));
                         //--------------------------
-                        m_distribution.at(_random_position) = 0;
+                        this->get_distribution().at(_random_position) = 0;
                         //--------------------------
-                    }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                    }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
                     //--------------------------
-                    return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(), false};
+                    return {torch::cat(_data, 0), this->cost_function(args...), this->calculate_epsilon(), false};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args)
                 //--------------------------------------------------------------
                 std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args){
                     //--------------------------------------------------------------
-                    if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
+                    if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
+                    }// end if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end())
                     //--------------------------------------------------------------
-                    if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
+                    if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1){
                         //--------------------------
                         done = false;
                         //--------------------------
                         return {get_first_internal(epsilon, batch), torch::tensor(0)};
-                    }// end if (m_data_iter == m_data.begin())
+                        //--------------------------
+                    }// end if (this->get_iterator() == this->get_data().begin())
                     //--------------------------------------------------------------
                     std::vector<torch::Tensor> _data;
                     _data.reserve(batch);
                     //--------------------------
-                    auto _data_end = std::next(m_data_iter, batch);
+                    auto _data_end = std::next(this->get_iterator(), batch);
                     //--------------------------
                     std::random_device rd;
                     std::mt19937 gen(rd());
-                    std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
+                    std::discrete_distribution<> random_distribution(this->get_distribution().begin(), this->get_distribution().end());
                     //--------------------------------------------------------------
-                    if(_data_end == m_data.end()-1){
+                    if(_data_end == this->get_data().end()-1){
                         //--------------------------
-                        for(; m_data_iter != _data_end; ++m_data_iter) {
+                        for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
                             auto _random_position = random_distribution(gen);
                             //--------------------------
-                            _data.push_back(*std::next(m_data.begin(), _random_position));
+                            _data.push_back(*std::next(this->get_data().begin(), _random_position));
                             //--------------------------
-                            m_distribution.at(_random_position) = 0;
+                            this->get_distribution().at(_random_position) = 0;
                             //--------------------------
-                        }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                        }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
                         //--------------------------
                         epsilon = this->calculate_epsilon();
                         done = true;
                         //--------------------------
-                        return {torch::cat(_data, 0), m_CostFunction(args...)};
+                        return {torch::cat(_data, 0), this->cost_function(args...)};
                         //--------------------------
-                    }// if(m_data_iter == m_data.end())
+                    }// if(this->get_iterator() == this->get_data().end())
                     //--------------------------------------------------------------
-                    for(; m_data_iter != _data_end; ++m_data_iter) {
+                    for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                         //--------------------------
                         auto _random_position = random_distribution(gen);
                         //--------------------------
-                        _data.push_back(*std::next(m_data.begin(), _random_position));
+                        _data.push_back(*std::next(this->get_data().begin(), _random_position));
                         //--------------------------
-                        m_distribution.at(_random_position) = 0;
+                        this->get_distribution().at(_random_position) = 0;
                         //--------------------------
-                    }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                    }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
                     //--------------------------
                     epsilon = this->calculate_epsilon();
                     done = false;
                     //--------------------------
-                    return {torch::cat(_data, 0), m_CostFunction(args...)};
+                    return {torch::cat(_data, 0), this->cost_function(args...)};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, Args... args)
                 //--------------------------------------------------------------
                 std::tuple<torch::Tensor, double> get_first_internal(const size_t& batch){
                     //--------------------------
-                    if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
+                    if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
+                    }// end if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end())
                     //--------------------------
-                    if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
+                    if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1){
                         //--------------------------
                         std::vector<torch::Tensor> _data;
                         _data.reserve(batch);
                         //--------------------------
                         std::random_device rd;
                         std::mt19937 gen(rd());
-                        std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
+                        std::discrete_distribution<> random_distribution(this->get_distribution().begin(), this->get_distribution().end());
                         //--------------------------
                         auto epsilon = this->calculate_epsilon();
                         //--------------------------
-                        auto _data_end = std::next(m_data_iter, batch);
+                        auto _data_end = std::next(this->get_iterator(), batch);
                         //--------------------------
-                        for(; m_data_iter != _data_end; ++m_data_iter) {
+                        for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
                             auto _random_position = random_distribution(gen);
                             //--------------------------
-                            _data.push_back(*std::next(m_data.begin(), _random_position));
+                            _data.push_back(*std::next(this->get_data().begin(), _random_position));
                             //--------------------------
-                            m_distribution.at(_random_position) = 0;
+                            this->get_distribution().at(_random_position) = 0;
                             //--------------------------
-                        }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                        }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
+                        //--------------------------
+                        --this->get_iterator();
                         //--------------------------
                         return {torch::cat(_data, 0), epsilon};
                         //--------------------------
-                    }// end if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1)
+                    }// end if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1)
                     //--------------------------
                     return {torch::tensor(0), 0};
                     //--------------------------
@@ -336,38 +327,40 @@ namespace RL {
                 //--------------------------------------------------------------
                 torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch){
                     //--------------------------
-                    if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
+                    if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
+                    }// end if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end())
                     //--------------------------
-                    if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
+                    if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1){
                         //--------------------------
                         std::vector<torch::Tensor> _data;
                         _data.reserve(batch);
                         //--------------------------
                         std::random_device rd;
                         std::mt19937 gen(rd());
-                        std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
+                        std::discrete_distribution<> random_distribution(this->get_distribution().begin(), this->get_distribution().end());
                         //--------------------------
                         auto epsilon = this->calculate_epsilon();
                         //--------------------------
-                        auto _data_end = std::next(m_data_iter, batch);
+                        auto _data_end = std::next(this->get_iterator(), batch);
                         //--------------------------
-                        for(; m_data_iter != _data_end; ++m_data_iter) {
+                        for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
                             auto _random_position = random_distribution(gen);
                             //--------------------------
-                            _data.push_back(*std::next(m_data.begin(), _random_position));
+                            _data.push_back(*std::next(this->get_data().begin(), _random_position));
                             //--------------------------
-                            m_distribution.at(_random_position) = 0;
+                            this->get_distribution().at(_random_position) = 0;
                             //--------------------------
-                        }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                        }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
+                        //--------------------------
+                        --this->get_iterator();
                         //--------------------------
                         return torch::cat(_data, 0);
                         //--------------------------
-                    }// end (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1)
+                    }// end (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1)
                     //--------------------------
                     epsilon = 0.;
                     //--------------------------
@@ -377,13 +370,6 @@ namespace RL {
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::vector<T>& m_data;
-                typename std::vector<T>::iterator& m_data_iter;
-                //--------------------------
-                std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
-                //--------------------------
-                std::vector<uint8_t>& m_distribution;
-                //--------------------------
                 size_t m_batch;
             //--------------------------------------------------------------
         };// end class RLEnvironmentShuffleLoader

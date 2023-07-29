@@ -296,6 +296,12 @@ namespace RL {
                     //--------------------------
                 }// end std::function<COST_OUTPUT(const Args&...)>& get_cost_function(void)
                 //--------------------------------------------------------------
+                COST_OUTPUT cost_function(const Args&... args){
+                    //--------------------------
+                    return m_CostFunction(args...);
+                    //--------------------------
+                }// end COST_OUTPUT cost_function(const Args&... args)
+                //--------------------------------------------------------------
                 typename std::vector<T>::iterator& get_iterator(void){
                     //--------------------------
                     return m_data_iter;
@@ -315,7 +321,7 @@ namespace RL {
                 //--------------------------
                 std::function<COST_OUTPUT(const Args&...)> m_CostFunction;
                 //--------------------------
-                double m_egreedy, m_egreedy_final, m_egreedy_decay;
+                const double m_egreedy, m_egreedy_final, m_egreedy_decay;
             //--------------------------------------------------------------
         };// end class RLEnvironment
         //--------------------------------------------------------------

@@ -56,24 +56,18 @@ namespace RL {
                                                                                                                              egreedy,
                                                                                                                              egreedy_final,
                                                                                                                              egreedy_decay),
-                                                                                      m_data(this->get_data()),
-                                                                                      m_data_iter (this->get_iterator()), 
-                                                                                      m_CostFunction(this->get_cost_function()),
                                                                                       m_batch(batch){
                     //----------------------------
-                    if(batch >= m_data.size()/2){
+                    if(batch >= this->get_data().size()/2){
                         //--------------------------
-                        throw std::out_of_range("Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(m_data.size()/2) + "]");
+                        throw std::out_of_range("Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(this->get_data().size()/2) + "]");
                         //--------------------------
-                    }// end if(batch >= m_data.size()/2)
+                    }// end if(batch >= this->get_data().size()/2)
                     //----------------------------
                 }// end RLEnvironmentLoader(Dataset&& data_loader)
                 //--------------------------------------------------------------
                 //Define copy constructor explicitly
                 RLEnvironmentLoader(const RLEnvironmentLoader& other) : RLEnvironment<T, COST_OUTPUT, Args...>(other),
-                                                                        m_data(other.m_data),
-                                                                        m_data_iter(other.m_data_iter),
-                                                                        m_CostFunction(other.m_CostFunction),
                                                                         m_batch(other.m_batch) {
                     //--------------------------
                 }// end RLEnvironmentLoader(const RLEnvironmentLoader& other)
@@ -88,10 +82,7 @@ namespace RL {
                     //--------------------------
                     // Perform a deep copy of the data
                     RLEnvironment<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_data          = other.m_data;
-                    m_data_iter     = other.m_data_iter;
-                    m_CostFunction  = other.m_CostFunction;
-                    m_batch         = other.m_batch;
+                    m_batch     = other.m_batch;
                     //--------------------------
                     return *this;
                     //--------------------------
@@ -167,13 +158,13 @@ namespace RL {
                 *
                 * If the end of the batch is the end of the data iterator, the function iterates over the remaining data tensors, adds them
                 * to `_data`, calculates the epsilon value, sets the done flag to true, and returns a tuple containing the concatenated
-                * tensor of `_data` along with the cost output obtained by invoking the `m_CostFunction` member function with the provided
+                * tensor of `_data` along with the cost output obtained by invoking the `this->cost_function` member function with the provided
                 * arguments `args`.
                 *
                 * If neither of the above cases is true, the function assumes that there are remaining data tensors to process. It iterates
                 * over the batch size, adding the next data tensors to `_data`. It then calculates the epsilon value, sets the done flag to
                 * false, and returns a tuple containing the concatenated tensor of `_data` along with the cost output obtained by invoking
-                * the `m_CostFunction` member function with the provided arguments `args`.
+                * the `this->cost_function` member function with the provided arguments `args`.
                 *
                 * @note Make sure that the data iterator is properly initialized before calling this function.
                 */
@@ -255,13 +246,13 @@ namespace RL {
                 *
                 * If the end of the batch is the end of the data iterator, the function iterates over the remaining data tensors, adds them
                 * to `_data`, calculates the epsilon value, sets the done flag to true, and returns a tuple containing the concatenated
-                * tensor of `_data` along with the cost output obtained by invoking the `m_CostFunction` member function with the provided
+                * tensor of `_data` along with the cost output obtained by invoking the `this->cost_function` member function with the provided
                 * arguments `args`.
                 *
                 * If neither of the above cases is true, the function assumes that there are remaining data tensors to process. It iterates
                 * over the batch size, adding the next data tensors to `_data`. It then calculates the epsilon value, sets the done flag to
                 * false, and returns a tuple containing the concatenated tensor of `_data` along with the cost output obtained by invoking
-                * the `m_CostFunction` member function with the provided arguments `args`.
+                * the `this->cost_function` member function with the provided arguments `args`.
                 *
                 * @note Make sure that the data iterator is properly initialized before calling this function.
                 *
@@ -396,13 +387,13 @@ namespace RL {
                 //--------------------------------------------------------------
                 std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, const Args&... args){
                     //--------------------------------------------------------------
-                    if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
+                    if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
+                    }// end if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end())
                     //--------------------------------------------------------------
-                    if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
+                    if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1){
                         //--------------------------
                         torch::Tensor _data;
                         double epsilon;
@@ -411,110 +402,112 @@ namespace RL {
                         //--------------------------
                         return {_data, torch::tensor(0), epsilon, false};
                         //--------------------------
-                    }// end if (m_data_iter == m_data.begin())
+                    }// end if (this->get_iterator() == this->get_data().begin())
                     //--------------------------------------------------------------
                     std::vector<torch::Tensor> _data;
                     _data.reserve(batch);
                     //--------------------------
-                    auto _data_end = std::next(m_data_iter, batch);
+                    auto _data_end = std::next(this->get_iterator(), batch);
                     //--------------------------------------------------------------
-                    if(_data_end == m_data.end()-1){
+                    if(_data_end == this->get_data().end()-1){
                         //--------------------------
-                        for(; m_data_iter != _data_end; ++m_data_iter) {
+                        for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
-                            _data.push_back(*m_data_iter);
+                            _data.push_back(*this->get_iterator());
                             //--------------------------
-                        }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                        }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
                         //--------------------------
-                        return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(), true};
+                        return {torch::cat(_data, 0), this->cost_function(args...), this->calculate_epsilon(), true};
                         //--------------------------
-                    }// if(m_data_iter == m_data.end())
+                    }// if(this->get_iterator() == this->get_data().end())
                     //--------------------------------------------------------------
-                    for(; m_data_iter != _data_end; ++m_data_iter) {
+                    for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                         //--------------------------
-                        _data.push_back(*m_data_iter);
+                        _data.push_back(*this->get_iterator());
                         //--------------------------
-                    }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                    }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
                     //--------------------------
-                    return {torch::cat(_data, 0), m_CostFunction(args...), this->calculate_epsilon(), false};
+                    return {torch::cat(_data, 0), this->cost_function(args...), this->calculate_epsilon(), false};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args)
                 //--------------------------------------------------------------
                 std::tuple<torch::Tensor, COST_OUTPUT> internal_step(OUT double& epsilon, OUT bool& done, const size_t& batch, const Args&... args){
                     //--------------------------------------------------------------
-                    if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
+                    if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
+                    }// end if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end())
                     //--------------------------------------------------------------
-                    if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
+                    if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1){
                         //--------------------------
                         done = false;
                         //--------------------------
                         return {get_first_internal(epsilon, batch), torch::tensor(0)};
                         //--------------------------
-                    }// end if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1)
+                    }// end if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1)
                     //--------------------------------------------------------------
                     std::vector<torch::Tensor> _data;
                     _data.reserve(batch);
                     //--------------------------
-                    auto _data_end = std::next(m_data_iter, batch);
+                    auto _data_end = std::next(this->get_iterator(), batch);
                     //--------------------------------------------------------------
-                    if(_data_end == m_data.end()-1){
+                    if(_data_end == this->get_data().end()-1){
                         //--------------------------
-                        for(; m_data_iter != _data_end; ++m_data_iter) {
+                        for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
-                            _data.push_back(*m_data_iter);
+                            _data.push_back(*this->get_iterator());
                             //--------------------------
-                        }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                        }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
                         //--------------------------
                         epsilon = this->calculate_epsilon();
                         done = true;
                         //--------------------------
-                        return {torch::cat(_data, 0), m_CostFunction(args...)};
+                        return {torch::cat(_data, 0), this->cost_function(args...)};
                         //--------------------------
-                    }// if(m_data_iter == m_data.end())
+                    }// if(this->get_iterator() == this->get_data().end())
                     //--------------------------------------------------------------
-                    for(; m_data_iter != _data_end; ++m_data_iter) {
+                    for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                         //--------------------------
-                        _data.push_back(*m_data_iter);
+                        _data.push_back(*this->get_iterator());
                         //--------------------------
-                    }// end for(; m_data_iter != _data_end; ++m_data_iter)
+                    }// end for(; this->get_iterator() != _data_end; ++this->get_iterator())
                     //--------------------------
                     epsilon = this->calculate_epsilon();
                     done = false;
                     //--------------------------
-                    return {torch::cat(_data, 0), m_CostFunction(args...)};
+                    return {torch::cat(_data, 0), this->cost_function(args...)};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, Args... args)
                 //--------------------------------------------------------------
                 std::tuple<torch::Tensor, double> get_first_internal(const size_t& batch){
                     //--------------------------
-                    if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
+                    if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
+                    }// end if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end())
                     //--------------------------
-                    if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
+                    if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1){
                         //--------------------------
                         std::vector<torch::Tensor> _data;
                         _data.reserve(batch);
                         //--------------------------
                         auto epsilon = this->calculate_epsilon();
                         //--------------------------
-                        _data.push_back(*m_data_iter);
+                        auto _data_end = std::next(this->get_iterator(), batch);
                         //--------------------------
-                        for(size_t i = 1; i < batch; ++i){
+                        for(; this->get_iterator() != _data_end; ++this->get_iterator()){
                             //--------------------------
-                            _data.push_back(*++m_data_iter);
+                            _data.push_back(*this->get_iterator());
                             //--------------------------
-                        }// end for(size_t i = 0; i < batch; ++i)
+                        }// for(; _data_iter != _data_end; ++_data_iter)
+                        //--------------------------
+                        --this->get_iterator();
                         //--------------------------
                         return {torch::cat(_data, 0), epsilon};
                         //--------------------------
-                    }// end if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1)
+                    }// end if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1)
                     //--------------------------
                     return {torch::tensor(0), 0};
                     //--------------------------
@@ -522,30 +515,32 @@ namespace RL {
                 //--------------------------------------------------------------
                 torch::Tensor get_first_internal(OUT double& epsilon, const size_t& batch){
                     //--------------------------
-                    if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end()){
+                    if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (m_data_iter == m_data.end() or std::next(m_data_iter, batch) == m_data.end())
+                    }// end if (this->get_iterator() == this->get_data().end() or std::next(this->get_iterator(), batch) == this->get_data().end())
                     //--------------------------
-                    if (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1){
+                    if (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1){
                         //--------------------------
                         std::vector<torch::Tensor> _data;
                         _data.reserve(batch);
                         //--------------------------
                         epsilon = this->calculate_epsilon();
                         //--------------------------
-                        _data.push_back(*m_data_iter);
+                        auto _data_end = std::next(this->get_iterator(), batch);
                         //--------------------------
-                        for(size_t i = 1; i < batch; ++i){
+                        for(; this->get_iterator() != _data_end; ++this->get_iterator()){
                             //--------------------------
-                            _data.push_back(*++m_data_iter);
+                            _data.push_back(*this->get_iterator());
                             //--------------------------
-                        }// end for(size_t i = 0; i < batch; ++i)
+                        }// for(; _data_iter != _data_end; ++_data_iter)
+                        //--------------------------
+                        --this->get_iterator();
                         //--------------------------
                         return torch::cat(_data, 0);
                         //--------------------------
-                    }// end (m_data_iter == m_data.begin() and std::next(m_data_iter, batch) != m_data.end()-1)
+                    }// end (this->get_iterator() == this->get_data().begin() and std::next(this->get_iterator(), batch) != this->get_data().end()-1)
                     //--------------------------
                     epsilon = 0.;
                     //--------------------------
@@ -555,11 +550,6 @@ namespace RL {
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::vector<T>& m_data;
-                typename std::vector<T>::iterator& m_data_iter;
-                //--------------------------
-                std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
-                //--------------------------
                 size_t m_batch;
             //--------------------------------------------------------------
         };// end class RLEnvironmentLoader

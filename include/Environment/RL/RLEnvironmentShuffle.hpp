@@ -52,27 +52,11 @@ namespace RL {
                     //-------------------------- 
                 }// end RLEnvironmentShuffle(Dataset&& data_loader)
                 //--------------------------------------------------------------
-                //Define copy constructor explicitly
-                RLEnvironmentShuffle(const RLEnvironmentShuffle& other) :   RLEnvironment<T, COST_OUTPUT, Args...>(other),
-                                                                            m_distribution(other.m_distribution){
-                    //--------------------------
-                }// end RLEnvironmentShuffle(const RLEnvironmentShuffle& other)
-                //--------------------------------------------------------------
-                //Copy assignment operator
-                RLEnvironmentShuffle& operator=(const RLEnvironmentShuffle& other) {
-                    //--------------------------
-                    // Check for self-assignment
-                    if (this == &other) {
-                        return *this;
-                    }// end if (this == &other)
-                    //--------------------------
-                    // Perform a deep copy of the data
-                    RLEnvironment<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_distribution  = other.m_distribution;
-                    //--------------------------
-                    return *this;
-                    //--------------------------
-                }// end RLEnvironmentShuffle& operator=(const RLEnvironmentShuffle& other)
+                RLEnvironmentShuffle(const RLEnvironmentShuffle&)             = default;
+                RLEnvironmentShuffle& operator=(RLEnvironmentShuffle&&)       = default;
+                //----------------------------
+                RLEnvironmentShuffle(RLEnvironmentShuffle&&)                  = default;
+                RLEnvironmentShuffle& operator=(const RLEnvironmentShuffle&)  = default;
                 //--------------------------------------------------------------
                 /**
                  * @brief 

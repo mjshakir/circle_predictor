@@ -60,27 +60,11 @@ namespace RL {
                     //----------------------------        
                 }// end RLEnvironmentShuffleLoader(Dataset&& data_loader)
                 //--------------------------------------------------------------
-                //Define copy constructor explicitly
-                RLEnvironmentShuffleLoader(const RLEnvironmentShuffleLoader& other) :   RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(other),
-                                                                                        m_batch(other.m_batch){
-                    //--------------------------
-                }// end RLEnvironmentLoaderAtomic(const RLEnvironmentLoaderAtomic& other)
-                //--------------------------------------------------------------
-                //Copy assignment operator
-                RLEnvironmentShuffleLoader& operator=(const RLEnvironmentShuffleLoader& other) {
-                    //--------------------------
-                    // Check for self-assignment
-                    if (this == &other) {
-                        return *this;
-                    }// end if (this == &other)
-                    //--------------------------
-                    // Perform a deep copy of the data
-                    RLEnvironmentShuffle<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_batch         = other.m_batch;
-                    //--------------------------
-                    return *this;
-                    //--------------------------
-                }// end RLEnvironmentLoader& operator=(const RLEnvironmentLoader& other)
+                RLEnvironmentShuffleLoader(const RLEnvironmentShuffleLoader&)             = default;
+                RLEnvironmentShuffleLoader& operator=(RLEnvironmentShuffleLoader&&)       = default;
+                //----------------------------
+                RLEnvironmentShuffleLoader(RLEnvironmentShuffleLoader&&)                  = default;
+                RLEnvironmentShuffleLoader& operator=(const RLEnvironmentShuffleLoader&)  = default;
                 //--------------------------------------------------------------
                 /**
                  * @brief 

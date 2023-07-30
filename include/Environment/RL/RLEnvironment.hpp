@@ -58,35 +58,11 @@ namespace RL {
                     //----------------------------
                 }// end RLEnvironment(Dataset&& data_loader)
                 //--------------------------------------------------------------
-                //Define copy constructor explicitly
-                RLEnvironment(const RLEnvironment& other) : m_data(other.m_data),
-                                                            m_data_iter(other.m_data_iter),
-                                                            m_CostFunction(other.m_CostFunction),
-                                                            m_egreedy(other.m_egreedy),
-                                                            m_egreedy_final(other.m_egreedy_final),
-                                                            m_egreedy_decay(other.m_egreedy_decay) {
-                    //--------------------------
-                }// end RLEnvironment(const RLEnvironment& other)
-                //--------------------------------------------------------------
-                 //Copy assignment operator
-                RLEnvironment& operator=(const RLEnvironment& other) {
-                    //--------------------------
-                    // Check for self-assignment
-                    if (this == &other) {
-                        return *this;
-                    }// end if (this == &other)
-                    //--------------------------
-                    // Perform a deep copy of the data
-                    m_data          = other.m_data;
-                    m_data_iter     = other.m_data_iter;
-                    m_CostFunction  = other.m_CostFunction;
-                    m_egreedy       = other.m_egreedy;
-                    m_egreedy_final = other.m_egreedy_final;
-                    m_egreedy_decay = other.m_egreedy_decay;
-                    //--------------------------
-                    return *this;
-                    //--------------------------
-                }// end RLEnvironmentLoader& operator=(const RLEnvironmentLoader& other)
+                RLEnvironment(const RLEnvironment&)            = default;
+                RLEnvironment& operator=(const RLEnvironment&) = default;
+                //----------------------------
+                RLEnvironment(RLEnvironment&&)                 = default;
+                RLEnvironment& operator=(RLEnvironment&&)      = default;
                 //--------------------------------------------------------------
                 /**
                  * @brief 

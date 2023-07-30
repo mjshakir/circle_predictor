@@ -177,11 +177,7 @@ namespace RL {
                         //--------------------------
                     }// end if (this->get_iterator() == this->get_data().begin())
                     //--------------------------
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
-                    //--------------------------
-                    auto _random_position = random_distribution(gen);
+                    auto _random_position = generate_random_position();
                     //--------------------------
                     if(this->get_iterator() == this->get_data().end()-1){
                         //--------------------------
@@ -215,11 +211,7 @@ namespace RL {
                         //--------------------------
                     }// end if (this->get_iterator() == this->get_data().begin())
                     //--------------------------
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
-                    //--------------------------
-                    auto _random_position = random_distribution(gen);
+                    auto _random_position = generate_random_position();
                     //--------------------------
                     if(this->get_iterator() == this->get_data().end()-1){
                         //--------------------------
@@ -251,11 +243,7 @@ namespace RL {
                     //--------------------------
                     if (this->get_iterator() == this->get_data().begin()){
                         //--------------------------
-                        std::random_device rd;
-                        std::mt19937 gen(rd());
-                        std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
-                        //--------------------------
-                        auto _random_position = random_distribution(gen);
+                        auto _random_position = generate_random_position();
                         //--------------------------
                         auto epsilon = this->calculate_epsilon();
                         //--------------------------
@@ -281,11 +269,7 @@ namespace RL {
                     //--------------------------
                     if (this->get_iterator() == this->get_data().begin()){
                         //--------------------------
-                        std::random_device rd;
-                        std::mt19937 gen(rd());
-                        std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
-                        //--------------------------
-                        auto _random_position = random_distribution(gen);
+                        auto _random_position = generate_random_position();
                         //--------------------------
                         epsilon = this->calculate_epsilon();
                         //--------------------------
@@ -308,6 +292,16 @@ namespace RL {
                     return m_distribution;
                     //--------------------------
                 }// end std::vector<uint8_t>& get_distribution(void)
+                //--------------------------------------------------------------
+                size_t generate_random_position(void) const {
+                    //--------------------------
+                    thread_local std::random_device rd;
+                    thread_local std::mt19937 gen(rd());
+                    thread_local std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
+                    //--------------------------
+                    return static_cast<size_t>(random_distribution(gen));
+                    //--------------------------
+                }// end size_t generate_random_position(void) const
                 //--------------------------------------------------------------
                 virtual void reset_iterator(void) override{
                     //--------------------------

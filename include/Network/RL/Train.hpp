@@ -7,6 +7,8 @@
 #include "Utilities/StaticCheck.hpp"
 //--------------------------
 #include "Generate/RL/RLNormalize.hpp"
+//--------------------------
+#include "Utilities/ProgressBar.hpp"
 //--------------------------------------------------------------
 // Standard library
 //--------------------------------------------------------------
@@ -96,7 +98,7 @@ namespace RL {
                 //--------------------------
                 auto initial_input = m_environment.get_first(epsilon).to(m_device);
                 //--------------------------
-                std::cout << "initial_input: " << initial_input.sizes() << std::endl;
+                // std::cout << "initial_input: " << initial_input.sizes() << "\n" << initial_input << std::endl;
                 //--------------------------
                 auto action_output = m_handler.action(initial_input, epsilon, args...).to(m_device);
                 //--------------------------
@@ -216,7 +218,9 @@ namespace RL {
             template<typename... Args>
             void train_run(const size_t& epoch, torch::optim::Optimizer& optimizer, std::function<torch::Tensor(torch::Tensor)> normalizing_function, const Args&... args){
                 //--------------------------
-                progressbar bar(epoch);
+                // progressbar bar(epoch);
+                //--------------------------
+                Utils::ProgressBar bar(epoch, 30, "Training", "*", "-");
                 //--------------------------
                 for (size_t i = 0; i < epoch; ++i) {
                     //--------------------------
@@ -251,7 +255,9 @@ namespace RL {
                     //--------------------------
                     for(size_t j = 0; j < jobs; ++j){
                         //--------------------------
-                        threads.emplace_back([this, &optimizer, &normalizing_function, &args...](){train_local_run(optimizer, normalizing_function, args...);});
+                        // threads.emplace_back([this, &optimizer, &normalizing_function, &args...](){train_local_run(optimizer, normalizing_function, args...);});
+                        //--------------------------
+                        threads.emplace_back([this, &optimizer, &normalizing_function, &args...](){train_run(optimizer, normalizing_function, args...);});
                         //--------------------------
                     }// end for(size_t j = 0; j < jobs; ++j)
                     //--------------------------

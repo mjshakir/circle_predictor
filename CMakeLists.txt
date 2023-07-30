@@ -140,6 +140,7 @@ add_library(${PROJECT_NAME}_rl_network SHARED
 add_library(${PROJECT_NAME}_utilities SHARED
   src/Utilities/CircleEquation.cpp
   src/Utilities/StaticCheck.cpp
+  src/Utilities/ProgressBar.cpp
 )
 #------------------------------------------------------------------------------------------
 if(USE_TTB)

@@ -53,10 +53,10 @@ namespace RL {
                 }// end RLEnvironmentShuffle(Dataset&& data_loader)
                 //--------------------------------------------------------------
                 RLEnvironmentShuffle(const RLEnvironmentShuffle&)             = default;
-                RLEnvironmentShuffle& operator=(RLEnvironmentShuffle&&)       = default;
+                RLEnvironmentShuffle& operator=(const RLEnvironmentShuffle&)  = default;
                 //----------------------------
                 RLEnvironmentShuffle(RLEnvironmentShuffle&&)                  = default;
-                RLEnvironmentShuffle& operator=(const RLEnvironmentShuffle&)  = default;
+                RLEnvironmentShuffle& operator=(RLEnvironmentShuffle&&)       = default;
                 //--------------------------------------------------------------
                 /**
                  * @brief 

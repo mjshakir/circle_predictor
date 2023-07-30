@@ -90,7 +90,7 @@ namespace RL {
                  */
                 virtual std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(const Args&... args) override{
                     //----------------------------
-                    return internal_step(args...);
+                    return internal_step(m_batch, args...);
                     //----------------------------
                 }// std::tuple<torch::Tensor, COST_OUTPUT, double, bool> step(const Args&... args)
                 //--------------------------------------------------------------
@@ -104,7 +104,7 @@ namespace RL {
                  */
                 virtual std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const Args&... args) override{
                     //----------------------------
-                    return internal_step(epsilon, done, args...);
+                    return internal_step(epsilon, done, m_batch, args...);
                     //----------------------------
                 }// std::tuple<torch::Tensor, COST_OUTPUT> step(OUT double& epsilon, OUT bool& done, const Args&... args))
                 //--------------------------------------------------------------
@@ -130,7 +130,7 @@ namespace RL {
                  */
                 virtual std::tuple<torch::Tensor, double> get_first(void) override{
                     //----------------------------
-                    return get_first_internal();
+                    return get_first_internal(m_batch);
                     //----------------------------
                 }// end torch::Tensor get_first(void)
                 //--------------------------------------------------------------
@@ -142,7 +142,7 @@ namespace RL {
                  */
                 virtual torch::Tensor get_first(OUT double& epsilon) override{
                     //----------------------------
-                    return get_first_internal(epsilon);
+                    return get_first_internal(epsilon, m_batch);
                     //----------------------------
                 }// end torch::Tensor get_first(void)
                 //--------------------------------------------------------------
@@ -188,16 +188,12 @@ namespace RL {
                     _data.reserve(batch);
                     //--------------------------
                     auto _data_end = std::next(this->get_iterator(), batch);
-                    //--------------------------
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::discrete_distribution<> random_distribution(this->get_distribution().begin(), this->get_distribution().end());
                     //--------------------------------------------------------------
                     if(_data_end == this->get_data().end()-1){
                         //--------------------------
                         for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
-                            auto _random_position = random_distribution(gen);
+                            auto _random_position = this->generate_random_position();
                             //--------------------------
                             _data.push_back(*std::next(this->get_data().begin(), _random_position));
                             //--------------------------
@@ -211,7 +207,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                         //--------------------------
-                        auto _random_position = random_distribution(gen);
+                        auto _random_position = this->generate_random_position();
                         //--------------------------
                         _data.push_back(*std::next(this->get_data().begin(), _random_position));
                         //--------------------------
@@ -252,7 +248,7 @@ namespace RL {
                         //--------------------------
                         for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
-                            auto _random_position = random_distribution(gen);
+                            auto _random_position = this->generate_random_position();
                             //--------------------------
                             _data.push_back(*std::next(this->get_data().begin(), _random_position));
                             //--------------------------
@@ -269,7 +265,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                         //--------------------------
-                        auto _random_position = random_distribution(gen);
+                        auto _random_position = this->generate_random_position();
                         //--------------------------
                         _data.push_back(*std::next(this->get_data().begin(), _random_position));
                         //--------------------------
@@ -307,7 +303,7 @@ namespace RL {
                         //--------------------------
                         for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
-                            auto _random_position = random_distribution(gen);
+                            auto _random_position = this->generate_random_position();
                             //--------------------------
                             _data.push_back(*std::next(this->get_data().begin(), _random_position));
                             //--------------------------
@@ -342,13 +338,13 @@ namespace RL {
                         std::mt19937 gen(rd());
                         std::discrete_distribution<> random_distribution(this->get_distribution().begin(), this->get_distribution().end());
                         //--------------------------
-                        auto epsilon = this->calculate_epsilon();
+                        epsilon = this->calculate_epsilon();
                         //--------------------------
                         auto _data_end = std::next(this->get_iterator(), batch);
                         //--------------------------
                         for(; this->get_iterator() != _data_end; ++this->get_iterator()) {
                             //--------------------------
-                            auto _random_position = random_distribution(gen);
+                            auto _random_position = this->generate_random_position();
                             //--------------------------
                             _data.push_back(*std::next(this->get_data().begin(), _random_position));
                             //--------------------------

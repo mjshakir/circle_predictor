@@ -56,25 +56,19 @@ namespace RL {
                                                 std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                                 const double& egreedy = 0.9,
                                                 const double& egreedy_final = 0.02,
-                                                const double& egreedy_decay = 500.) : RLEnvironment<T, COST_OUTPUT, Args...>(std::move(data),
-                                                                                                                             std::move(costFunction),
-                                                                                                                             egreedy,
-                                                                                                                             egreedy_final,
-                                                                                                                             egreedy_decay),
-                                                                                      m_data_iter(this->get_iterator()),
-                                                                                      m_egreedy(egreedy),
-                                                                                      m_egreedy_final(egreedy_final),
-                                                                                      m_egreedy_decay(egreedy_decay){
+                                                const double& egreedy_decay = 500.) : RLEnvironment<T, COST_OUTPUT, Args...>(   std::move(data),
+                                                                                                                                std::move(costFunction),
+                                                                                                                                egreedy, 
+                                                                                                                                egreedy_final, 
+                                                                                                                                egreedy_decay),
+                                                                                      m_data_iter(this->get_iterator()){
                     //----------------------------
                     // set_atomic_iterator(this->get_iterator());
                     //----------------------------
                 }// end RLEnvironmentAtomic(Dataset&& data_loader)
                 //--------------------------------------------------------------
                 //Define copy constructor explicitly
-                RLEnvironmentAtomic(const RLEnvironmentAtomic& other) : RLEnvironment<T, COST_OUTPUT, Args...>(other),
-                                                                        m_egreedy(other.m_egreedy),
-                                                                        m_egreedy_final(other.m_egreedy_final),
-                                                                        m_egreedy_decay(other.m_egreedy_decay){
+                RLEnvironmentAtomic(const RLEnvironmentAtomic& other) : RLEnvironment<T, COST_OUTPUT, Args...>(other){
                     //--------------------------
                     set_atomic_iterator(this->get_iterator());
                     //--------------------------
@@ -90,9 +84,6 @@ namespace RL {
                     //--------------------------
                     // Perform a deep copy of the data
                     RLEnvironment<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_egreedy       = other.m_egreedy;
-                    m_egreedy_final = other.m_egreedy_final;
-                    m_egreedy_decay = other.m_egreedy_decay;
                     //--------------------------
                     set_atomic_iterator(this->get_iterator());
                     //--------------------------
@@ -164,7 +155,7 @@ namespace RL {
                 * Next, the function initializes an empty vector `_data` and reserves space for `batch` tensors to optimize memory allocation.
                 *
                 * If the data iterator is at the beginning and the end of the batch is not the end of the data, the function calculates the
-                * epsilon value using the `calculate_epsilon()` member function, sets the done flag to false, and adds the current data
+                * epsilon value using the `this->calculate_epsilon()` member function, sets the done flag to false, and adds the current data
                 * tensor to `_data`. It then iterates over the remaining data tensors, adding them to `_data`. Finally, it returns a tuple
                 * containing the concatenated tensor of `_data` along with a tensor of value 0 as the cost output.
                 *
@@ -275,7 +266,7 @@ namespace RL {
                     //--------------------------------------------------------------
                     if(_data_iter == this->get_data().end()-1){
                         //--------------------------
-                        return {*_data_iter, this->cost_function(args...), calculate_epsilon(_data_iter), true};
+                        return {*_data_iter, this->cost_function(args...), this->calculate_epsilon(_data_iter), true};
                         //--------------------------
                     }// if(_data_iter == this->get_data().end())
                     //--------------------------------------------------------------
@@ -283,7 +274,7 @@ namespace RL {
                     ++_data_iter;
                     set_atomic_iterator(_data_iter);
                     //--------------------------
-                    return {input, this->cost_function(args...), calculate_epsilon(_data_iter), false};
+                    return {input, this->cost_function(args...), this->calculate_epsilon(_data_iter), false};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args)
                 //--------------------------------------------------------------
@@ -311,14 +302,14 @@ namespace RL {
                     //--------------------------------------------------------------
                     if(_data_iter == this->get_data().end()-1){
                         //--------------------------
-                        epsilon = calculate_epsilon(_data_iter);
+                        epsilon = this->calculate_epsilon(_data_iter);
                         done = true;
                         //--------------------------
                         return {*_data_iter, this->cost_function(args...)};
                         //--------------------------
                     }// if(_data_iter == this->get_data().end()-1)
                     //--------------------------------------------------------------
-                    epsilon = calculate_epsilon(_data_iter);
+                    epsilon = this->calculate_epsilon(_data_iter);
                     done = false;
                     //--------------------------
                     auto input = *_data_iter;
@@ -345,7 +336,7 @@ namespace RL {
                         //--------------------------
                         auto input = *_data_iter;
                         //--------------------------
-                        auto epsilon = calculate_epsilon(_data_iter);
+                        auto epsilon = this->calculate_epsilon(_data_iter);
                         //--------------------------
                         ++_data_iter;
                         //--------------------------
@@ -375,7 +366,7 @@ namespace RL {
                         //--------------------------
                         auto input = *_data_iter;
                         //--------------------------
-                        epsilon = calculate_epsilon(_data_iter);
+                        epsilon = this->calculate_epsilon(_data_iter);
                         //--------------------------
                         ++_data_iter;
                         //--------------------------
@@ -403,12 +394,6 @@ namespace RL {
                     //--------------------------
                 }// end std::vector<torch::Tensor>::iterator get_atomic_iterator(void) const
                 //--------------------------------------------------------------
-                constexpr double calculate_epsilon(const typename std::vector<T>::iterator& data_iter) {
-                    //--------------------------
-                    return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * std::distance(this->get_data().begin(), data_iter) / m_egreedy_decay);
-                    //--------------------------
-                }// end constexpr double calculate_epsilon(typename std::vector<T>::iterator data_iter)
-                //--------------------------------------------------------------
                 virtual void reset_iterator(void) override{
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
@@ -420,9 +405,7 @@ namespace RL {
             private:
                 //--------------------------------------------------------------
                 std::atomic<typename std::vector<T>::iterator> m_data_iter;
-                //--------------------------
-                const double m_egreedy, m_egreedy_final, m_egreedy_decay;
-                //--------------------------                
+                //--------------------------             
                 std::mutex m_mutex;
             //--------------------------------------------------------------
         };// end class RLEnvironmentAtomic

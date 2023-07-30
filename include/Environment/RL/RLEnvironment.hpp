@@ -278,11 +278,17 @@ namespace RL {
                     //--------------------------
                 }// end void rest_iterator(void)
                 //--------------------------------------------------------------
-                constexpr double calculate_epsilon(void){
+                inline double calculate_epsilon(void){
                     //--------------------------
-                    return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * std::distance(m_data.begin(), m_data_iter) / m_egreedy_decay);
+                    return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * static_cast<double>(std::distance(m_data.begin(), m_data_iter)) / m_egreedy_decay);
                     //--------------------------
                 }// end double calculate_epsilon()
+                //--------------------------------------------------------------
+                inline double calculate_epsilon(const typename std::vector<T>::iterator& data_iter) {
+                    //--------------------------
+                    return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * static_cast<double>(std::distance(this->get_data().begin(), data_iter)) / m_egreedy_decay);
+                    //--------------------------
+                }// end constexpr double calculate_epsilon(typename std::vector<T>::iterator data_iter)
                 //--------------------------------------------------------------
                 std::vector<T>& get_data(void){
                     //--------------------------

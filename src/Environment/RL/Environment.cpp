@@ -5,7 +5,6 @@
 //--------------------------------------------------------------
 // User Defined library
 //--------------------------------------------------------------
-#include "Environment/RL/EnvironmentTestLoader.hpp"
 #include "Environment/RL/RLEnvironment.hpp"
 #include "Environment/RL/RLEnvironmentLoader.hpp"
 #include "Environment/RL/RLEnvironmentShuffle.hpp"
@@ -14,6 +13,8 @@
 #include "Environment/RL/RLEnvironmentLoaderAtomic.hpp"
 #include "Environment/RL/RLEnvironmentShuffleAtomic.hpp"
 #include "Environment/RL/RLEnvironmentShuffleAtomicLoader.hpp"
+#include "Environment/RL/RLEnvironmentTest.hpp"
+#include "Environment/RL/RLEnvironmentTestLoader.hpp"
 //--------------------------------------------------------------
 // Standard cpp library
 //--------------------------------------------------------------
@@ -43,6 +44,13 @@ auto RL::Environment::Environment::CreateEnvironment(   std::vector<T>&& data,
     return generate_environment(std::move(data), std::move(costFunction), batch, egreedy, egreedy_final, egreedy_decay, type);
     //----------------------------
 }// end auto RL::Environment::Environment::CreateEnvironmen
+//--------------------------------------------------------------
+template<typename T>
+auto RL::Environment::Environment::CreateEnvironment(std::vector<T>&& data){
+    //----------------------------
+    return generate_environment(std::move(data));
+    //----------------------------
+}// end auto RL::Environment::Environment::CreateEnvironment(std::vector<T>&& data)
 //--------------------------------------------------------------
 template<typename T>
 auto RL::Environment::Environment::CreateEnvironment(std::vector<T>&& data, const size_t& batch){
@@ -149,9 +157,16 @@ auto RL::Environment:: Environment::generate_environment(   std::vector<T>&& dat
 }//end auto RL::Environment::Environment::generate_environment
 //--------------------------------------------------------------
 template<typename T>
+auto RL::Environment::Environment::generate_environment(std::vector<T>&& data){
+    //----------------------------
+    return std::make_unique<RL::Environment::RLEnvironmentTest<T>>(std::move(data));
+    //----------------------------
+}// end auto RL::Environment::Environment::generate_environment(std::vector<T>&& data)
+//--------------------------------------------------------------
+template<typename T>
 auto RL::Environment::Environment::generate_environment(std::vector<T>&& data, const size_t& batch){
     //----------------------------
-    return std::make_unique<RL::Environment::EnvironmentTestLoader<T>>(std::move(data), batch);
+    return std::make_unique<RL::Environment::RLEnvironmentTestLoader<T>>(std::move(data), batch);
     //----------------------------
 }// end auto RL::Environment::Environment::generate_environment(std::vector<T>&& data, const size_t batch)
 //--------------------------------------------------------------

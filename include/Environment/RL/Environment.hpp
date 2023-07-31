@@ -83,6 +83,9 @@ namespace RL {
                                                 const double& egreedy_decay = 500.);
                 //----------------------------
                 template<typename T>
+                static auto CreateEnvironment(std::vector<T>&& data);
+                //----------------------------
+                template<typename T>
                 static auto CreateEnvironment(std::vector<T>&& data, const size_t& batch);
                 //--------------------------------------------------------------
             protected:
@@ -103,6 +106,9 @@ namespace RL {
                                                     const double& egreedy_final,
                                                     const double& egreedy_decay,
                                                     const TYPE& type);
+                //----------------------------
+                template<typename T>
+                static auto generate_environment(std::vector<T>&& data);
                 //----------------------------
                 template<typename T>
                 static auto generate_environment(std::vector<T>&& data, const size_t& batch);

@@ -21,7 +21,7 @@ namespace RL {
         //--------------------------------------------------------------
         template<typename T, typename COST_OUTPUT, typename... Args>
         //--------------------------------------------------------------
-        class RLEnvironmentShuffle : public RLEnvironment<T, COST_OUTPUT, Args...> {
+        class RLEnvironmentShuffle : public virtual RLEnvironment<T, COST_OUTPUT, Args...> {
             //--------------------------------------------------------------
             public:
                 //--------------------------------------------------------------
@@ -118,6 +118,29 @@ namespace RL {
                 }// end void reset(void)
                 //--------------------------------------------------------------
             protected:
+                //--------------------------------------------------------------
+                /**
+                 * @brief Construct to create a training environment for reinforcement learning 
+                 * 
+                 * @param data          [in] : Data Vector of the template type T
+                 * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters
+                 * @param egreedy       [in] : The starting egreedy                                           @default: 0.9
+                 * @param egreedy_final [in] : The egreedy number where it will change                        @default: 0.02
+                 * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor                     @default: 500.
+                 * @param batch         [in] : The batch number (needs to be less then half of the data size) @default: 1ul   
+                 */
+                explicit RLEnvironmentShuffle(  const std::vector<T>& data, 
+                                                const std::function<COST_OUTPUT(const Args&...)>& costFunction,
+                                                const double& egreedy = 0.9,
+                                                const double& egreedy_final = 0.02,
+                                                const double& egreedy_decay = 500.) :   RLEnvironment<T, COST_OUTPUT, Args...>( std::move(data), 
+                                                                                                                                std::move(costFunction), 
+                                                                                                                                egreedy, 
+                                                                                                                                egreedy_final, 
+                                                                                                                                egreedy_decay),
+                                                                                        m_distribution(create_distribution(this->size())){
+                    //-------------------------- 
+                }// end RLEnvironmentShuffle(Dataset&& data_loader)
                 //--------------------------------------------------------------
                 /**
                  * @brief Construct to create a training environment for reinforcement learning 

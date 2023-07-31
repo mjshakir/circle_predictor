@@ -67,29 +67,11 @@ namespace RL {
                     //----------------------------
                 }// end RLEnvironmentAtomic(Dataset&& data_loader)
                 //--------------------------------------------------------------
-                //Define copy constructor explicitly
-                RLEnvironmentAtomic(const RLEnvironmentAtomic& other) : RLEnvironment<T, COST_OUTPUT, Args...>(other){
-                    //--------------------------
-                    set_atomic_iterator(this->get_iterator());
-                    //--------------------------
-                }// end RLEnvironmentAtomic(const RLEnvironmentAtomic& other)
-                //--------------------------------------------------------------
-                //Copy assignment operator
-                RLEnvironmentAtomic& operator=(const RLEnvironmentAtomic& other) {
-                    //--------------------------
-                    // Check for self-assignment
-                    if (this == &other) {
-                        return *this;
-                    }// end if (this == &other)
-                    //--------------------------
-                    // Perform a deep copy of the data
-                    RLEnvironment<T, COST_OUTPUT, Args...>::operator=(other);
-                    //--------------------------
-                    set_atomic_iterator(this->get_iterator());
-                    //--------------------------
-                    return *this;
-                    //--------------------------
-                }// end RLEnvironmentLoader& operator=(const RLEnvironmentLoader& other)
+                RLEnvironmentAtomic(const RLEnvironmentAtomic&)             = default;
+                RLEnvironmentAtomic& operator=(const RLEnvironmentAtomic&)  = default;
+                //----------------------------
+                RLEnvironmentAtomic(RLEnvironmentAtomic&&)                  = default;
+                RLEnvironmentAtomic& operator=(RLEnvironmentAtomic&&)       = default;
                 //--------------------------------------------------------------
                 /**
                 * @brief Executes an internal step in the RL environment.

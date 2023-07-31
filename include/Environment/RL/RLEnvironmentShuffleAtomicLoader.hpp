@@ -61,42 +61,21 @@ namespace RL {
                                                                                                                                                     egreedy,
                                                                                                                                                     egreedy_final,
                                                                                                                                                     egreedy_decay),
-                                                                                                m_data_iter(this->get_iterator()),
                                                                                                 m_batch(batch){
                     //----------------------------
-                    if(this->get_atomic_iterator() != this->get_data().begin()){
-                        //----------------------------
-                        throw std::out_of_range("Iterator is not in the beginning");
-                        //----------------------------
-                    }// end if(this->get_atomic_iterator() != this->get_data().begin())
+                    if(batch >= this->get_data().size()/2){
+                        //--------------------------
+                        throw std::out_of_range("Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(this->get_data().size()/2) + "]");
+                        //--------------------------
+                    }// end if(batch >= this->get_data().size()/2)
                     //----------------------------
                 }// end RLEnvironmentShuffleAtomicLoader(Dataset&& data_loader)
                 //--------------------------------------------------------------
-                //Define copy constructor explicitly
-                RLEnvironmentShuffleAtomicLoader(const RLEnvironmentShuffleAtomicLoader& other) :   RLEnvironment<T, COST_OUTPUT, Args...>(other),
-                                                                                                    RLEnvironmentShuffleAtomic<T, COST_OUTPUT, Args...>(other),
-                                                                                                    m_data_iter(this->get_iterator()),
-                                                                                                    m_batch(other.m_batch) {
-                    //--------------------------
-                }// end RLEnvironmentShuffleAtomicLoader(const RLEnvironmentShuffleAtomicLoader& other)
-                //--------------------------------------------------------------
-                //Copy assignment operator
-                RLEnvironmentShuffleAtomicLoader& operator=(const RLEnvironmentShuffleAtomicLoader& other) {
-                    //--------------------------
-                    // Check for self-assignment
-                    if (this == &other) {
-                        return *this;
-                    }// end if (this == &other)
-                    //--------------------------
-                    // Perform a deep copy of the data
-                    RLEnvironment<T, COST_OUTPUT, Args...>::operator=(other);
-                    RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_data_iter     = this->get_iterator();
-                    m_batch         = other.m_batch;
-                    //--------------------------
-                    return *this;
-                    //--------------------------
-                }// end RLEnvironmentLoader& operator=(const RLEnvironmentLoader& other)
+                RLEnvironmentShuffleAtomicLoader(const RLEnvironmentShuffleAtomicLoader&)            = default;
+                RLEnvironmentShuffleAtomicLoader& operator=(const RLEnvironmentShuffleAtomicLoader&) = default;
+                //----------------------------
+                RLEnvironmentShuffleAtomicLoader(RLEnvironmentShuffleAtomicLoader&&)                 = default;
+                RLEnvironmentShuffleAtomicLoader& operator=(RLEnvironmentShuffleAtomicLoader&&)      = default;
                 //--------------------------------------------------------------
                 /**
                 * @brief Executes an internal step in the RL environment.
@@ -608,8 +587,6 @@ namespace RL {
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::atomic<typename std::vector<T>::iterator> m_data_iter;
-                //--------------------------
                 size_t m_batch;
                 //--------------------------
                 std::mutex m_mutex;

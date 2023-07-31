@@ -67,7 +67,6 @@ namespace RL {
                                                                                                                                          egreedy,
                                                                                                                                          egreedy_final,
                                                                                                                                          egreedy_decay),
-                                                                                            m_data_iter(this->get_iterator()),
                                                                                             m_batch(batch){
                     //----------------------------
                     if(batch >= this->get_data().size()/2){
@@ -78,29 +77,11 @@ namespace RL {
                     //----------------------------
                 }// end RLEnvironmentLoaderAtomic(Dataset&& data_loader)
                 //--------------------------------------------------------------
-                //Define copy constructor explicitly
-                RLEnvironmentLoaderAtomic(const RLEnvironmentLoaderAtomic& other) : RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(other),
-                                                                                    m_data_iter(this->get_iterator()),
-                                                                                    m_batch(other.m_batch) {
-                    //--------------------------
-                }// end RLEnvironmentLoaderAtomic(const RLEnvironmentLoaderAtomic& other)
-                //--------------------------------------------------------------
-                //Copy assignment operator
-                RLEnvironmentLoaderAtomic& operator=(const RLEnvironmentLoaderAtomic& other) {
-                    //--------------------------
-                    // Check for self-assignment
-                    if (this == &other) {
-                        return *this;
-                    }// end if (this == &other)
-                    //--------------------------
-                    // Perform a deep copy of the data
-                    RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_data_iter     = this->get_iterator();
-                    m_batch         = other.m_batch;
-                    //--------------------------
-                    return *this;
-                    //--------------------------
-                }// end RLEnvironmentLoader& operator=(const RLEnvironmentLoader& other)
+                RLEnvironmentLoaderAtomic(const RLEnvironmentLoaderAtomic&)             = default;
+                RLEnvironmentLoaderAtomic& operator=(const RLEnvironmentLoaderAtomic&)  = default;
+                //----------------------------
+                RLEnvironmentLoaderAtomic(RLEnvironmentLoaderAtomic&&)                  = default;
+                RLEnvironmentLoaderAtomic& operator=(RLEnvironmentLoaderAtomic&&)       = default;
                 //--------------------------------------------------------------
                 /**
                 * @brief Executes an internal step in the RL environment.
@@ -588,8 +569,6 @@ namespace RL {
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::atomic<typename std::vector<T>::iterator> m_data_iter;
-                //--------------------------
                 const size_t m_batch;
                 //--------------------------
                 std::mutex m_mutex;

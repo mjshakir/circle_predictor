@@ -65,36 +65,15 @@ namespace RL {
                                                                                                                                             this->get_cost_function(),
                                                                                                                                             egreedy,
                                                                                                                                             egreedy_final,
-                                                                                                                                            egreedy_decay),
-                                                                                            m_data_iter(this->get_iterator()){
+                                                                                                                                            egreedy_decay){
                     //----------------------------
                 }// end RLEnvironmentShuffleAtomic(Dataset&& data_loader)
                 //--------------------------------------------------------------
-                //Define copy constructor explicitly
-                RLEnvironmentShuffleAtomic(const RLEnvironmentShuffleAtomic& other) :   RLEnvironment<T, COST_OUTPUT, Args...>(other),
-                                                                                        RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(other),
-                                                                                        RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(other),
-                                                                                        m_data_iter(this->get_iterator()){
-                    //--------------------------
-                }// end RLEnvironmentShuffleAtomic(const RLEnvironmentShuffleAtomic& other)
-                //--------------------------------------------------------------
-                //Copy assignment operator
-                RLEnvironmentShuffleAtomic& operator=(const RLEnvironmentShuffleAtomic& other) {
-                    //--------------------------
-                    // Check for self-assignment
-                    if (this == &other) {
-                        return *this;
-                    }// end if (this == &other)
-                    //--------------------------
-                    // Perform a deep copy of the data
-                    RLEnvironment<T, COST_OUTPUT, Args...>::operator=(other);
-                    RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::operator=(other);
-                    RLEnvironmentShuffle<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_data_iter     = this->get_iterator();
-                    //--------------------------
-                    return *this;
-                    //--------------------------
-                }// end RLEnvironmentLoader& operator=(const RLEnvironmentLoader& other)
+                RLEnvironmentShuffleAtomic(const RLEnvironmentShuffleAtomic&)            = default;
+                RLEnvironmentShuffleAtomic& operator=(const RLEnvironmentShuffleAtomic&) = default;
+                //----------------------------
+                RLEnvironmentShuffleAtomic(RLEnvironmentShuffleAtomic&&)                 = default;
+                RLEnvironmentShuffleAtomic& operator=(RLEnvironmentShuffleAtomic&&)      = default;
                 //--------------------------------------------------------------
                 /**
                 * @brief Executes an internal step in the RL environment.
@@ -409,8 +388,6 @@ namespace RL {
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::atomic<typename std::vector<T>::iterator> m_data_iter;
-                //--------------------------
                 std::mutex m_mutex;
             //--------------------------------------------------------------
         };// end class RLEnvironmentShuffleAtomic

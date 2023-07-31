@@ -11,6 +11,8 @@
 //--------------------------------------------------------------
 // Definitions 
 //--------------------------------------------------------------
+// Alpha
+//--------------------------
 #define ALPHA 0.1
 //--------------------------
 // ANSI Colors
@@ -29,6 +31,14 @@
 //--------------------------
 #define ANSI_BOLD_ON       "\x1b[1m"
 #define ANSI_BOLD_OFF      ANSI_COLOR_RESET
+//--------------------------
+// Conversion Constant
+//--------------------------
+#define SECONDS_PER_MINUTE      60
+#define SECONDS_PER_HOUR        3600
+#define SECONDS_PER_DAY         86400
+#define MILLISECONDS_PER_SECOND 1000
+
 //--------------------------------------------------------------
 Utils::ProgressBar::ProgressBar(const uint8_t& bar_length,
                                 const std::string& name, 
@@ -112,19 +122,19 @@ void Utils::ProgressBar::append_elapsed_time(std::stringstream& ss) {
     //--------------------------
     auto elapsed_time = calculate_elapsed();
     //--------------------------
-    auto elapsed_days = static_cast<size_t>(elapsed_time / (3600 * 24));
-    elapsed_time -= elapsed_days * 3600 * 24;
+    auto elapsed_days = static_cast<size_t>(elapsed_time / SECONDS_PER_DAY);
+    elapsed_time -= elapsed_days * SECONDS_PER_DAY;
     //--------------------------
-    auto elapsed_hours = static_cast<size_t>(elapsed_time / 3600);
-    elapsed_time -= elapsed_hours * 3600;
+    auto elapsed_hours = static_cast<size_t>(elapsed_time / SECONDS_PER_HOUR);
+    elapsed_time -= elapsed_hours * SECONDS_PER_HOUR;
     //--------------------------
-    auto elapsed_minutes = static_cast<size_t>(elapsed_time / 60);
-    elapsed_time -= elapsed_minutes * 60;
+    auto elapsed_minutes = static_cast<size_t>(elapsed_time / SECONDS_PER_MINUTE);
+    elapsed_time -= elapsed_minutes * SECONDS_PER_MINUTE;
     //--------------------------
     auto elapsed_seconds = static_cast<size_t>(elapsed_time);
     elapsed_time -= elapsed_seconds;
     //--------------------------
-    auto elapsed_milliseconds = static_cast<size_t>(elapsed_time * 1000);
+    auto elapsed_milliseconds = static_cast<size_t>(elapsed_time * MILLISECONDS_PER_SECOND);
     //--------------------------
     ss << "Elapsed: " << std::setw(2) << std::setfill('0') << elapsed_days << ":"
        << std::setw(2) << std::setfill('0') << elapsed_hours << ":"
@@ -138,19 +148,19 @@ void Utils::ProgressBar::append_remaining_time(std::stringstream& ss) {
     //--------------------------
     auto remaining_seconds_count = calculate_etc();
     //--------------------------
-    auto days = static_cast<size_t>(remaining_seconds_count / (3600 * 24));
-    remaining_seconds_count -= days * 3600 * 24;
+    auto days = static_cast<size_t>(remaining_seconds_count / SECONDS_PER_DAY);
+    remaining_seconds_count -= days * SECONDS_PER_DAY;
     //--------------------------
-    auto hours = static_cast<size_t>(remaining_seconds_count / 3600);
-    remaining_seconds_count -= hours * 3600;
+    auto hours = static_cast<size_t>(remaining_seconds_count / SECONDS_PER_HOUR);
+    remaining_seconds_count -= hours * SECONDS_PER_HOUR;
     //--------------------------
-    auto minutes = static_cast<size_t>(remaining_seconds_count / 60);
-    remaining_seconds_count -= minutes * 60;
+    auto minutes = static_cast<size_t>(remaining_seconds_count / SECONDS_PER_MINUTE);
+    remaining_seconds_count -= minutes * SECONDS_PER_MINUTE;
     //--------------------------
     auto seconds = static_cast<size_t>(remaining_seconds_count);
     remaining_seconds_count -= seconds;
     //--------------------------
-    auto milliseconds = static_cast<size_t>(remaining_seconds_count * 1000);
+    auto milliseconds = static_cast<size_t>(remaining_seconds_count * MILLISECONDS_PER_SECOND);
     //--------------------------
     ss << "ETC: " << std::setw(2) << std::setfill('0') << days << ":"
        << std::setw(2) << std::setfill('0') << hours << ":"

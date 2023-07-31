@@ -51,30 +51,30 @@ namespace RL {
                                                     std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                                     const double& egreedy = 0.9,
                                                     const double& egreedy_final = 0.02,
-                                                    const double& egreedy_decay = 500.) :   RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(   std::move(data),
-                                                                                                                                            std::move(costFunction),
+                                                    const double& egreedy_decay = 500.) :   RLEnvironment<T, COST_OUTPUT, Args...>( std::move(data),
+                                                                                                                                    std::move(costFunction),
+                                                                                                                                    egreedy, 
+                                                                                                                                    egreedy_final, 
+                                                                                                                                    egreedy_decay),
+                                                                                            RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(   this->get_data(),
+                                                                                                                                            this->get_cost_function(),
                                                                                                                                             egreedy,
                                                                                                                                             egreedy_final,
                                                                                                                                             egreedy_decay),
-                                                                                            RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(  this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_data(),
-                                                                                                                                            this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_cost_function(),
+                                                                                            RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(  this->get_data(),
+                                                                                                                                            this->get_cost_function(),
                                                                                                                                             egreedy,
                                                                                                                                             egreedy_final,
                                                                                                                                             egreedy_decay),
-                                                                                            m_data(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_data()),
-                                                                                            m_data_iter(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_iterator()),
-                                                                                            m_CostFunction(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_cost_function()),
-                                                                                            m_distribution(this->get_distribution()){
+                                                                                            m_data_iter(this->get_iterator()){
                     //----------------------------
                 }// end RLEnvironmentShuffleAtomic(Dataset&& data_loader)
                 //--------------------------------------------------------------
                 //Define copy constructor explicitly
-                RLEnvironmentShuffleAtomic(const RLEnvironmentShuffleAtomic& other) :   RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(other),
+                RLEnvironmentShuffleAtomic(const RLEnvironmentShuffleAtomic& other) :   RLEnvironment<T, COST_OUTPUT, Args...>(other),
+                                                                                        RLEnvironmentAtomic<T, COST_OUTPUT, Args...>(other),
                                                                                         RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(other),
-                                                                                        m_data(other.m_data),
-                                                                                        m_data_iter(this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_iterator()),
-                                                                                        m_CostFunction(other.m_CostFunction),
-                                                                                        m_distribution(other.m_distribution){
+                                                                                        m_data_iter(this->get_iterator()){
                     //--------------------------
                 }// end RLEnvironmentShuffleAtomic(const RLEnvironmentShuffleAtomic& other)
                 //--------------------------------------------------------------
@@ -87,12 +87,10 @@ namespace RL {
                     }// end if (this == &other)
                     //--------------------------
                     // Perform a deep copy of the data
+                    RLEnvironment<T, COST_OUTPUT, Args...>::operator=(other);
                     RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::operator=(other);
                     RLEnvironmentShuffle<T, COST_OUTPUT, Args...>::operator=(other);
-                    m_data          = other.m_data;
-                    m_data_iter     = this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::get_iterator();
-                    m_CostFunction  = other.m_CostFunction;
-                    m_distribution  = other.m_distribution;
+                    m_data_iter     = this->get_iterator();
                     //--------------------------
                     return *this;
                     //--------------------------
@@ -254,13 +252,13 @@ namespace RL {
                     //--------------------------
                     auto _data_iter = this->get_atomic_iterator();
                     //--------------------------------------------------------------
-                    if (_data_iter == m_data.end()){
+                    if (_data_iter == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (_data_iter == m_data.end())
+                    }// end if (_data_iter == this->get_data().end())
                     //--------------------------------------------------------------
-                    if (_data_iter == m_data.begin()){
+                    if (_data_iter == this->get_data().begin()){
                         //--------------------------
                         torch::Tensor _data;
                         double epsilon;
@@ -269,26 +267,22 @@ namespace RL {
                         //--------------------------
                         return {_data, torch::tensor(0), epsilon, false};
                         //--------------------------
-                    }// end if (_data_iter == m_data.begin())
+                    }// end if (_data_iter == this->get_data().begin())
                     //--------------------------------------------------------------
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
+                    auto _random_position = this->generate_random_position();
                     //--------------------------
-                    auto _random_position = random_distribution(gen);
-                    //--------------------------
-                    if(_data_iter == m_data.end()-1){
+                    if(_data_iter == this->get_data().end()-1){
                         //--------------------------
-                        return {*std::next(m_data.begin(), _random_position), m_CostFunction(args...), this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter), true};
+                        return {*std::next(this->get_data().begin(), _random_position), this->cost_function(args...), this->calculate_epsilon(_data_iter), true};
                         //--------------------------
-                    }// if(_data_iter == m_data.end())
+                    }// if(_data_iter == this->get_data().end())
                     //--------------------------------------------------------------
                     ++_data_iter;
                     this->set_atomic_iterator(_data_iter);
                     //--------------------------
-                    m_distribution.at(_random_position) = 0;
+                    this->get_distribution().at(_random_position) = 0;
                     //--------------------------
-                    return {*std::next(m_data.begin(), _random_position), m_CostFunction(args...), this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter), false};
+                    return {*std::next(this->get_data().begin(), _random_position), this->cost_function(args...), this->calculate_epsilon(_data_iter), false};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT, double, bool> internal_step(const size_t& batch, Args... args)
                 //--------------------------------------------------------------
@@ -298,13 +292,13 @@ namespace RL {
                     //--------------------------
                     auto _data_iter = this->get_atomic_iterator();
                     //--------------------------------------------------------------
-                    if (_data_iter == m_data.end()){
+                    if (_data_iter == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end())
+                    }// end if (_data_iter == this->get_data().end() or std::next(_data_iter, batch) == this->get_data().end())
                     //--------------------------------------------------------------
-                    if (_data_iter == m_data.begin()){
+                    if (_data_iter == this->get_data().begin()){
                         //--------------------------
                         done = false;
                         //--------------------------
@@ -312,32 +306,28 @@ namespace RL {
                         //--------------------------
                         return {_data, torch::tensor(0)};
                         //--------------------------
-                    }// end if (_data_iter == m_data.begin() and std::next(_data_iter, batch) != m_data.end()-1)
+                    }// end if (_data_iter == this->get_data().begin() and std::next(_data_iter, batch) != this->get_data().end()-1)
                     //--------------------------------------------------------------
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
+                    auto _random_position = this->generate_random_position();
                     //--------------------------
-                    auto _random_position = random_distribution(gen);
-                    //--------------------------
-                    if(_data_iter == m_data.end()-1){
+                    if(_data_iter == this->get_data().end()-1){
                         //--------------------------
-                        epsilon = this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter);
+                        epsilon = this->calculate_epsilon(_data_iter);
                         done = true;
                         //--------------------------
-                        return {*std::next(m_data.begin(), _random_position), m_CostFunction(args...)};
+                        return {*std::next(this->get_data().begin(), _random_position), this->cost_function(args...)};
                         //--------------------------
-                    }// if(_data_iter == m_data.end()-1)
+                    }// if(_data_iter == this->get_data().end()-1)
                     //--------------------------------------------------------------
-                    epsilon = this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter);
+                    epsilon = this->calculate_epsilon(_data_iter);
                     done = false;
                     //--------------------------
                     ++_data_iter;
                     this->set_atomic_iterator(_data_iter);
                     //--------------------------
-                    m_distribution.at(_random_position) = 0;
+                    this->get_distribution().at(_random_position) = 0;
                     //--------------------------
-                    return {*std::next(m_data.begin(), _random_position), m_CostFunction(args...)};
+                    return {*std::next(this->get_data().begin(), _random_position), this->cost_function(args...)};
                     //--------------------------
                 }// end std::tuple<torch::Tensor, COST_OUTPUT> internal_step(double& epsilon, bool& done, const size_t& batch, Args... args)
                 //--------------------------------------------------------------
@@ -347,31 +337,27 @@ namespace RL {
                     //--------------------------
                     auto _data_iter = this->get_atomic_iterator();
                     //--------------------------
-                    if (_data_iter == m_data.end()){
+                    if (_data_iter == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (_data_iter == m_data.end() or std::next(_data_iter, batch) == m_data.end())
+                    }// end if (_data_iter == this->get_data().end() or std::next(_data_iter, batch) == this->get_data().end())
                     //--------------------------
-                    if (_data_iter == m_data.begin()){
+                    if (_data_iter == this->get_data().begin()){
                         //--------------------------
-                        std::random_device rd;
-                        std::mt19937 gen(rd());
-                        std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
+                        auto _random_position = this->generate_random_position();
                         //--------------------------
-                        auto _random_position = random_distribution(gen);
-                        //--------------------------
-                        auto epsilon = this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter);
+                        auto epsilon = this->calculate_epsilon(_data_iter);
                         //--------------------------
                         ++_data_iter;
                         //--------------------------
                         this->set_atomic_iterator(_data_iter);
                         //--------------------------
-                        m_distribution.at(_random_position) = 0;
+                        this->get_distribution().at(_random_position) = 0;
                         //--------------------------
-                        return {*std::next(m_data.begin(), _random_position), epsilon};
+                        return {*std::next(this->get_data().begin(), _random_position), epsilon};
                         //--------------------------
-                    }// end if (_data_iter == m_data.begin())
+                    }// end if (_data_iter == this->get_data().begin())
                     //--------------------------
                     return {torch::tensor(0), 0};
                     //--------------------------
@@ -383,29 +369,27 @@ namespace RL {
                     //--------------------------
                     auto _data_iter = this->get_atomic_iterator();
                     //--------------------------
-                    if (_data_iter == m_data.end()){
+                    if (_data_iter == this->get_data().end()){
                         //--------------------------
                         throw std::out_of_range("End Of The Data Iterator");
                         //--------------------------
-                    }// end if (_data_iter == m_data.end())
+                    }// end if (_data_iter == this->get_data().end())
                     //--------------------------
-                    if (_data_iter == m_data.begin()){
+                    if (_data_iter == this->get_data().begin()){
                         //--------------------------
-                        std::random_device rd;
-                        std::mt19937 gen(rd());
-                        std::discrete_distribution<> random_distribution(m_distribution.begin(), m_distribution.end());
+                        auto _random_position = this->generate_random_position();
                         //--------------------------
-                        auto _random_position = random_distribution(gen);
-                        //--------------------------
-                        epsilon = this->RLEnvironmentAtomic<T, COST_OUTPUT, Args...>::calculate_epsilon(_data_iter);
+                        epsilon = this->calculate_epsilon(_data_iter);
                         //--------------------------
                         ++_data_iter;
                         //--------------------------
                         this->set_atomic_iterator(_data_iter);
                         //--------------------------
-                        return *std::next(m_data.begin(), _random_position);
+                        this->get_distribution().at(_random_position) = 0;
                         //--------------------------
-                    }// end (_data_iter == m_data.begin() and std::next(_data_iter, batch) != m_data.end()-1)
+                        return *std::next(this->get_data().begin(), _random_position);
+                        //--------------------------
+                    }// end (_data_iter == this->get_data().begin() and std::next(_data_iter, batch) != this->get_data().end()-1)
                     //--------------------------
                     epsilon = 0.;
                     //--------------------------
@@ -417,21 +401,15 @@ namespace RL {
                     //--------------------------
                     std::lock_guard<std::mutex> date_lock(m_mutex);
                     //--------------------------
-                    this->set_atomic_iterator(m_data.begin());
+                    this->set_atomic_iterator(this->get_data().begin());
                     //--------------------------
-                    std::fill(std::execution::par, m_distribution.begin(), m_distribution.end(), 1u);
+                    std::fill(std::execution::par, this->get_distribution().begin(), this->get_distribution().end(), 1u);
                     //--------------------------
                 }// end void rest_iterator(void)
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::vector<T>& m_data;
-                //--------------------------
                 std::atomic<typename std::vector<T>::iterator> m_data_iter;
-                //--------------------------
-                std::function<COST_OUTPUT(const Args&...)>& m_CostFunction;
-                //--------------------------
-                std::vector<uint8_t>& m_distribution;
                 //--------------------------
                 std::mutex m_mutex;
             //--------------------------------------------------------------

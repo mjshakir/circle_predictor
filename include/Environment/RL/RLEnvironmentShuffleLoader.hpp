@@ -45,16 +45,23 @@ namespace RL {
                                                     const size_t& batch = 2ul,
                                                     const double& egreedy = 0.9,
                                                     const double& egreedy_final = 0.02,
-                                                    const double& egreedy_decay = 500.) : RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(std::move(data),
-                                                                                                                                        std::move(costFunction), 
-                                                                                                                                        egreedy, 
-                                                                                                                                        egreedy_final, 
-                                                                                                                                        egreedy_decay),
-                                                                                        m_batch(batch){
+                                                    const double& egreedy_decay = 500.) :   RLEnvironment<T, COST_OUTPUT, Args...>( std::move(data), 
+                                                                                                                                    std::move(costFunction), 
+                                                                                                                                    egreedy, 
+                                                                                                                                    egreedy_final, 
+                                                                                                                                    egreedy_decay),
+                                                                                            RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(  std::move(data),
+                                                                                                                                            std::move(costFunction), 
+                                                                                                                                            egreedy, 
+                                                                                                                                            egreedy_final, 
+                                                                                                                                            egreedy_decay),
+                                                                                            m_batch(batch){
                     //--------------------------
                     if(batch >= this->get_data().size()/2){
                         //--------------------------
-                        throw std::out_of_range("Batch Size: [" + std::to_string(batch) + "] Must Be Less Then The data Size: [" + std::to_string(this->get_data().size()/2) + "]");
+                        throw std::out_of_range("Batch Size: [" + std::to_string(batch) +
+                                                "] Must Be Less Then The data Size: [" +
+                                                std::to_string(this->get_data().size()/2) + "]");
                         //--------------------------
                     }// end if(batch >= this->get_data().size()/2)
                     //----------------------------        

@@ -117,14 +117,15 @@ add_library(${PROJECT_NAME}_rl_data SHARED
 add_library(${PROJECT_NAME}_rl_environment SHARED
   src/Environment/RL/Environment.cpp
   src/Environment/RL/RLEnvironment.cpp
-  src/Environment/RL/RLEnvironmentShuffle.cpp
   src/Environment/RL/RLEnvironmentLoader.cpp
+  src/Environment/RL/RLEnvironmentShuffle.cpp
   src/Environment/RL/RLEnvironmentShuffleLoader.cpp
-  src/Environment/RL/EnvironmentTestLoader.cpp
   src/Environment/RL/RLEnvironmentAtomic.cpp
   src/Environment/RL/RLEnvironmentLoaderAtomic.cpp
   src/Environment/RL/RLEnvironmentShuffleAtomic.cpp
   src/Environment/RL/RLEnvironmentShuffleAtomicLoader.cpp
+  src/Environment/RL/RLEnvironmentTest.cpp
+  src/Environment/RL/RLEnvironmentTestLoader.cpp
 )
 #------------------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_rl_network SHARED

@@ -8,12 +8,17 @@
 #include <sstream>
 #include <iomanip>
 #include <climits>
+#include <algorithm>
+#include <execution>
 //--------------------------------------------------------------
 // Definitions 
 //--------------------------------------------------------------
 // Alpha
 //--------------------------
-#define ALPHA 0.1
+#define ALPHA             0.1  // Minimum value for ALPHA, choose a suitable value
+#define MAX_ALPHA         0.9  // Maximum value for ALPHA, choose a suitable value
+#define MIN_ALPHA         0.1  // Minimum value for ALPHA, choose a suitable value
+#define ADJUSTMENT_FACTOR 0.05 // Adjustment factor for ALPHA, choose a suitable value
 //--------------------------
 // ANSI Colors
 //--------------------------
@@ -93,9 +98,24 @@ double Utils::ProgressBar::calculate_etc(void) {
     //--------------------------
     if (m_progress > 0 and m_total > 0) {
         //--------------------------
+        double alpha = ALPHA;
+        //--------------------------
         // calculate EMA of time per unit of work
+        //--------------------------
         double average_delta_time_seconds = m_average_delta_time.count();
-        average_delta_time_seconds = ALPHA * current_delta_time + (1 - ALPHA) * average_delta_time_seconds;
+        //--------------------------
+        if (current_delta_time > 1.5 * m_average_delta_time.count()) {
+            //--------------------------
+            alpha = std::min(MAX_ALPHA, ALPHA + ADJUSTMENT_FACTOR);
+            //--------------------------
+        } // end if (current_delta_time > 1.5 * m_average_delta_time.count()) 
+        else {
+            //--------------------------
+            alpha = std::max(MIN_ALPHA, ALPHA - ADJUSTMENT_FACTOR);
+            //--------------------------
+        }// end else
+        //--------------------------
+        average_delta_time_seconds = alpha * current_delta_time + (1 - alpha) * average_delta_time_seconds;
         m_average_delta_time = std::chrono::duration<double>(average_delta_time_seconds);
         //--------------------------
         // ETC = average time per unit of work * remaining work
@@ -191,11 +211,13 @@ void Utils::ProgressBar::display(void) {
         //--------------------------
         ss << m_name << ": " << std::setw(3) << percent << "% [" << ANSI_BOLD_ON;  // Start bold
         //--------------------------
-        for (size_t i = 0; i < position; i++) {
-            //--------------------------
-            bar[i] = m_progress_char[0];
-            //--------------------------
-        }// end for (size_t i = 0; i < position; i++)
+        // for (size_t i = 0; i < position; i++) {
+        //     //--------------------------
+        //     bar[i] = m_progress_char[0];
+        //     //--------------------------
+        // }// end for (size_t i = 0; i < position; i++)
+        //--------------------------
+        std::fill_n(std::execution::par, bar.begin(), position, m_progress_char[0]);
         //--------------------------
     }//end if(m_total != 0 and m_total != std::numeric_limits<size_t>::max()) 
     else {

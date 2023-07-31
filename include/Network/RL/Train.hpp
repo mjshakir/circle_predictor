@@ -91,7 +91,7 @@ namespace RL {
                 //--------------------------
                 std::lock_guard<std::mutex> _lock_guard(m_mutex);
                 //--------------------------
-                m_environment.reset();
+                // m_environment.reset();
                 //--------------------------
                 bool done = false;
                 double epsilon = 0.;
@@ -146,7 +146,7 @@ namespace RL {
                     //--------------------------
                 }// end while(!_done)
                 //--------------------------
-                // m_environment.reset();
+                m_environment.reset();
                 //--------------------------
             }// end void train_run(void)
             //--------------------------------------------------------------
@@ -155,10 +155,14 @@ namespace RL {
                                     std::function<torch::Tensor(const torch::Tensor&)> normalizing_function,
                                     const Args&... args){
                 //--------------------------
-                auto environment = m_environment;
+                // auto environment = m_environment;
                 // auto memory = m_memory;
                 //--------------------------
                 std::lock_guard<std::mutex> _lock_guard(m_mutex);
+                //--------------------------
+                auto environment = m_environment;
+                //--------------------------
+                environment.reset();
                 //--------------------------
                 bool done = false;
                 double epsilon = 0.;
@@ -211,7 +215,7 @@ namespace RL {
                     //--------------------------
                 }// end while(!_done)
                 //--------------------------
-                environment.reset();
+                // environment.reset();
                 //--------------------------
             }// end void train_run(void)
             //---------------------------------------------------------------
@@ -249,15 +253,16 @@ namespace RL {
                 //--------------------------
                 auto _epoch = static_cast<size_t>(epoch/jobs);
                 //--------------------------
-                progressbar bar(_epoch);
+                // progressbar bar(_epoch);
+                Utils::ProgressBar bar(_epoch, 30, "Training", "*", "-");
                 //--------------------------
                 for (size_t i = 0; i < _epoch; ++i) {
                     //--------------------------
                     for(size_t j = 0; j < jobs; ++j){
                         //--------------------------
-                        // threads.emplace_back([this, &optimizer, &normalizing_function, &args...](){train_local_run(optimizer, normalizing_function, args...);});
-                        //--------------------------
                         threads.emplace_back([this, &optimizer, &normalizing_function, &args...](){train_run(optimizer, normalizing_function, args...);});
+                        //--------------------------
+                        // threads.emplace_back([this, &optimizer, &normalizing_function, &args...](){train_run(optimizer, normalizing_function, args...);});
                         //--------------------------
                     }// end for(size_t j = 0; j < jobs; ++j)
                     //--------------------------

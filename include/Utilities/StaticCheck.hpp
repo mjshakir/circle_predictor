@@ -5,7 +5,6 @@
 //--------------------------------------------------------------
 // Environment
 //--------------------------
-#include "Environment/RL/EnvironmentTestLoader.hpp"
 #include "Environment/RL/RLEnvironment.hpp"
 #include "Environment/RL/RLEnvironmentLoader.hpp"
 #include "Environment/RL/RLEnvironmentShuffle.hpp"
@@ -14,8 +13,9 @@
 #include "Environment/RL/RLEnvironmentLoaderAtomic.hpp"
 #include "Environment/RL/RLEnvironmentShuffleAtomic.hpp"
 #include "Environment/RL/RLEnvironmentShuffleAtomicLoader.hpp"
+#include "Environment/RL/RLEnvironmentTest.hpp"
+#include "Environment/RL/RLEnvironmentTestLoader.hpp"
 //--------------------------------------------------------------
-//--------------------------
 // Network Handling
 //--------------------------
 #include "Network/RL/ReinforcementNetworkHandlingDQN.hpp"

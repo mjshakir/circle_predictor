@@ -37,7 +37,8 @@ endfunction()
 #------------------------------------------------------------------------------------------
 set_with_default(USE_TTB "build application with TTB" BOOL ON)
 #------------------------------------------------------------------------------------------
-add_compile_options(-Wall -Wextra -Wpedantic -pedantic-errors -Werror=format-security -fasynchronous-unwind-tables)
+add_library(common_options INTERFACE)
+target_compile_options(common_options INTERFACE -Wall -Wextra -Wpedantic -pedantic-errors -Werror=format-security -fasynchronous-unwind-tables)
 #------------------------------------------------------------------------------------------
 # Set the output folder where your program will be created
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -58,6 +59,18 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 #------------------------------------------------------------------------------------------
+# Try to find fmt
+find_package(fmt QUIET)
+#---------------
+if(fmt_FOUND)
+    message(STATUS "Found fmt library")
+    set(HAVE_FMT TRUE)
+    add_definitions(-DHAVE_FMT)
+else()
+    message(WARNING "fmt library not found. Some features might not work.")
+    set(HAVE_FMT FALSE)
+endif()
+#---------------
 find_package(Torch REQUIRED)
 #---------------
 if (NOT Torch_FOUND)
@@ -150,14 +163,22 @@ if(USE_TTB)
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES} tbb)
   target_link_libraries(${PROJECT_NAME}_rl_environment PRIVATE ${TORCH_LIBRARIES} tbb)
   target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} tbb fort)
-  target_link_libraries(${PROJECT_NAME}_utilities ${TORCH_LIBRARIES} tbb)
+  if(HAVE_FMT)
+    target_link_libraries(${PROJECT_NAME}_utilities PRIVATE ${TORCH_LIBRARIES} fmt::fmt tbb)
+  else()
+    target_link_libraries(${PROJECT_NAME}_utilities PRIVATE ${TORCH_LIBRARIES} tbb)
+  endif()
 else()
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_environment PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} fort)
-  target_link_libraries(${PROJECT_NAME}_utilities ${TORCH_LIBRARIES})
+  if(HAVE_FMT)
+    target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${TORCH_LIBRARIES} fmt::fmt)
+  else()
+    target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${TORCH_LIBRARIES})
+  endif()
 endif(USE_TTB)
 #------------------------------------------------------------------------------------------
 include_directories(
@@ -174,6 +195,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   ${PROJECT_NAME}_timing
   ${TORCH_LIBRARIES}
   ${Boost_LIBRARIES}
+  common_options
   )
 #------------------------------------------------------------------------------------------
 target_link_libraries(${PROJECT_NAME}_rl PRIVATE
@@ -185,6 +207,7 @@ target_link_libraries(${PROJECT_NAME}_rl PRIVATE
   ${TORCH_LIBRARIES}
   ${Boost_LIBRARIES}
   fort
+  common_options
   )
 #------------------------------------------------------------------------------------------
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)

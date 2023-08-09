@@ -7,21 +7,23 @@
 #include <chrono>
 #include <string>
 //--------------------------------------------------------------
+// Boost library 
+//--------------------------------------------------------------
+#include <boost/circular_buffer.hpp>
+//--------------------------------------------------------------
 namespace Utils{
     //--------------------------------------------------------------
     class ProgressBar {
         //--------------------------------------------------------------
         public:
             //--------------------------------------------------------------
-            ProgressBar(const uint8_t& bar_length = 30U,
-                        const std::string& name = "Progress:", 
-                        const std::string& progress_char = "+", 
+            ProgressBar(const std::string& name = "Progress:", 
+                        const std::string& progress_char = "#", 
                         const std::string& empty_space_char = "-");
             //--------------------------
             ProgressBar(const size_t& total,
-                        const uint8_t& bar_length = 30U,
                         const std::string& name = "Progress:", 
-                        const std::string& progress_char = "+", 
+                        const std::string& progress_char = "#", 
                         const std::string& empty_space_char = "-");
             //--------------------------
             ProgressBar           (ProgressBar const&) = delete;
@@ -33,39 +35,45 @@ namespace Utils{
             //--------------------------
             void update(void);
             //--------------------------
-            constexpr bool done(void);
+            bool done(void);
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
-            void append_elapsed_time(std::stringstream& ss);
+            void append_time(std::stringstream& ss, double time, const std::string& label);
             //--------------------------
-            void append_remaining_time(std::stringstream& ss);
+            #ifdef HAVE_FMT
+                std::string append_time(double time, const std::string& label);
+            #endif
             //--------------------------
             void display(void);
             //--------------------------
             void tick(void);
             //--------------------------
-            inline bool is_done(void) const ;
-            //--------------------------
-            double get_remaining_seconds(void);
+            bool is_done(void) const ;
             //--------------------------
             double calculate_etc(void);
             //--------------------------
             double calculate_elapsed(void);
+            //--------------------------
+            static size_t get_terminal_width(void);
+            //--------------------------
+            static void calculate_bar(void); 
             //--------------------------------------------------------------
         private:
             //--------------------------------------------------------------
-            size_t m_total, m_progress;
-            //--------------------------
-            const uint8_t m_bar_length;
+            size_t m_total, m_progress, m_update_counter;
             //--------------------------
             const std::string m_name, m_progress_char, m_empty_space_char;
             //--------------------------
-            bool m_is_first_tick;
+            boost::circular_buffer<double> m_delta_times;
+            //--------------------------
+            double m_last_etc;
             //--------------------------
             std::chrono::steady_clock::time_point m_last_tick_time, m_start_time;
             //--------------------------
-            std::chrono::duration<double> m_average_delta_time;
+            static size_t  m_name_length, m_bar_length, m_available_width, m_spaces_after_bar;
+            //--------------------------
+            static void handle_winch_signal(int signum);
         //--------------------------------------------------------------
     };// end class ProgressBar
     //--------------------------------------------------------------

@@ -11,7 +11,7 @@ class Timing{
         //--------------------------
         // Constructor 
         //--------------------------
-        Timing();
+        Timing(void);
         //--------------------------
         // Constructor 
         //--------------------------
@@ -36,6 +36,6 @@ class Timing{
         //--------------------------
         std::string m_function_name;
         //--------------------------
-        std::chrono::time_point<std::chrono::high_resolution_clock> m_start;  
+        const std::chrono::time_point<std::chrono::high_resolution_clock> m_start;  
     //--------------------------------------------------------------
 };

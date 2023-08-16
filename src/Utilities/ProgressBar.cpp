@@ -193,29 +193,33 @@ double Utils::ProgressBar::calculate_elapsed(void) {
     //--------------------------
 }// end double Utils::ProgressBar::calculate_elapsed(void)
 //--------------------------------------------------------------
-void Utils::ProgressBar::append_time(std::stringstream& ss, double time, const std::string& label) {
+#ifndef HAVE_FMT
     //--------------------------
-    auto days = static_cast<size_t>(time / SECONDS_PER_DAY);
-    time -= days * SECONDS_PER_DAY;
+    void Utils::ProgressBar::append_time(std::stringstream& ss, double time, const std::string& label) {
+        //--------------------------
+        auto days = static_cast<size_t>(time / SECONDS_PER_DAY);
+        time -= days * SECONDS_PER_DAY;
+        //--------------------------
+        auto hours = static_cast<size_t>(time / SECONDS_PER_HOUR);
+        time -= hours * SECONDS_PER_HOUR;
+        //--------------------------
+        auto minutes = static_cast<size_t>(time / SECONDS_PER_MINUTE);
+        time -= minutes * SECONDS_PER_MINUTE;
+        //--------------------------
+        auto seconds = static_cast<size_t>(time);
+        time -= seconds;
+        //--------------------------
+        auto milliseconds = static_cast<size_t>(time * MILLISECONDS_PER_SECOND);
+        //--------------------------
+        ss << label << " " << std::setw(2) << std::setfill('0') << days << ":"
+        << std::setw(2) << std::setfill('0') << hours << ":"
+        << std::setw(2) << std::setfill('0') << minutes << ":"
+        << std::setw(2) << std::setfill('0') << seconds << ":"
+        << std::setw(3) << std::setfill('0') << milliseconds << " ";
+        //--------------------------
+    }// end void Utils::ProgressBar::append_time(std::stringstream& ss, double time, const std::string& label)
     //--------------------------
-    auto hours = static_cast<size_t>(time / SECONDS_PER_HOUR);
-    time -= hours * SECONDS_PER_HOUR;
-    //--------------------------
-    auto minutes = static_cast<size_t>(time / SECONDS_PER_MINUTE);
-    time -= minutes * SECONDS_PER_MINUTE;
-    //--------------------------
-    auto seconds = static_cast<size_t>(time);
-    time -= seconds;
-    //--------------------------
-    auto milliseconds = static_cast<size_t>(time * MILLISECONDS_PER_SECOND);
-    //--------------------------
-    ss << label << " " << std::setw(2) << std::setfill('0') << days << ":"
-       << std::setw(2) << std::setfill('0') << hours << ":"
-       << std::setw(2) << std::setfill('0') << minutes << ":"
-       << std::setw(2) << std::setfill('0') << seconds << ":"
-       << std::setw(3) << std::setfill('0') << milliseconds << " ";
-    //--------------------------
-}// end void Utils::ProgressBar::append_time(std::stringstream& ss, double time, const std::string& label)
+#endif
 //--------------------------------------------------------------
 #ifdef HAVE_FMT
     //--------------------------

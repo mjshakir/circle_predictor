@@ -1,13 +1,13 @@
 #pragma once
 
 //--------------------------------------------------------------
-// LibTorch library
+// User Defined library
 //--------------------------------------------------------------
-#include <torch/torch.h>
+#include "Generate/Supervised/Normalize.hpp"
 //--------------------------------------------------------------
 namespace RL {
     //--------------------------------------------------------------
-    class RLNormalize{
+    class RLNormalize : public Normalize{
         //--------------------------------------------------------------
         public:
             //--------------------------------------------------------------
@@ -60,55 +60,27 @@ namespace RL {
              * 
              *  @return A unnormalize a torch tensor
              */
-            torch::Tensor unnormalization(const torch::Tensor& input);
-            //--------------------------
-            /**
-             *  @brief  Unnormalize the input tensor. This uses inverse Min-max feature scaling.
-             * 
-             *  @return A unnormalize a torch tensor
-             */
             static torch::Tensor unnormalization(const torch::Tensor& input, const torch::Tensor& t_min, const torch::Tensor& t_max);
-            //--------------------------
-            /**
-             *  @brief  Unnormalize the input tensor. This uses inverse Min-max feature scaling.
-             * 
-             *  @return A unnormalize a torch tensor
-             */
-            torch::Tensor get_min(void) const;
-            //--------------------------
-            /**
-             *  @brief  Unnormalize the input tensor. This uses inverse Min-max feature scaling.
-             * 
-             *  @return A unnormalize a torch tensor
-             */
-            torch::Tensor get_max(void) const;
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
             std::vector<torch::Tensor> normalization_data(void);
             //--------------------------
-            torch::Tensor normalization_data(const torch::Tensor& input);
-            //--------------------------
             static std::vector<torch::Tensor> normalization_data(const std::vector<torch::Tensor>& input);
             //--------------------------
             static std::tuple<std::vector<torch::Tensor>, torch::Tensor, torch::Tensor>  normalization_min_max_data(const std::vector<torch::Tensor>& input);
             //--------------------------
-            torch::Tensor unnormalization_data(const torch::Tensor& input);
-            //--------------------------
             static torch::Tensor unnormalization_data(const torch::Tensor& input, const torch::Tensor& t_min, const torch::Tensor& t_max);
-            //--------------------------------------------------------------
-        private:
-            //--------------------------------------------------------------
-            std::vector<torch::Tensor> m_input;
             //--------------------------
-            torch::Tensor m_input_tensor, m_min, m_max;
-            //--------------------------------------------------------------
             std::tuple<torch::Tensor, torch::Tensor> find_min_max(const std::vector<torch::Tensor>& input);
             //--------------------------
             torch::Tensor find_min(const std::vector<torch::Tensor>& input);
             //--------------------------
             torch::Tensor find_max(const std::vector<torch::Tensor>& input);
             //--------------------------------------------------------------
+        private:
+            //--------------------------------------------------------------
+            const std::vector<torch::Tensor> m_input;
         //--------------------------------------------------------------
     };// end class RLNormalize
     //--------------------------------------------------------------

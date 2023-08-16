@@ -10,7 +10,7 @@ class Normalize{
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
-        Normalize() = delete;
+        Normalize(void) = delete;
         //--------------------------
         /**
          *  @brief A constructor 
@@ -54,6 +54,10 @@ class Normalize{
             return unnormalization_data_nonTensor(input);
             //--------------------------
         }// end T unnormalization_data_nontensor(const T& input)
+        //--------------------------
+        torch::Tensor min(void) const;
+        //--------------------------
+        torch::Tensor max(void) const;
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
@@ -71,6 +75,10 @@ class Normalize{
             return (input*(m_max.item<T>()-m_min.item<T>()))+m_min.item<T>();
             //--------------------------
         }// end T unnormalization_data_nontensor(const T& input)
+        //--------------------------
+        torch::Tensor get_min(void) const;
+        //--------------------------
+        torch::Tensor get_max(void) const;
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------

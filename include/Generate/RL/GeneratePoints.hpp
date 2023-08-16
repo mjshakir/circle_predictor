@@ -8,6 +8,10 @@
 //--------------------------------------------------------------
 #include <torch/torch.h>
 //--------------------------------------------------------------
+// Standard library
+//--------------------------------------------------------------
+#include <random>
+//--------------------------------------------------------------
 namespace RL {
     //--------------------------------------------------------------
     class GeneratePoints : protected Generate{
@@ -34,9 +38,9 @@ namespace RL {
              *  @param limiter               [in]: the maximum value the points can get for X, Y.                                                  @default: 10.0
              */
             GeneratePoints( const size_t& generated_points = 60000,
-                        const size_t& generated_points_test = 10000, 
-                        const size_t& column = 2, 
-                        const double& limiter = 10.);
+                            const size_t& generated_points_test = 10000, 
+                            const size_t& column = 2, 
+                            const double& limiter = 10.);
             //--------------------------
             /**
              *  @brief Getter: The data generated.  
@@ -93,9 +97,11 @@ namespace RL {
             //--------------------------------------------------------------
         private:
             //--------------------------------------------------------------
-            size_t m_generated_points, m_generated_points_test, m_column;
+            size_t m_column;
             //--------------------------
-            double m_limiter;
+            std::random_device m_rd;  // Will be used to obtain a seed for the random number engine
+            std::mt19937 m_gen; // Standard mersenne_twister_engine seeded with rd(
+            std::uniform_real_distribution<double> m_random_point;
         //--------------------------------------------------------------
     };// end class GeneratePoints
     //--------------------------------------------------------------

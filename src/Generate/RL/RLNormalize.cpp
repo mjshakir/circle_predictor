@@ -9,16 +9,8 @@
 #include <execution>
 #include <future>
 //--------------------------------------------------------------
-RL::RLNormalize::RLNormalize(const std::vector<torch::Tensor>& input) : m_input(input),
-                                                                        m_input_tensor(torch::cat(input, 0)),
-                                                                        m_min(torch::min(m_input_tensor)),
-                                                                        m_max(torch::max(m_input_tensor)){
-    //--------------------------
-    if(std::abs(m_max.item().toDouble() - m_min.item().toDouble()) <= 1E-9){
-        //--------------------------
-        throw std::runtime_error("Divide by zero. Max:[" + std::to_string(m_max.item().toDouble()) + "] and min:[" + std::to_string(m_min.item().toDouble()) + "]");
-        //--------------------------
-    }// end if((m_max.item().toDouble() - m_min.item().toDouble()) == 0.)
+RL::RLNormalize::RLNormalize(const std::vector<torch::Tensor>& input) : Normalize(torch::cat(input, 0)),
+                                                                        m_input(input){
     //--------------------------
 }// end RL::RLNormalize::RLNormalize(const torch::Tensor& input)
 //--------------------------------------------------------------
@@ -30,7 +22,7 @@ std::vector<torch::Tensor> RL::RLNormalize::normalization(void){
 //--------------------------------------------------------------
 torch::Tensor RL::RLNormalize::normalization(const torch::Tensor& input){
     //--------------------------
-    return normalization_data(input);
+    return normalization_vdata(input);
     //--------------------------
 }// end torch::Tensor RL::RLNormalize::normalization(void)
 //--------------------------------------------------------------
@@ -46,43 +38,19 @@ std::tuple<std::vector<torch::Tensor>, torch::Tensor, torch::Tensor> RL::RLNorma
     //--------------------------
 }// std::tuple<std::vector<torch::Tensor>, torch::Tensor, torch::Tensor> RL::RLNormalize::normalization_min_max(const std::vector<torch::Tensor>& input)
 //--------------------------------------------------------------
-torch::Tensor RL::RLNormalize::unnormalization(const torch::Tensor& input){
-    //--------------------------
-    return unnormalization_data(input);
-    //--------------------------
-}// end torch::Tensor RL::RLNormalize::unnormalization(const torch::Tensor& input)
-//--------------------------------------------------------------
 torch::Tensor RL::RLNormalize::unnormalization(const torch::Tensor& input, const torch::Tensor& t_min, const torch::Tensor& t_max){
     //--------------------------
     return unnormalization_data(input, t_min, t_max);
     //--------------------------
 }// end torch::Tensor RL::RLNormalize::unnormalization(const torch::Tensor& input, const torch::Tensor min, const torch::Tensor max)
 //--------------------------------------------------------------
-torch::Tensor RL::RLNormalize::get_min(void) const{
-    //--------------------------
-    return m_min;
-    //--------------------------
-}// end torch::Tensor torch::Tensor RL::RLNormalize::get_min(void) const
-//--------------------------------------------------------------
-torch::Tensor RL::RLNormalize::get_max(void) const{
-    //--------------------------
-    return m_max;
-    //--------------------------
-}// end torch::Tensor torch::Tensor RL::RLNormalize::get_min(void) const
-//--------------------------------------------------------------
 std::vector<torch::Tensor> RL::RLNormalize::normalization_data(void){
     //--------------------------
     std::vector<torch::Tensor> _data(m_input.size());
     //--------------------------
-    std::transform(std::execution::par, m_input.begin(), m_input.end(), _data.begin(), [this](const auto& x){return (x-m_min)/(m_max-m_min);});
+    std::transform(std::execution::par, m_input.begin(), m_input.end(), _data.begin(), [this](const auto& x){return (x-this->get_min())/(this->get_max()-this->get_min());});
     //--------------------------
     return _data;
-    //--------------------------
-}// end torch::Tensor RL::RLNormalize::normalization_data(void)
-//--------------------------------------------------------------
-torch::Tensor RL::RLNormalize::normalization_data(const torch::Tensor& input){
-    //--------------------------
-    return ((input-m_min)/(m_max-m_min));
     //--------------------------
 }// end torch::Tensor RL::RLNormalize::normalization_data(void)
 //--------------------------------------------------------------
@@ -109,12 +77,6 @@ std::tuple<std::vector<torch::Tensor>, torch::Tensor, torch::Tensor>  RL::RLNorm
     return {_data, t_min, t_max};
     //--------------------------
 }// end std::tuple<std::vector<torch::Tensor>, torch::Tensor, torch::Tensor>  RL::RLNormalize::normalization_min_max_data(const std::vector<torch::Tensor>& input)
-//--------------------------------------------------------------
-torch::Tensor RL::RLNormalize::unnormalization_data(const torch::Tensor& input){
-    //--------------------------
-    return (input*(m_max-m_min))+m_min;
-    //--------------------------
-}// end torch::Tensor RL::RLNormalize::unnormalization_data(const torch::Tensor& input)
 //--------------------------------------------------------------
 torch::Tensor RL::RLNormalize::unnormalization_data(const torch::Tensor& input, const torch::Tensor& t_min, const torch::Tensor& t_max){
     //--------------------------

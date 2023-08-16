@@ -5,6 +5,12 @@
 //--------------------------------------------------------------
 Normalize::Normalize(const torch::Tensor& input) : m_input(input), m_max(torch::max(input)), m_min(torch::min(input)){
     //--------------------------
+    if(std::abs(m_max.item().toDouble() - m_min.item().toDouble()) <= 1E-9){
+        //--------------------------
+        throw std::runtime_error("Divide by zero. Max:[" + std::to_string(m_max.item().toDouble()) + "] and min:[" + std::to_string(m_min.item().toDouble()) + "]");
+        //--------------------------
+    }// end if((m_max.item().toDouble() - m_min.item().toDouble()) == 0.)
+    //--------------------------
 }// end Normalize::Normalize(const torch::Tensor& input)
 //--------------------------------------------------------------
 torch::Tensor Normalize::normalization(void){
@@ -24,6 +30,18 @@ torch::Tensor Normalize::unnormalization(const torch::Tensor& input){
     return unnormalization_data(input);
     //--------------------------
 }// end torch::Tensor Normalize::unnormalization(const torch::Tensor& input)
+//--------------------------------------------------------------
+torch::Tensor Normalize::min(void) const{
+    //--------------------------
+    return get_min();
+    //--------------------------
+}// end torch::Tensor Normalize::get_min(void) const
+//--------------------------------------------------------------
+torch::Tensor Normalize::max(void) const{
+    //--------------------------
+    return get_max();
+    //--------------------------
+}// end torch::Tensor Normalize::get_max(void) const
 //--------------------------------------------------------------
 torch::Tensor Normalize::normalization_data(void){
     //--------------------------
@@ -50,4 +68,16 @@ torch::Tensor Normalize::unnormalization_data(const torch::Tensor& input){
     return (input*(m_max-m_min))+m_min;
     //--------------------------
 }// end torch::Tensor Normalize::unnormalization_data(const torch::Tensor& input)
+//--------------------------------------------------------------
+torch::Tensor Normalize::get_min(void) const{
+    //--------------------------
+    return m_min;
+    //--------------------------
+}// end torch::Tensor Normalize::get_min(void) const
+//--------------------------------------------------------------
+torch::Tensor Normalize::get_max(void) const{
+    //--------------------------
+    return m_max;
+    //--------------------------
+}// end torch::Tensor Normalize::get_max(void) const
 //--------------------------------------------------------------

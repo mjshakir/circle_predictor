@@ -74,7 +74,6 @@ namespace RL {
             std::vector<T> generate_value(const size_t& generated_points, F&& function, const Args&... args){
                 //--------------------------
                 std::vector<T> _data(generated_points);
-                // _data.reserve(generated_points);
                 //--------------------------
                 std::generate(std::execution::par, _data.begin(), _data.end(), [&function, &args...](){return function(args...);});
                 //--------------------------
@@ -88,7 +87,7 @@ namespace RL {
             //--------------------------------------------------------------
         private:
             //--------------------------------------------------------------
-            size_t m_generated_points, m_generated_points_test;
+            const size_t m_generated_points, m_generated_points_test;
         //--------------------------------------------------------------
     };// end class Generate
     //--------------------------------------------------------------

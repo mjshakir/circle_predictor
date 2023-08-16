@@ -28,6 +28,7 @@ namespace Utils{
             //--------------------------
             ProgressBar           (ProgressBar const&) = delete;
             ProgressBar& operator=(ProgressBar const&) = delete;
+            //--------------------------
             ProgressBar           (ProgressBar&&)      = delete;
             ProgressBar& operator=(ProgressBar&&)      = delete;
             //--------------------------
@@ -39,10 +40,16 @@ namespace Utils{
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
-            void append_time(std::stringstream& ss, double time, const std::string& label);
+            #ifndef HAVE_FMT
+                //--------------------------
+                void append_time(std::stringstream& ss, double time, const std::string& label);
+                //--------------------------
+            #endif
             //--------------------------
             #ifdef HAVE_FMT
+                //--------------------------
                 std::string append_time(double time, const std::string& label);
+                //--------------------------
             #endif
             //--------------------------
             void display(void);

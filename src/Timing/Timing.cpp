@@ -17,7 +17,7 @@
 //--------------------------
 #define CONVERT_NANO 1e9
 //--------------------------------------------------------------
-Timing::Timing() : m_function_name("Unknown"), m_start(std::chrono::high_resolution_clock::now()) {
+Timing::Timing(void) : m_function_name("Unknown"), m_start(std::chrono::high_resolution_clock::now()) {
     //--------------------------
 }// end Timing::Timing()
 //--------------------------------------------------------------

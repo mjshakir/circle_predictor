@@ -934,7 +934,9 @@ int main(int argc, char const *argv[]){
     // std::mt19937 gen(rd());
     // std::bernoulli_distribution memory_activation(memory_percentage);
     //--------------------------
-    ExperienceReplay<torch::Tensor, torch::Tensor, torch::Tensor, bool> memory(capacity);
+    // ExperienceReplay<torch::Tensor, torch::Tensor, torch::Tensor, bool> memory(capacity);
+    //--------------------------
+    ExperienceReplayBuffer<torch::Tensor, torch::Tensor, torch::Tensor, bool> memory(capacity);
     //--------------------------
     // std::vector<torch::Tensor> _rewards;
     // _rewards.reserve( input.size() * epoch);

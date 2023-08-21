@@ -2,32 +2,36 @@
 //--------------------------------------------------------------
 // Standard library
 //--------------------------------------------------------------
-#include <iostream>
-//-------------------
-#include <deque>
-#include <vector>
-#include <tuple>
 #include <random>
+#include <tuple>
 #include <mutex>
+#include <vector>
+#include <algorithm>
+//--------------------------------------------------------------
+// Boost library
+//--------------------------------------------------------------
+#include <boost/circular_buffer.hpp>
 //--------------------------------------------------------------
 template<typename... Args>
-class ExperienceReplay{
+class ExperienceReplayBuffer {
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
-        ExperienceReplay(void) = delete;
+        ExperienceReplayBuffer() = delete;
         //--------------------------
-        virtual ~ExperienceReplay() = default; // Virtual destructor
+        virtual ~ExperienceReplayBuffer() = default; // Virtual destructor
         //--------------------------
-        ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity){
+        ExperienceReplayBuffer(const size_t& capacity = 500) : m_capacity(capacity) {
             //--------------------------
-        }// end ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity)
+            m_memory.set_capacity(capacity);
+            //--------------------------
+        }//end explicit ExperienceReplayBuffer(const size_t& capacity = 500)
         //--------------------------
-        ExperienceReplay(const ExperienceReplay& other) : m_capacity(other.m_capacity){
+        ExperienceReplayBuffer(const ExperienceReplayBuffer& other) : m_capacity(other.m_capacity), m_memory(other.m_memory){
             //--------------------------
         }// end ExperienceReplay(const ExperienceReplay& other)
         //--------------------------
-        ExperienceReplay& operator=(const ExperienceReplay& other) {
+        ExperienceReplayBuffer& operator=(const ExperienceReplayBuffer& other) {
             //--------------------------
             // Check for self-assignment
             if (this == &other) {
@@ -38,31 +42,32 @@ class ExperienceReplay{
             //--------------------------
             // Perform a deep copy of the data
             m_capacity  = other.m_capacity;
+            m_memory    = other.m_memory;
             //--------------------------
             return *this;
             //--------------------------
         }// end ExperienceReplay& operator=(const ExperienceReplay& other)
         //--------------------------
-        ExperienceReplay(ExperienceReplay&&)                    = default;
-        ExperienceReplay& operator=(ExperienceReplay&&)         = default;
+        ExperienceReplayBuffer(ExperienceReplayBuffer&&)                    = default;
+        ExperienceReplayBuffer& operator=(ExperienceReplayBuffer&&)         = default;
         //--------------------------
         void push(const Args&... args){
             //--------------------------
             push_data(args...);
             //--------------------------
-        }// end void void push(const Args&... args)
-        //--------------------------------------------------------------
-        std::tuple<Args...> sample(void){
+        }// end void push(const Args&... args)
+        //--------------------------
+        std::tuple<Args...> sample(void) {
             //--------------------------
             return sample_data();
             //--------------------------
         }// end std::tuple<Args...> sample(void)
         //--------------------------
-        std::tuple<Args...> sample(const size_t& position){
+        std::tuple<Args...> sample(const size_t& key) {
             //--------------------------
-            return sample_data(position);
+            return sample_data(key);
             //--------------------------
-        }// end std::tuple<Args...> sample(const size_t& position)
+        }// end  std::tuple<Args...> sample(const size_t& key)
         //--------------------------
         std::vector<std::tuple<Args...>> samples(const size_t& samples) {
             //--------------------------
@@ -70,25 +75,19 @@ class ExperienceReplay{
             //--------------------------
         }// end  std::tuple<Args...> sample(const size_t& key)
         //--------------------------
-        constexpr size_t size(void) const{
+        constexpr size_t size() const {
             //--------------------------
-            return fifo_size();
+            return buffer_size();
             //--------------------------
-        }// end size_t size(void) const
+        }// end constexpr size_t size() const
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
         void push_data(const Args&... args){
             //--------------------------
-            std::lock_guard<std::mutex> date_lock(m_mutex);
+            std::lock_guard<std::mutex> data_lock(m_mutex);
             //--------------------------
-            m_memory.emplace_back(args...);
-            //--------------------------
-            if(m_memory.size() >= m_capacity) {
-                //--------------------------
-                m_memory.pop_front(); // Remove the oldest experience when capacity is reached
-                //--------------------------
-            }//end if(m_memory.size() >= m_capacity)
+            m_memory.push_back(std::make_tuple(args...));
             //--------------------------
         }// end void push_data(const Args&... args)
         //--------------------------------------------------------------
@@ -136,19 +135,19 @@ class ExperienceReplay{
             //--------------------------
         }// end std::tuple<Args...> samples_data(const size_t& key)
         //--------------------------------------------------------------
-        constexpr size_t fifo_size(void) const {
+        constexpr size_t buffer_size(void) const {
             //--------------------------
             return m_memory.size();
             //--------------------------
-        }// end size_t map_size(void) const
+        }// end size_t buffer_size(void) const
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
         size_t m_capacity;
         //--------------------------
-        std::deque<std::tuple<Args...>> m_memory;
+        boost::circular_buffer<std::tuple<Args...>> m_memory;
         //--------------------------
         std::mutex m_mutex;
     //--------------------------------------------------------------
-}; // end class ExperienceReplay
+};//end ExperienceReplayBuffer
 //--------------------------------------------------------------

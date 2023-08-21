@@ -23,6 +23,7 @@
 // Memory Replay
 //--------------------------
 #include "Network/RL/ExperienceReplay.hpp"
+#include "Network/RL/ExperienceReplayBuffer.hpp"
 //--------------------------------------------------------------
 namespace Utils{
     //--------------------------------------------------------------
@@ -59,7 +60,9 @@ namespace Utils{
     template <template <typename...> typename MemoryType, typename... Args>
     struct CheckExperienceReplay<MemoryType<Args...>> {
         //--------------------------
-        static constexpr bool value = (sizeof...(Args) > 0) and std::is_same_v<MemoryType<Args...>, ExperienceReplay<Args...>>;
+        static constexpr bool value = (sizeof...(Args) > 0) and 
+                                        (std::is_same_v<MemoryType<Args...>, ExperienceReplay<Args...>> or 
+                                        std::is_same_v<MemoryType<Args...>, ExperienceReplayBuffer<Args...>>);
         //--------------------------
     };// end struct CheckExperienceReplay<MemoryType<Args...>>
     //--------------------------------------------------------------

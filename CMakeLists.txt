@@ -148,6 +148,7 @@ add_library(${PROJECT_NAME}_rl_network SHARED
   src/Network/RL/ReinforcementNetworkHandling.cpp
   src/Network/RL/ReinforcementNetworkHandlingDQN.cpp
   src/Network/RL/ExperienceReplay.cpp
+  src/Network/RL/ExperienceReplayBuffer.cpp
   src/Network/RL/Train.cpp
 )
 #------------------------------------------------------------------------------------------

@@ -217,15 +217,9 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     Timing _full_timer(__FUNCTION__);
     //--------------------------
-    TimeIT _timer_tester;
-    //--------------------------
     RL::GeneratePoints _generate(generated_size, test_size, points_size, limiter);
     //--------------------------
-    if(verbos){
-        //--------------------------
-        *info_table  << "GeneratePoints time" << _timer_tester.get_time_seconds() << fort::endr;
-        //--------------------------
-    }// if(verbos)
+    TimeIT _timer_tester;
     //--------------------------
     RL::RLNormalize _normalize(_generate.get_input());
     //--------------------------
@@ -235,11 +229,12 @@ int main(int argc, char const *argv[]){
         //--------------------------
     }// if(verbos)
     //--------------------------
-    auto input = _normalize.normalization();
-   //--------------------------
+    // auto input = _normalize.normalization();
+    auto [input, normalization_time] = _timer_tester.timeFunction(std::function([&_normalize]() { return _normalize.normalization(); }));
+    //--------------------------
     if(verbos){
         //--------------------------
-        *info_table  << "Get normalized time" << _timer_tester.get_time_seconds() << fort::endr;
+        *info_table  << "Get normalized time" << normalization_time << fort::endr;
         //--------------------------
         std::cout << info_table->to_string() << std::endl;
         //--------------------------
@@ -689,58 +684,212 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // };
     //--------------------------------------------------------------
-    const torch::Tensor local_min = _normalize.get_min(), local_max =_normalize.get_max();
+    // const torch::Tensor local_min = _normalize.get_min(), local_max =_normalize.get_max();
     //--------------------------
-    auto _circle_reward = [&local_min, &local_max](const torch::Tensor& input, const torch::Tensor& output){
+    // auto _circle_reward = [&_normalize](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     const torch::Tensor local_min = _normalize.min(), local_max =_normalize.max();
+    //     //--------------------------
+    //     torch::Tensor _input  =  RL::RLNormalize::unnormalization(input, local_min, local_max),
+    //                   _output =  RL::RLNormalize::unnormalization(output, local_min, local_max);        
+    //     //--------------------------
+    //     std::vector<double> reward(output.size(0), 0.);
+    //     //--------------------------
+    //     // Parallelize the loop using STL parallel for_each
+    //     std::for_each(std::execution::par, reward.begin(), reward.end(), [&](double& r) {
+    //         //--------------------------
+    //         size_t i = &r - &reward[0];  // Get the index of the current element
+    //         //--------------------------
+    //         // Criterion 1: Points aligned
+    //         Utils::CircleEquation::Aligned(r, _output[i], 1E-4);
+    //         //--------------------------
+    //         // Criterion 2: Points close to the circumference of a circle
+    //         Utils::CircleEquation::CloseToCircumference(r,
+    //                                                     _output[i],
+    //                                                     _input.slice(1, 0, 2).slice(0, i, (i + 1)),
+    //                                                     _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(),
+    //                                                     1E-4);
+    //         //--------------------------
+    //         // Criterion 3: Points equidistant
+    //         Utils::CircleEquation::Equidistant(r, _output[i], 1E-4);
+    //         //--------------------------
+    //         // Criterion 4: Angle ratios consistent
+    //         Utils::CircleEquation::AngleRatiosConsistent(r, _output[i], 1E-4);
+    //         //--------------------------
+    //         // Criterion 5: Symmetry of the points
+    //         Utils::CircleEquation::Symmetric(r, _output[i]);
+    //         //--------------------------
+    //         // Criterion 6: Triangle area
+    //         Utils::CircleEquation::TriangleArea(r, _output[i]);
+    //         //--------------------------
+    //         // Criterion 7: Circle smoothness
+    //         Utils::CircleEquation::CircleSmoothness(r, 
+    //                                                 _output[i],
+    //                                                 _input.slice(1, 0, 2).slice(0, i, (i + 1)),
+    //                                                 _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze());
+    //         //--------------------------
+    //         // Criterion 8: Points within the limit
+    //         Utils::CircleEquation::PointLimiter(r,
+    //                                             _output[i],
+    //                                             _input.slice(1, 0, 2).slice(0, i, (i + 1)),
+    //                                             _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze());
+    //         //--------------------------
+    //     });      
+    //     //--------------------------
+    //     // auto _reward_results = torch::tensor(reward);
+    //     // std::cout << "reward_results: " << _reward_results << std::endl; 
+    //     // std::cout   << "reward_results: " << _reward_results.mean().item().toDouble() 
+    //     //             << " min: " << _reward_results.min().item().toDouble() 
+    //     //             << " max: " << _reward_results.max().item().toDouble()<< std::endl; 
+    //     // auto results = Normalize::normalization(_reward_results);
+    //     // std::cout << "results: " << results << std::endl; 
+    //     // return results;
+    //     //--------------------------
+    //     return Normalize::normalization(torch::tensor(reward));
+    //     //--------------------------
+    //     // return torch::tensor(reward);
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
+    // auto _circle_reward = [&_normalize](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     // Get the local min and max from the normalization function
+    //     //--------------------------
+    //     const torch::Tensor local_min = _normalize.min(), local_max = _normalize.max();
+    //     //--------------------------
+    //     auto _input  =  RL::RLNormalize::unnormalization(input, local_min, local_max);
+    //     auto _output =  RL::RLNormalize::unnormalization(output, local_min, local_max);        
+    //     //--------------------------
+    //     std::vector<double> reward(output.size(0), 0.);
+    //     //--------------------------
+    //     auto input_x = _input.slice(1, 0, 2);
+    //     auto input_y = _input.slice(1, 2, 3).squeeze();
+    //     //--------------------------
+    //     // Parallelize the computation
+    //     //--------------------------
+    //     std::for_each(std::execution::par, reward.begin(), reward.end(), [&](double& r, size_t i) {
+    //         Utils::CircleEquation::Aligned(r, _output[i], 1E-4);
+    //         Utils::CircleEquation::CloseToCircumference(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1), 1E-4);
+    //         Utils::CircleEquation::Equidistant(r, _output[i], 1E-4);
+    //         Utils::CircleEquation::AngleRatiosConsistent(r, _output[i], 1E-4);
+    //         Utils::CircleEquation::Symmetric(r, _output[i]);
+    //         Utils::CircleEquation::TriangleArea(r, _output[i]);
+    //         Utils::CircleEquation::CircleSmoothness(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1));
+    //         Utils::CircleEquation::PointLimiter(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1));
+    //     });      
+    //     //--------------------------
+    //     return Normalize::normalization(torch::tensor(reward));
+    // };  
+    //--------------------------------------------------------------
+    auto _circle_reward = [&_normalize](const torch::Tensor& input, const torch::Tensor& output){
         //--------------------------
-        torch::Tensor _input  =  RL::RLNormalize::unnormalization(input, local_min, local_max),
-                      _output =  RL::RLNormalize::unnormalization(output, local_min, local_max);        
+        const torch::Tensor local_min = _normalize.min(), local_max = _normalize.max();
+        //--------------------------
+        torch::Tensor _input  =  RL::RLNormalize::unnormalization(input, local_min, local_max);
+        torch::Tensor _output =  RL::RLNormalize::unnormalization(output, local_min, local_max);        
         //--------------------------
         std::vector<double> reward(output.size(0), 0.);
         //--------------------------
-        // Parallelize the loop using STL parallel for_each
+        auto input_x = _input.slice(1, 0, 2);
+        auto input_y = _input.slice(1, 2, 3).squeeze();
+        //--------------------------
         std::for_each(std::execution::par, reward.begin(), reward.end(), [&](double& r) {
             //--------------------------
-            size_t i = &r - &reward[0];  // Get the index of the current element
+            size_t i = &r - &reward[0];  // Compute the index
             //--------------------------
-            // Criterion 1: Points aligned
-            Utils::CircleEquation::Aligned(r, _output[i], 1E-4);
-            //--------------------------
-            // Criterion 2: Points close to the circumference of a circle
-            Utils::CircleEquation::CloseToCircumference(r,
-                                                        _output[i],
-                                                        _input.slice(1, 0, 2).slice(0, i, (i + 1)),
-                                                        _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(),
-                                                        1E-4);
-            //--------------------------
-            // Criterion 3: Points equidistant
-            Utils::CircleEquation::Equidistant(r, _output[i], 1E-4);
-            //--------------------------
-            // Criterion 4: Angle ratios consistent
-            Utils::CircleEquation::AngleRatiosConsistent(r, _output[i], 1E-4);
-            //--------------------------
-            // Criterion 5: Symmetry of the points
+            Utils::CircleEquation::Aligned(r, _output[i], 1E-5);
+            Utils::CircleEquation::CloseToCircumference(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1), 1E-4);
+            Utils::CircleEquation::Equidistant(r, _output[i], 1E-5);
+            Utils::CircleEquation::AngleRatiosConsistent(r, _output[i], 1E-5);
             Utils::CircleEquation::Symmetric(r, _output[i]);
-            //--------------------------
-            // Criterion 6: Triangle area
-            Utils::CircleEquation::TriangleArea(r, _output[i]);
-            //--------------------------
-            // Criterion 7: Circle smoothness
-            Utils::CircleEquation::CircleSmoothness(r, 
-                                                    _output[i],
-                                                    _input.slice(1, 0, 2).slice(0, i, (i + 1)),
-                                                    _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze());
+            Utils::CircleEquation::TriangleArea(r, _output[i], 1E-10L);
+            Utils::CircleEquation::CircleSmoothness(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1));
+            Utils::CircleEquation::PointLimiter(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1));
             //--------------------------
         });      
         //--------------------------
         // auto _reward_results = torch::tensor(reward);
-        // return Normalize::normalization(_reward_results);
         //--------------------------
-        return Normalize::normalization(torch::tensor(reward));
+        // std::cout << "reward_results: " << _reward_results << std::endl; 
         //--------------------------
-        // return torch::tensor(reward);
+        // std::cout   << "reward_results: " << _reward_results.mean().item().toDouble() 
+        //             << " min: " << _reward_results.min().item().toDouble() 
+        //             << " max: " << _reward_results.max().item().toDouble()<< std::endl; 
+        //--------------------------
+        // std::cout   << "reward_results: " << _reward_results.mean().item().toDouble() << std::endl; 
+        //--------------------------
+        // return _reward_results;
+        //--------------------------
+        // auto results = Normalize::normalization(_reward_results);
+        // std::cout << "results: " << results << std::endl; 
+        // return results;
+        //--------------------------
+        // return Normalize::normalization(torch::tensor(reward));
+        //--------------------------
+        return torch::tensor(reward);
         //--------------------------
     };
+    //--------------------------------------------------------------
+    // const torch::Tensor local_min = _normalize.get_min(), local_max =_normalize.get_max();
+    // //--------------------------
+    // auto _circle_reward = [&local_min, &local_max](const torch::Tensor& input, const torch::Tensor& output) {
+    //     //--------------------------
+    //     torch::Tensor   _input  = RL::RLNormalize::unnormalization(input, local_min, local_max),
+    //                     _output = RL::RLNormalize::unnormalization(output, local_min, local_max);
+    //     //--------------------------
+    //     int64_t batch_size = _output.size(0);
+    //     //--------------------------
+    //     // Parallel execution using std::async and std::future
+    //     std::vector<std::future<double>> criterion_futures;
+    //     criterion_futures.reserve(batch_size);
+    //     //--------------------------
+    //     for (int64_t i = 0; i < batch_size; ++i) {
+    //         //--------------------------
+    //         criterion_futures.emplace_back(std::async(std::launch::async, [&]() {
+    //             double reward = 0.0;
+    //             // Criterion 1: Points aligned
+    //             Utils::CircleEquation::Aligned(reward, _output[i], 1E-4);
+    //             // Criterion 2: Points close to the circumference of a circle
+    //             Utils::CircleEquation::CloseToCircumference(reward,
+    //                                                         _output[i],
+    //                                                         _input.slice(1, 0, 2).slice(0, i, (i + 1)),
+    //                                                         _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze(),
+    //                                                         1E-4);
+    //             // Criterion 3: Points equidistant
+    //             Utils::CircleEquation::Equidistant(reward, _output[i], 1E-4);
+    //             // Criterion 4: Angle ratios consistent
+    //             Utils::CircleEquation::AngleRatiosConsistent(reward, _output[i], 1E-4);
+    //             // Criterion 5: Symmetry of the points
+    //             Utils::CircleEquation::Symmetric(reward, _output[i]);
+    //             // Criterion 6: Triangle area
+    //             Utils::CircleEquation::TriangleArea(reward, _output[i]);
+    //             // Criterion 7: Circle smoothness
+    //             Utils::CircleEquation::CircleSmoothness(reward,
+    //                                                     _output[i],
+    //                                                     _input.slice(1, 0, 2).slice(0, i, (i + 1)),
+    //                                                     _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze());
+    //             // Criterion 8: Points within the limit
+    //             Utils::CircleEquation::PointLimiter(reward,
+    //                                                 _output[i],
+    //                                                 _input.slice(1, 0, 2).slice(0, i, (i + 1)),
+    //                                                 _input.slice(1, 2, 3).slice(0, i, (i + 1)).squeeze());
+    //             return reward;
+    //         }));
+    //     }
+    //     //--------------------------
+    //     // Consolidate rewards
+    //     std::vector<double> rewards;
+    //     rewards.reserve(batch_size);
+    //     //--------------------------
+    //     for (auto& criterion: criterion_futures) {
+    //         //--------------------------
+    //         rewards.emplace_back(criterion.get());
+    //         //--------------------------
+    //     }// end for (auto& criterion: criterion_futures)
+    //     //--------------------------
+    //     return Normalize::normalization(torch::tensor(rewards));
+    //     //--------------------------
+    // };
     //--------------------------------------------------------------
     RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), std::move(_circle_reward), batch_size, 0.9, 0.02, 500.);
     //--------------------------
@@ -861,7 +1010,7 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // }//end for(size_t i = 0; i < epoch; ++i)
     //--------------------------------------------------------------
-    std::cout   << "-------------------------------[Training]-------------------------------" << std::endl;
+    // std::cout   << "-------------------------------[Training]-------------------------------" << std::endl;
     //-----------
     TimeIT _timer;
     //--------------------------

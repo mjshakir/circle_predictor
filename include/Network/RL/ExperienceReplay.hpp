@@ -17,15 +17,34 @@ class ExperienceReplay{
         //--------------------------------------------------------------
         ExperienceReplay(void) = delete;
         //--------------------------
-        ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity), m_rng{m_rd()}{
+        virtual ~ExperienceReplay() = default; // Virtual destructor
+        //--------------------------
+        ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity){
             //--------------------------
         }// end ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity)
         //--------------------------
-        ExperienceReplay(const ExperienceReplay& other)             = default;
-        ExperienceReplay& operator=(const ExperienceReplay& other)  = default;
+        ExperienceReplay(const ExperienceReplay& other) : m_capacity(other.m_capacity){
+            //--------------------------
+        }// end ExperienceReplay(const ExperienceReplay& other)
         //--------------------------
-        ExperienceReplay(ExperienceReplay&&)             = delete;
-        ExperienceReplay& operator=(ExperienceReplay&&)  = delete;
+        ExperienceReplay& operator=(const ExperienceReplay& other) {
+            //--------------------------
+            // Check for self-assignment
+            if (this == &other) {
+                //--------------------------
+                return *this;
+                //--------------------------
+            }// end if (this == &other)
+            //--------------------------
+            // Perform a deep copy of the data
+            m_capacity  = other.m_capacity;
+            //--------------------------
+            return *this;
+            //--------------------------
+        }// end ExperienceReplay& operator=(const ExperienceReplay& other)
+        //--------------------------
+        ExperienceReplay(ExperienceReplay&&)                    = default;
+        ExperienceReplay& operator=(ExperienceReplay&&)         = default;
         //--------------------------
         void push(const Args&... args){
             //--------------------------
@@ -59,8 +78,6 @@ class ExperienceReplay{
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
-        virtual ~ExperienceReplay() = default; // Virtual destructor
-        //--------------------------------------------------------------
         void push_data(const Args&... args){
             //--------------------------
             std::lock_guard<std::mutex> date_lock(m_mutex);
@@ -77,9 +94,11 @@ class ExperienceReplay{
         //--------------------------------------------------------------
         std::tuple<Args...> sample_data(void){
             //--------------------------
+            thread_local std::random_device dev;
+            thread_local std::mt19937 rng(dev());
             thread_local std::uniform_int_distribution<std::mt19937::result_type> uniform_position(0, m_memory.size()-1);
             //--------------------------
-            return m_memory.at(uniform_position(m_rng));
+            return m_memory.at(uniform_position(rng));
             //--------------------------
         }// end std::tuple<Args...> sample_data(void)
         //--------------------------------------------------------------
@@ -108,7 +127,10 @@ class ExperienceReplay{
             std::vector<std::tuple<Args...>> _data;
             _data.reserve(samples);
             //--------------------------
-            std::sample(m_memory.begin(), m_memory.end(), std::back_inserter(_data), samples, m_rng);
+            thread_local std::random_device dev;
+            thread_local std::mt19937 rng(dev());
+            //--------------------------
+            std::sample(m_memory.begin(), m_memory.end(), std::back_inserter(_data), samples, rng);
             //--------------------------
             return _data;
             //--------------------------
@@ -123,9 +145,6 @@ class ExperienceReplay{
     private:
         //--------------------------------------------------------------
         size_t m_capacity;
-        //--------------------------
-        std::random_device m_rd;
-        std::mt19937 m_rng;
         //--------------------------
         std::deque<std::tuple<Args...>> m_memory;
         //--------------------------

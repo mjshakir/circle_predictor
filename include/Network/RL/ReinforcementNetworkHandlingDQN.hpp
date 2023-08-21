@@ -18,7 +18,6 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                             Network&& target_model,
                                             const size_t& update_frequency,
                                             std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
-                                                                                                m_model(this->get_model()),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
@@ -32,7 +31,6 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                             const size_t& update_frequency,
                                             const bool& clamp,
                                             std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
-                                                                                                m_model(this->get_model()),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
@@ -47,7 +45,6 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                             const bool& clamp,
                                             const bool& double_mode,
                                             std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
-                                                                                                m_model(this->get_model()),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
@@ -94,13 +91,13 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                                         const bool& done, 
                                         const double& gamma) override {
             //--------------------------
-            m_model.train(true);
+            this->get_model().train(true);
             //--------------------------
             auto _target_value = dqn_agent(next_input, rewards, done, gamma);
             //--------------------------
             optimizer.zero_grad();
             //--------------------------
-            auto _predicted_value = m_model.forward(input);
+            auto _predicted_value = this->get_model().forward(input);
             //--------------------------
             // std::cout   << "_target_value: " << _target_value.sizes()
             //             << " _predicted_value: " << _predicted_value.sizes() << std::endl;
@@ -117,11 +114,11 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             //-------------------------- 
             if(m_clamp){
                 //--------------------------
-                for(auto& param : m_model.parameters()){
+                for(auto& param : this->get_model().parameters()){
                     //--------------------------
                     param.grad().data().clamp(-1,1);
                     //--------------------------
-                }// end for(auto& param : m_model.parameters())
+                }// end for(auto& param : this->get_model().parameters())
                 //--------------------------
             }// end if(m_clamp)
             //--------------------------
@@ -131,7 +128,13 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                 //--------------------------
                 torch::NoGradGuard no_grad;
                 //--------------------------
-                m_target_model.parameters() = m_model.parameters();
+                // m_target_model.parameters() = this->get_model().parameters();
+                //--------------------------
+                for (size_t i = 0; i < this->get_model().parameters().size(); ++i) {
+                    //--------------------------
+                    m_target_model.parameters().at(i).data().copy_(this->get_model().parameters().at(i).data());
+                    //--------------------------
+                }// end for (size_t i = 0; i < this->get_model().parameters().size(); ++i)
                 //--------------------------
             }// end if(m_update_target_counter % update_frequency == 0)
             //--------------------------
@@ -145,7 +148,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------------------------------------------
     private:
         //--------------------------
-        Network &m_model, m_target_model; 
+        Network m_target_model; 
         //--------------------------
         size_t m_update_frequency, m_update_target_counter;
         //--------------------------
@@ -160,7 +163,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             //--------------------------
             if(m_double_mode){
                 //--------------------------
-                auto _state_indexes = m_model.forward(next_input).detach();
+                auto _state_indexes = this->get_model().forward(next_input).detach();
                 //--------------------------
                 if (_state_indexes.dim() > 2){
                     //--------------------------

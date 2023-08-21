@@ -5,6 +5,11 @@
 //--------------------------------------------------------------
 #include <torch/torch.h>
 //--------------------------------------------------------------
+// Boost library
+//--------------------------------------------------------------
+#include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
+//--------------------------------------------------------------
 namespace Utils{
     //--------------------------------------------------------------
     class CircleEquation{
@@ -43,13 +48,21 @@ namespace Utils{
             //--------------------------
             static void Symmetric(double& reward, const torch::Tensor& points);
             //--------------------------------------------------------------
-            static torch::Tensor TriangleArea(const torch::Tensor& points);
+            static torch::Tensor TriangleArea(const torch::Tensor& points, const long double& tolerance);
             //--------------------------
-            static void TriangleArea(double& reward, const torch::Tensor& points);
+            static void TriangleArea(double& reward, const torch::Tensor& points, const long double& tolerance);
             //--------------------------------------------------------------
             static torch::Tensor CircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
             //--------------------------
-            static void CircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
+            static void CircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);            
+            //--------------------------------------------------------------
+            static torch::Tensor PointLimiter(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
+            //--------------------------
+            static void PointLimiter(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
+            //--------------------------------------------------------------
+            static bool Distinct(const torch::Tensor& point1, const torch::Tensor& point2);
+            //--------------------------
+            static void Distinct(double& reward, const torch::Tensor& point1, const torch::Tensor& point2);
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
@@ -101,13 +114,29 @@ namespace Utils{
             //--------------------------
             static void arePointsSymmetric(double& reward, const torch::Tensor& points);
             //--------------------------------------------------------------
-            static torch::Tensor calculateTriangleArea(const torch::Tensor& points);
+            static torch::Tensor calculateTriangleArea(const torch::Tensor& points, const long double& tolerance);
             //--------------------------
-            static void calculateTriangleArea(double& reward, const torch::Tensor& points);
+            static void calculateTriangleArea(double& reward, const torch::Tensor& points, const long double& tolerance);
             //--------------------------------------------------------------
             static torch::Tensor calculateCircleSmoothness(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
             //--------------------------
             static void calculateCircleSmoothness(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
+            //--------------------------
+            static torch::Tensor getMaxPointLimiter(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
+            //--------------------------
+            static void getMaxPointLimiter(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
+            //--------------------------
+            static bool PointsDistinct(const torch::Tensor& point1, const torch::Tensor& point2);
+            //--------------------------
+            static void PointsDistinct(double& reward, const torch::Tensor& point1, const torch::Tensor& point2);
+            //--------------------------------------------------------------
+        private:
+            //--------------------------------------------------------------
+            typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> m_point;
+            typedef boost::geometry::model::box<m_point> m_box;
+            //--------------------------
+            static bool isSymmetricCounterpartInSet(const m_point& reflected, 
+                                                    const boost::geometry::index::rtree<m_point, boost::geometry::index::quadratic<16>>& rtree);
         //--------------------------------------------------------------
     };// end class CircleEquation
     //--------------------------------------------------------------

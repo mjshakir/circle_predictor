@@ -19,17 +19,37 @@ class ExperienceReplayBuffer {
         //--------------------------------------------------------------
         ExperienceReplayBuffer() = delete;
         //--------------------------
-        explicit ExperienceReplayBuffer(const size_t& capacity = 500) : m_capacity(capacity),  m_rng{m_rd()} {
+        virtual ~ExperienceReplayBuffer() = default; // Virtual destructor
+        //--------------------------
+        ExperienceReplayBuffer(const size_t& capacity = 500) : m_capacity(capacity) {
             //--------------------------
             m_memory.set_capacity(capacity);
             //--------------------------
         }//end explicit ExperienceReplayBuffer(const size_t& capacity = 500)
         //--------------------------
-        ExperienceReplayBuffer(const ExperienceReplayBuffer& other)             = default;
-        ExperienceReplayBuffer& operator=(const ExperienceReplayBuffer& other)  = default;
+        ExperienceReplayBuffer(const ExperienceReplayBuffer& other) : m_capacity(other.m_capacity), m_memory(other.m_memory){
+            //--------------------------
+        }// end ExperienceReplay(const ExperienceReplay& other)
         //--------------------------
-        ExperienceReplayBuffer(ExperienceReplayBuffer&&)             = delete;
-        ExperienceReplayBuffer& operator=(ExperienceReplayBuffer&&)  = delete;
+        ExperienceReplayBuffer& operator=(const ExperienceReplayBuffer& other) {
+            //--------------------------
+            // Check for self-assignment
+            if (this == &other) {
+                //--------------------------
+                return *this;
+                //--------------------------
+            }// end if (this == &other)
+            //--------------------------
+            // Perform a deep copy of the data
+            m_capacity  = other.m_capacity;
+            m_memory    = other.m_memory;
+            //--------------------------
+            return *this;
+            //--------------------------
+        }// end ExperienceReplay& operator=(const ExperienceReplay& other)
+        //--------------------------
+        ExperienceReplayBuffer(ExperienceReplayBuffer&&)                    = default;
+        ExperienceReplayBuffer& operator=(ExperienceReplayBuffer&&)         = default;
         //--------------------------
         void push(const Args&... args){
             //--------------------------
@@ -63,8 +83,6 @@ class ExperienceReplayBuffer {
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
-        virtual ~ExperienceReplayBuffer() = default; // Virtual destructor
-        //--------------------------------------------------------------
         void push_data(const Args&... args){
             //--------------------------
             std::lock_guard<std::mutex> data_lock(m_mutex);
@@ -75,21 +93,23 @@ class ExperienceReplayBuffer {
         //--------------------------------------------------------------
         std::tuple<Args...> sample_data(void){
             //--------------------------
+            thread_local std::random_device dev;
+            thread_local std::mt19937 rng(dev());
             thread_local std::uniform_int_distribution<std::mt19937::result_type> uniform_position(0, m_memory.size()-1);
             //--------------------------
-            return m_memory.at(uniform_position(m_rng));
+            return m_memory.at(uniform_position(rng));
             //--------------------------
         }// end std::tuple<Args...> sample_data(void)
         //--------------------------------------------------------------
         std::tuple<Args...> sample_data(const size_t& position){
             //--------------------------
-            if (key > m_memory.size()){
+            if (position > m_memory.size()){
                 //--------------------------
                 throw std::out_of_range("Position: [" + std::to_string(position) + "] is larger then the memory size:[" + std::to_string(m_memory.size()-1) + "]");
                 //--------------------------
             }// end if (key > m_memory.size())
             //--------------------------
-            return m_memory.at(key);
+            return m_memory.at(position);
             //--------------------------
         }// end std::tuple<Args...> sample_data(const size_t& key)
         //--------------------------------------------------------------
@@ -106,15 +126,10 @@ class ExperienceReplayBuffer {
             std::vector<std::tuple<Args...>> _data;
             _data.reserve(samples);
             //--------------------------
-            std::vector<size_t> sampled_indices(samples);
+            thread_local std::random_device dev;
+            thread_local std::mt19937 rng(dev());
             //--------------------------
-            std::sample(m_memory.begin(), m_memory.end(), sampled_indices.begin(), samples, m_rng);
-            //--------------------------
-            for(const auto& idx : sampled_indices) {
-                //--------------------------
-                _data.push_back(m_memory.at(idx));
-                //--------------------------
-            }// end for(const auto& idx : sampled_indices)
+            std::sample(m_memory.begin(), m_memory.end(), std::back_inserter(_data), samples, rng);
             //--------------------------
             return _data;
             //--------------------------
@@ -129,9 +144,6 @@ class ExperienceReplayBuffer {
     private:
         //--------------------------------------------------------------
         size_t m_capacity;
-        //--------------------------
-        std::random_device m_rd;
-        std::mt19937 m_rng;
         //--------------------------
         boost::circular_buffer<std::tuple<Args...>> m_memory;
         //--------------------------

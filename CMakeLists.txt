@@ -7,6 +7,8 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
 endif()
 #------------------------------------------------------------------------------------------
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+#------------------------------------------------------------------------------------------
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
 MESSAGE(STATUS "FORCE_COLORED_OUTPUT: " ${FORCE_COLORED_OUTPUT})
 #---------------

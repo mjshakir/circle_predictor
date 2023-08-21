@@ -4,9 +4,9 @@
 //--------------------------------------------------------------
 #include <iostream>
 //-------------------
-#include <unordered_map>
+#include <deque>
+#include <vector>
 #include <tuple>
-#include <climits>
 #include <random>
 #include <mutex>
 //--------------------------------------------------------------
@@ -17,39 +17,19 @@ class ExperienceReplay{
         //--------------------------------------------------------------
         ExperienceReplay(void) = delete;
         //--------------------------
-        ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity), m_position(0){
+        ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity), m_rng{m_rd()}{
             //--------------------------
-            m_memory.reserve(capacity);
-            //--------------------------
-        }// end ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity), m_position(0)
+        }// end ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity)
         //--------------------------
-        ExperienceReplay(const ExperienceReplay& other) : m_capacity(other.m_capacity),
-                                                          m_position(other.m_position){
-            //--------------------------
-            m_memory.reserve(m_capacity);
-            //--------------------------
-        }// end ExperienceReplay(const ExperienceReplay& other)
+        ExperienceReplay(const ExperienceReplay& other)             = default;
+        ExperienceReplay& operator=(const ExperienceReplay& other)  = default;
         //--------------------------
-        ExperienceReplay& operator=(const ExperienceReplay& other) {
-            //--------------------------
-            // Check for self-assignment
-            if (this == &other) {
-                return *this;
-            }// end if (this == &other)
-            //--------------------------
-            // Perform a deep copy of the data
-            m_capacity  = other.m_capacity;
-            m_position  = other.m_position;
-            //--------------------------
-            m_memory.reserve(m_capacity);
-            //--------------------------
-            return *this;
-            //--------------------------
-        }// end ExperienceReplay& operator=(const ExperienceReplay& other)
+        ExperienceReplay(ExperienceReplay&&)             = delete;
+        ExperienceReplay& operator=(ExperienceReplay&&)  = delete;
         //--------------------------
         void push(const Args&... args){
             //--------------------------
-            return push_data(args...);
+            push_data(args...);
             //--------------------------
         }// end void void push(const Args&... args)
         //--------------------------------------------------------------
@@ -59,59 +39,82 @@ class ExperienceReplay{
             //--------------------------
         }// end std::tuple<Args...> sample(void)
         //--------------------------
-        std::tuple<Args...> sample(const size_t& key){
+        std::tuple<Args...> sample(const size_t& position){
             //--------------------------
-            return sample_data(key);
+            return sample_data(position);
             //--------------------------
-        }// end std::tuple<Args...> sample(const size_t& key)
+        }// end std::tuple<Args...> sample(const size_t& position)
+        //--------------------------
+        std::vector<std::tuple<Args...>> samples(const size_t& samples) {
+            //--------------------------
+            return samples_data(samples);
+            //--------------------------
+        }// end  std::tuple<Args...> sample(const size_t& key)
         //--------------------------
         constexpr size_t size(void) const{
             //--------------------------
-            return map_size();
+            return fifo_size();
             //--------------------------
         }// end size_t size(void) const
         //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
+        virtual ~ExperienceReplay() = default; // Virtual destructor
+        //--------------------------------------------------------------
         void push_data(const Args&... args){
             //--------------------------
             std::lock_guard<std::mutex> date_lock(m_mutex);
             //--------------------------
-            m_memory.try_emplace(m_position, args...);
+            m_memory.emplace_back(args...);
             //--------------------------
-            m_position = ++m_position % m_capacity; //m_position += 1 % m_capacity;
-            //--------------------------
-            if(m_position == LONG_MAX){
+            if(m_memory.size() >= m_capacity) {
                 //--------------------------
-                m_position = 0;
+                m_memory.pop_front(); // Remove the oldest experience when capacity is reached
                 //--------------------------
-            }// end if(m_position != LONG_MAX)
+            }//end if(m_memory.size() >= m_capacity)
             //--------------------------
         }// end void push_data(const Args&... args)
         //--------------------------------------------------------------
         std::tuple<Args...> sample_data(void){
             //--------------------------
-            std::random_device dev;
-            std::mt19937 rng(dev());
-            std::uniform_int_distribution<std::mt19937::result_type> uniform_position(0, m_memory.size()-1);
+            thread_local std::uniform_int_distribution<std::mt19937::result_type> uniform_position(0, m_memory.size()-1);
             //--------------------------
-            return std::next(m_memory.begin(), uniform_position(rng))->second;
+            return m_memory.at(uniform_position(m_rng));
             //--------------------------
         }// end std::tuple<Args...> sample_data(void)
         //--------------------------------------------------------------
-        std::tuple<Args...> sample_data(const size_t& key){
+        std::tuple<Args...> sample_data(const size_t& position){
             //--------------------------
-            if (key > m_memory.size()){
+            if (position > m_memory.size()){
                 //--------------------------
-                throw std::out_of_range("Key: [" + std::to_string(key) + "] is larger then the memory size:[" + std::to_string(m_memory.size()-1) + "]");
+                throw std::out_of_range("Position: [" + std::to_string(position) + "] is larger then the memory size:[" + std::to_string(m_memory.size()-1) + "]");
                 //--------------------------
             }// end if (key > m_memory.size())
             //--------------------------
-            return m_memory.at(key);
+            return m_memory.at(position);
             //--------------------------
         }// end std::tuple<Args...> sample_data(const size_t& key)
         //--------------------------------------------------------------
-        constexpr size_t map_size(void) const {
+        std::vector<std::tuple<Args...>> samples_data(const size_t& samples){
+            //--------------------------
+            // Check if the requested samples exceed the current memory size
+            //--------------------------
+            if(samples > m_memory.size()) {
+                //--------------------------
+                throw std::out_of_range("Samples: [" + std::to_string(samples) + "] is larger then the memory size:[" + std::to_string(m_memory.size()-1) + "]");
+                //--------------------------
+            }// end  if(samples > m_memory.size())
+            //--------------------------
+            std::vector<std::tuple<Args...>> _data;
+            _data.reserve(samples);
+            //--------------------------
+            std::sample(m_memory.begin(), m_memory.end(), std::back_inserter(_data), samples, m_rng);
+            //--------------------------
+            return _data;
+            //--------------------------
+        }// end std::tuple<Args...> samples_data(const size_t& key)
+        //--------------------------------------------------------------
+        constexpr size_t fifo_size(void) const {
             //--------------------------
             return m_memory.size();
             //--------------------------
@@ -119,10 +122,14 @@ class ExperienceReplay{
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
-        size_t m_capacity, m_position;
+        size_t m_capacity;
         //--------------------------
-        std::unordered_map<size_t, std::tuple<Args...>> m_memory;
+        std::random_device m_rd;
+        std::mt19937 m_rng;
+        //--------------------------
+        std::deque<std::tuple<Args...>> m_memory;
         //--------------------------
         std::mutex m_mutex;
     //--------------------------------------------------------------
 }; // end class ExperienceReplay
+//--------------------------------------------------------------

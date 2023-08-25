@@ -863,19 +863,19 @@ int main(int argc, char const *argv[]){
         torch::Tensor R_distance_penalty = Utils::CircleEquation::distance_penalty(_input, _output);
         
         // Add penalties for points too close to each other
-        torch::Tensor R_point_separation_penalty = Utils::CircleEquation::separation_penalty(_output, 1E-1);
+        torch::Tensor R_point_separation_penalty = Utils::CircleEquation::separation_penalty(_output, 1E-2);
 
         // Final Reward
-        constexpr double w1 = 1.0, w2 = 1.0, w3 = 1.0, w_penalty = 0.1; // Weights can be adjusted
+        constexpr double w1 = 1., w2 = 1., w3 = 1., w_penalty = 1.; // Weights can be adjusted
         torch::Tensor total_rewards = w1 * R_distance + w2 * R_diversity + w3 * R_consistency - w_penalty * (R_distance_penalty + R_point_separation_penalty);
 
-        std::cout   << "R_distance: " << R_distance.mean().item().toDouble() 
-                    << " R_diversity: " << R_diversity.mean().item().toDouble() 
-                    << " R_consistency: " << R_consistency.mean().item().toDouble()
-                    << " R_distance_penalty: " << R_distance_penalty.mean().item().toDouble()
-                    << " R_point_separation_penalty: " << R_point_separation_penalty.mean().item().toDouble() << std::endl;
+        // std::cout   << "R_distance: " << R_distance.mean().item().toDouble() 
+        //             << " R_diversity: " << R_diversity.mean().item().toDouble() 
+        //             << " R_consistency: " << R_consistency.mean().item().toDouble()
+        //             << " R_distance_penalty: " << R_distance_penalty.mean().item().toDouble()
+        //             << " R_point_separation_penalty: " << R_point_separation_penalty.mean().item().toDouble() << std::endl;
         
-        std::cout   << "reward_results: " << total_rewards.mean().item().toDouble() << std::endl;
+        // std::cout   << "reward_results: " << total_rewards.mean().item().toDouble() << std::endl;
 
         return Normalize::normalization(total_rewards);
     };

@@ -19,11 +19,11 @@ class ExperienceReplay{
         //--------------------------
         virtual ~ExperienceReplay() = default; // Virtual destructor
         //--------------------------
-        ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity){
+        ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity), m_rng{m_dev()}{
             //--------------------------
         }// end ExperienceReplay(const size_t& capacity = 500) : m_capacity(capacity)
         //--------------------------
-        ExperienceReplay(const ExperienceReplay& other) : m_capacity(other.m_capacity){
+        ExperienceReplay(const ExperienceReplay& other) : m_capacity(other.m_capacity), m_rng{m_dev()}{
             //--------------------------
         }// end ExperienceReplay(const ExperienceReplay& other)
         //--------------------------
@@ -38,6 +38,8 @@ class ExperienceReplay{
             //--------------------------
             // Perform a deep copy of the data
             m_capacity  = other.m_capacity;
+            //--------------------------
+            m_rng = std::mt19937(m_dev());
             //--------------------------
             return *this;
             //--------------------------
@@ -100,11 +102,9 @@ class ExperienceReplay{
         //--------------------------------------------------------------
         std::tuple<Args...> sample_data(void){
             //--------------------------
-            thread_local std::random_device dev;
-            thread_local std::mt19937 rng(dev());
             thread_local std::uniform_int_distribution<std::mt19937::result_type> uniform_position(0, m_memory.size()-1);
             //--------------------------
-            return m_memory.at(uniform_position(rng));
+            return m_memory.at(uniform_position(m_rng));
             //--------------------------
         }// end std::tuple<Args...> sample_data(void)
         //--------------------------------------------------------------
@@ -125,10 +125,7 @@ class ExperienceReplay{
             std::vector<std::tuple<Args...>> _data;
             _data.reserve(m_memory.size());
             //--------------------------
-            thread_local std::random_device dev;
-            thread_local std::mt19937 rng(dev());
-            //--------------------------
-            std::sample(m_memory.begin(), m_memory.end(), std::back_inserter(_data), m_memory.size(). rng);
+            std::sample(m_memory.begin(), m_memory.end(), std::back_inserter(_data), m_memory.size(). m_rng);
             //--------------------------
             return _data;
             //--------------------------
@@ -147,10 +144,7 @@ class ExperienceReplay{
             std::vector<std::tuple<Args...>> _data;
             _data.reserve(samples);
             //--------------------------
-            thread_local std::random_device dev;
-            thread_local std::mt19937 rng(dev());
-            //--------------------------
-            std::sample(m_memory.begin(), m_memory.end(), std::back_inserter(_data), samples, rng);
+            std::sample(m_memory.begin(), m_memory.end(), std::back_inserter(_data), samples, m_rng);
             //--------------------------
             return _data;
             //--------------------------
@@ -164,7 +158,10 @@ class ExperienceReplay{
         //--------------------------------------------------------------
     private:
         //--------------------------------------------------------------
-        size_t m_capacity;
+        const size_t m_capacity;
+        //--------------------------
+        std::random_device m_dev;
+        std::mt19937 m_rng;
         //--------------------------
         std::deque<std::tuple<Args...>> m_memory;
         //--------------------------

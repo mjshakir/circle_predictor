@@ -9,7 +9,7 @@
 //--------------------------------------------------------------
 #include <random>
 //--------------------------------------------------------------
-template<typename Network, typename... Args>
+template<typename Network, typename SCHEDULER, typename... Args>
 class ReinforcementNetworkHandling{
     //--------------------------------------------------------------
     public:
@@ -18,14 +18,18 @@ class ReinforcementNetworkHandling{
         //--------------------------
         virtual ~ReinforcementNetworkHandling(void) = default;
         //--------------------------
-        ReinforcementNetworkHandling(   Network& model, 
-                                        std::function<torch::Tensor(Args&...)> actions):    m_model(model), 
-                                                                                            m_random_action(std::move(actions)){
+        ReinforcementNetworkHandling(   Network& model,
+                                        SCHEDULER& scheduler,
+                                        const std::function<torch::Tensor(Args&...)>& actions) :    m_model(model), 
+                                                                                                    m_scheduler(scheduler),
+                                                                                                    m_random_action(actions){
             //--------------------------
         }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
         //--------------------------
-        ReinforcementNetworkHandling(   Network&& model, 
-                                        std::function<torch::Tensor(Args&...)> actions) :   m_model(std::move(model)), 
+        ReinforcementNetworkHandling(   Network&& model,
+                                        SCHEDULER&& scheduler,
+                                        std::function<torch::Tensor(Args&...)>&& actions) : m_model(std::move(model)),
+                                                                                            m_scheduler(std::move(scheduler)),
                                                                                             m_random_action(std::move(actions)){
             //--------------------------
         }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
@@ -38,26 +42,26 @@ class ReinforcementNetworkHandling{
         //--------------------------
         // virtual void agent( const torch::Tensor& input, 
         //                     const torch::Tensor& next_input, 
-        //                     torch::optim::Optimizer& optimizer, 
+        //                     torch::optim::Optimizer& scheduler, 
         //                     const torch::Tensor& rewards, 
         //                     const bool& done, 
         //                     const double& gamma = 0.5,
         //                     const size_t& update_frequency = 100) = 0;
         //--------------------------
         virtual void agent( const torch::Tensor& input, 
-                    const torch::Tensor& next_input, 
-                    torch::optim::Optimizer& optimizer, 
-                    const torch::Tensor& rewards, 
-                    const bool& done, 
-                    const double& gamma = 0.5){
+                            const torch::Tensor& next_input,
+                            torch::optim::Optimizer& optimizer,
+                            const torch::Tensor& rewards, 
+                            const bool& done, 
+                            const double& gamma = 0.5){
             //--------------------------
             agent_optimizer(input, next_input, optimizer, rewards, done, gamma);
             //--------------------------
         }// end void agent
         //--------------------------
         void agent( const torch::Tensor& input, 
-                    const torch::Tensor& next_input, 
-                    torch::optim::Optimizer& optimizer, 
+                    const torch::Tensor& next_input,
+                    torch::optim::Optimizer& optimizer,
                     const torch::Tensor& rewards, 
                     const torch::Tensor& done, 
                     const double& gamma = 0.5){
@@ -99,15 +103,15 @@ class ReinforcementNetworkHandling{
         //--------------------------------------------------------------
         // virtual void agent_optimizer(   const torch::Tensor& input, 
         //                                 const torch::Tensor& next_input, 
-        //                                 torch::optim::Optimizer& optimizer, 
+        //                                 torch::optim::Optimizer& scheduler, 
         //                                 const torch::Tensor& rewards, 
         //                                 const bool& done, 
         //                                 const double& gamma,
         //                                 const size_t& update_frequency) = 0;
         //--------------------------------------------------------------
         virtual void agent_optimizer(   const torch::Tensor& input, 
-                                        const torch::Tensor& next_input, 
-                                        torch::optim::Optimizer& optimizer, 
+                                        const torch::Tensor& next_input,
+                                        torch::optim::Optimizer& optimizer,
                                         const torch::Tensor& rewards, 
                                         const bool& done, 
                                         const double& gamma){
@@ -129,13 +133,13 @@ class ReinforcementNetworkHandling{
             }//end if( torch::isnan(_predicted_value) || torch::isnan(_target_value))
             //--------------------------
             loss.backward({},c10::optional<bool>(true), false);
-            optimizer.step();
+            m_scheduler.step();
             //-------------------------- 
         }// end void agent(const torch::Tensor& input, const torch::Tensor& next_input, const torch::Tensor& action, const T& rewards, const bool& done)
         //--------------------------------------------------------------
         void agent_optimizer(   const torch::Tensor& input, 
-                                const torch::Tensor& next_input, 
-                                torch::optim::Optimizer& optimizer, 
+                                const torch::Tensor& next_input,
+                                torch::optim::Optimizer& optimizer,
                                 const torch::Tensor& rewards, 
                                 const torch::Tensor& done, 
                                 const double& gamma){
@@ -157,7 +161,7 @@ class ReinforcementNetworkHandling{
             }//end if( torch::isnan(_predicted_value) || torch::isnan(_target_value))
             //--------------------------
             loss.backward({},c10::optional<bool>(true), false);
-            optimizer.step();
+            m_scheduler.step();
             //-------------------------- 
         }// end void agent(const torch::Tensor& input, const torch::Tensor& next_input, const torch::Tensor& action, const T& rewards, const bool& done)
         //--------------------------------------------------------------
@@ -176,9 +180,17 @@ class ReinforcementNetworkHandling{
             //--------------------------
         }// end Network& get_model(void)
         //--------------------------------------------------------------
+        SCHEDULER& get_scheduler(void){
+            //--------------------------
+            return m_scheduler;
+            //--------------------------
+        }// end SCHEDULER& get_scheduler(void)
+        //--------------------------------------------------------------
     private:
         //--------------------------
         Network m_model; 
+        //--------------------------
+        SCHEDULER m_scheduler;
         //--------------------------
         std::function<torch::Tensor(Args&...)> m_random_action;
     //--------------------------------------------------------------

@@ -5,8 +5,8 @@
 //--------------------------------------------------------------
 #include "Network/RL/ReinforcementNetworkHandling.hpp"
 //--------------------------------------------------------------
-template<typename Network, typename... Args>
-class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Network, Args...>{
+template<typename Network, typename SCHEDULER, typename... Args>
+class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Network, SCHEDULER, Args...>{
     //--------------------------------------------------------------
     public:
         //--------------------------------------------------------------
@@ -16,8 +16,9 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------------------------------------------
         ReinforcementNetworkHandlingDQN(    Network&& model,
                                             Network&& target_model,
+                                            SCHEDULER&& scheduler,
                                             const size_t& update_frequency,
-                                            std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
+                                            std::function<torch::Tensor(Args&...)>&& actions) : ReinforcementNetworkHandling<Network, SCHEDULER, Args...>(std::move(model), std::move(scheduler), std::move(actions)),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
@@ -28,9 +29,10 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------------------------------------------
         ReinforcementNetworkHandlingDQN(    Network&& model,
                                             Network&& target_model,
+                                            SCHEDULER&& scheduler,
                                             const size_t& update_frequency,
                                             const bool& clamp,
-                                            std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
+                                            std::function<torch::Tensor(Args&...)>&& actions) : ReinforcementNetworkHandling<Network, SCHEDULER, Args...>(std::move(model), std::move(scheduler), std::move(actions)),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
@@ -41,10 +43,11 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------------------------------------------
         ReinforcementNetworkHandlingDQN(    Network&& model,
                                             Network&& target_model,
+                                            SCHEDULER&& scheduler,
                                             const size_t& update_frequency,
                                             const bool& clamp,
                                             const bool& double_mode,
-                                            std::function<torch::Tensor(Args&...)> actions) :   ReinforcementNetworkHandling<Network, Args...>(std::move(model), std::move(actions)),
+                                            std::function<torch::Tensor(Args&...)>&& actions) : ReinforcementNetworkHandling<Network, SCHEDULER, Args...>(std::move(model), std::move(scheduler), std::move(actions)),
                                                                                                 m_target_model(std::move(target_model)),
                                                                                                 m_update_frequency(update_frequency),
                                                                                                 m_update_target_counter(0),
@@ -53,12 +56,12 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
             //--------------------------
         }// end ReinforcementNetworkHandling(Network& model, torch::Device& device)
         //--------------------------------------------------------------
-        virtual void agent( const torch::Tensor& input, 
-                            const torch::Tensor& next_input, 
-                            torch::optim::Optimizer& optimizer, 
-                            const torch::Tensor& rewards, 
-                            const bool& done, 
-                            const double& gamma = 0.5) override {
+        virtual void agent( const torch::Tensor& input,
+                            const torch::Tensor& next_input,
+                            torch::optim::Optimizer& optimizer,
+                            const torch::Tensor& rewards,
+                            const bool& done,
+                            const double& gamma = 0.5) {
             //--------------------------
             agent_optimizer(input, next_input, optimizer, rewards, done, gamma);
             //--------------------------
@@ -84,12 +87,12 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
     //--------------------------------------------------------------
     protected:
         //--------------------------------------------------------------
-        virtual void agent_optimizer(   const torch::Tensor& input, 
-                                        const torch::Tensor& next_input, 
-                                        torch::optim::Optimizer& optimizer, 
-                                        const torch::Tensor& rewards, 
-                                        const bool& done, 
-                                        const double& gamma) override {
+        virtual void agent_optimizer(   const torch::Tensor& input,
+                                        const torch::Tensor& next_input,
+                                        torch::optim::Optimizer& optimizer,
+                                        const torch::Tensor& rewards,
+                                        const bool& done,
+                                        const double& gamma) {
             //--------------------------
             this->get_model().train(true);
             //--------------------------
@@ -122,7 +125,7 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
                 //--------------------------
             }// end if(m_clamp)
             //--------------------------
-            optimizer.step();
+            this->get_scheduler().step();
             //-------------------------- 
             if(++m_update_target_counter % m_update_frequency == 0){
                 //--------------------------
@@ -154,10 +157,10 @@ class ReinforcementNetworkHandlingDQN : public ReinforcementNetworkHandling<Netw
         //--------------------------
         bool m_clamp, m_double_mode;
         //--------------------------
-        torch::Tensor dqn_agent(  const torch::Tensor& next_input, 
-                                            const torch::Tensor& rewards, 
-                                            const bool& done,
-                                            const double& gamma){
+        torch::Tensor dqn_agent(const torch::Tensor& next_input, 
+                                const torch::Tensor& rewards, 
+                                const bool& done,
+                                const double& gamma){
             //--------------------------
             torch::Tensor _state_value;
             //--------------------------

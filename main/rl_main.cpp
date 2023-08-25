@@ -781,53 +781,103 @@ int main(int argc, char const *argv[]){
     //     return Normalize::normalization(torch::tensor(reward));
     // };  
     //--------------------------------------------------------------
-    auto _circle_reward = [&_normalize](const torch::Tensor& input, const torch::Tensor& output){
-        //--------------------------
+    // auto _circle_reward = [&_normalize](const torch::Tensor& input, const torch::Tensor& output){
+    //     //--------------------------
+    //     const torch::Tensor local_min = _normalize.min(), local_max = _normalize.max();
+    //     //--------------------------
+    //     torch::Tensor _input  =  RL::RLNormalize::unnormalization(input, local_min, local_max);
+    //     torch::Tensor _output =  RL::RLNormalize::unnormalization(output, local_min, local_max);        
+    //     //--------------------------
+    //     std::vector<double> reward(output.size(0), 0.);
+    //     //--------------------------
+    //     auto input_x = _input.slice(1, 0, 2);
+    //     auto input_y = _input.slice(1, 2, 3).squeeze();
+    //     //--------------------------
+    //     std::for_each(std::execution::par, reward.begin(), reward.end(), [&](double& r) {
+    //         //--------------------------
+    //         size_t i = &r - &reward[0];  // Compute the index
+    //         //--------------------------
+    //         Utils::CircleEquation::Aligned(r, _output[i], 1E-5);
+    //         Utils::CircleEquation::CloseToCircumference(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1), 1E-4);
+    //         Utils::CircleEquation::Equidistant(r, _output[i], 1E-5);
+    //         Utils::CircleEquation::AngleRatiosConsistent(r, _output[i], 1E-5);
+    //         Utils::CircleEquation::Symmetric(r, _output[i]);
+    //         Utils::CircleEquation::TriangleArea(r, _output[i], 1E-10L);
+    //         Utils::CircleEquation::CircleSmoothness(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1));
+    //         Utils::CircleEquation::PointLimiter(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1));
+    //         //--------------------------
+    //     });      
+    //     //--------------------------
+    //     auto _reward_results = torch::tensor(reward);
+    //     //--------------------------
+    //     std::cout << "reward_results: " << _reward_results; 
+    //     //--------------------------
+    //     // std::cout   << "reward_results: " << _reward_results.mean().item().toDouble() 
+    //     //             << " min: " << _reward_results.min().item().toDouble() 
+    //     //             << " max: " << _reward_results.max().item().toDouble()<< std::endl; 
+    //     //--------------------------
+    //     // std::cout   << "reward_results: " << _reward_results.mean().item().toDouble() << std::endl; 
+    //     //--------------------------
+    //     return _reward_results;
+    //     //--------------------------
+    //     // auto results = Normalize::normalization(_reward_results);
+    //     // std::cout << "results: " << results << std::endl; 
+    //     // return results;
+    //     //--------------------------
+    //     // return Normalize::normalization(torch::tensor(reward));
+    //     //--------------------------
+    //     // return torch::tensor(reward);
+    //     //--------------------------
+    // };
+    //--------------------------------------------------------------
+    // auto _circle_reward = [&_normalize](const torch::Tensor& input, const torch::Tensor& output){
+    //     const torch::Tensor local_min = _normalize.min(), local_max = _normalize.max();
+
+    //     torch::Tensor _input = RL::RLNormalize::unnormalization(input, local_min, local_max), _output = RL::RLNormalize::unnormalization(output, local_min, local_max);        
+
+    //     // Get individual rewards
+    //     torch::Tensor R_distance    = Utils::CircleEquation::distance_reward(_input, _output);
+    //     torch::Tensor R_diversity   = Utils::CircleEquation::diversity_reward(_output, _input);
+    //     torch::Tensor R_consistency = Utils::CircleEquation::consistency_reward(_output);
+
+    //     // Final Reward
+    //     constexpr double w1 = 1.0, w2 = 1.0, w3 = 1.0; // Weights can be adjusted
+    //     // torch::Tensor total_rewards = w1 * R_distance + w2 * R_diversity + w3 * R_consistency;
+
+    //     // std::cout   << "reward_results: " << Normalize::normalization(total_rewards).mean().item().toDouble() << std::endl;
+
+    //     return Normalize::normalization(w1 * R_distance + w2 * R_diversity + w3 * R_consistency);
+    // };
+    //--------------------------------------------------------------
+    auto _circle_reward = [&_normalize](const torch::Tensor& input, const torch::Tensor& output) {
         const torch::Tensor local_min = _normalize.min(), local_max = _normalize.max();
-        //--------------------------
-        torch::Tensor _input  =  RL::RLNormalize::unnormalization(input, local_min, local_max);
-        torch::Tensor _output =  RL::RLNormalize::unnormalization(output, local_min, local_max);        
-        //--------------------------
-        std::vector<double> reward(output.size(0), 0.);
-        //--------------------------
-        auto input_x = _input.slice(1, 0, 2);
-        auto input_y = _input.slice(1, 2, 3).squeeze();
-        //--------------------------
-        std::for_each(std::execution::par, reward.begin(), reward.end(), [&](double& r) {
-            //--------------------------
-            size_t i = &r - &reward[0];  // Compute the index
-            //--------------------------
-            Utils::CircleEquation::Aligned(r, _output[i], 1E-5);
-            Utils::CircleEquation::CloseToCircumference(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1), 1E-4);
-            Utils::CircleEquation::Equidistant(r, _output[i], 1E-5);
-            Utils::CircleEquation::AngleRatiosConsistent(r, _output[i], 1E-5);
-            Utils::CircleEquation::Symmetric(r, _output[i]);
-            Utils::CircleEquation::TriangleArea(r, _output[i], 1E-10L);
-            Utils::CircleEquation::CircleSmoothness(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1));
-            Utils::CircleEquation::PointLimiter(r, _output[i], input_x.slice(0, i, i + 1), input_y.slice(0, i, i + 1));
-            //--------------------------
-        });      
-        //--------------------------
-        // auto _reward_results = torch::tensor(reward);
-        //--------------------------
-        // std::cout << "reward_results: " << _reward_results << std::endl; 
-        //--------------------------
-        // std::cout   << "reward_results: " << _reward_results.mean().item().toDouble() 
-        //             << " min: " << _reward_results.min().item().toDouble() 
-        //             << " max: " << _reward_results.max().item().toDouble()<< std::endl; 
-        //--------------------------
-        // std::cout   << "reward_results: " << _reward_results.mean().item().toDouble() << std::endl; 
-        //--------------------------
-        // return _reward_results;
-        //--------------------------
-        // auto results = Normalize::normalization(_reward_results);
-        // std::cout << "results: " << results << std::endl; 
-        // return results;
-        //--------------------------
-        // return Normalize::normalization(torch::tensor(reward));
-        //--------------------------
-        return torch::tensor(reward);
-        //--------------------------
+
+        torch::Tensor _input = RL::RLNormalize::unnormalization(input, local_min, local_max), _output = RL::RLNormalize::unnormalization(output, local_min, local_max);        
+
+        // Get individual rewards
+        torch::Tensor R_distance    = Utils::CircleEquation::distance_reward(_input, _output);
+        torch::Tensor R_diversity   = Utils::CircleEquation::diversity_reward(_output, _input);
+        torch::Tensor R_consistency = Utils::CircleEquation::consistency_reward(_output);
+
+        // Add penalties for points outside the circle
+        torch::Tensor R_distance_penalty = Utils::CircleEquation::distance_penalty(_input, _output);
+        
+        // Add penalties for points too close to each other
+        torch::Tensor R_point_separation_penalty = Utils::CircleEquation::separation_penalty(_output, 1E-1);
+
+        // Final Reward
+        constexpr double w1 = 1.0, w2 = 1.0, w3 = 1.0, w_penalty = 0.1; // Weights can be adjusted
+        torch::Tensor total_rewards = w1 * R_distance + w2 * R_diversity + w3 * R_consistency - w_penalty * (R_distance_penalty + R_point_separation_penalty);
+
+        std::cout   << "R_distance: " << R_distance.mean().item().toDouble() 
+                    << " R_diversity: " << R_diversity.mean().item().toDouble() 
+                    << " R_consistency: " << R_consistency.mean().item().toDouble()
+                    << " R_distance_penalty: " << R_distance_penalty.mean().item().toDouble()
+                    << " R_point_separation_penalty: " << R_point_separation_penalty.mean().item().toDouble() << std::endl;
+        
+        std::cout   << "reward_results: " << total_rewards.mean().item().toDouble() << std::endl;
+
+        return Normalize::normalization(total_rewards);
     };
     //--------------------------------------------------------------
     // const torch::Tensor local_min = _normalize.get_min(), local_max =_normalize.get_max();
@@ -915,20 +965,22 @@ int main(int argc, char const *argv[]){
     DuelNet target_model(points_size, generated_points_size, output_size);
     //--------------------------
     torch::optim::SGD optimizer(model.parameters(), torch::optim::SGDOptions(1E-3L).momentum(0.95).nesterov(true));
+    torch::optim::StepLR scheduler(optimizer, /*step_size=*/10, /*gamma=*/0.1);
     //--------------------------
     // ReinforcementNetworkHandling<decltype(model), size_t, size_t> handler(  std::move(model), 
     //                                                                         [&_generate](const size_t& size = 1, const size_t& col = 2){ 
     //                                                                             return  _generate.get_output(size, col);});
     //--------------------------
-    ReinforcementNetworkHandlingDQN<decltype(model), size_t, size_t, size_t> handler(   std::move(model), 
-                                                                                        std::move(target_model),
-                                                                                        update_frequency,
-                                                                                        clamp,
-                                                                                        double_mode, 
-                                                                                        [&_generate](const size_t& size = 1,
-                                                                                                    const size_t& points_size = 1,
-                                                                                                    const size_t& col = 2){ 
-                                                                                            return  _generate.get_output(size, points_size, col);});
+    ReinforcementNetworkHandlingDQN<decltype(model), decltype(scheduler), size_t, size_t, size_t> handler(  std::move(model),
+                                                                                                            std::move(target_model),
+                                                                                                            std::move(scheduler),
+                                                                                                            update_frequency,
+                                                                                                            clamp,
+                                                                                                            double_mode,
+                                                                                                            [&_generate](const size_t& size = 1,
+                                                                                                                        const size_t& points_size = 1,
+                                                                                                                        const size_t& col = 2){ 
+                                                                                                                return  _generate.get_output(size, points_size, col);});
     //--------------------------
     // std::random_device rd;
     // std::mt19937 gen(rd());

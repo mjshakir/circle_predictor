@@ -18,6 +18,18 @@ namespace Utils{
             //--------------------------
             CircleEquation(void) = delete;
             //--------------------------
+            ~CircleEquation(void) = delete;
+            //--------------------------------------------------------------
+            static torch::Tensor distance_reward(const torch::Tensor& input, const torch::Tensor& output);
+            //--------------------------
+            static torch::Tensor diversity_reward(const torch::Tensor& output, const torch::Tensor& input);
+            //--------------------------
+            static torch::Tensor consistency_reward(const torch::Tensor& output);
+            //--------------------------------------------------------------
+            static torch::Tensor distance_penalty(const torch::Tensor& input, const torch::Tensor& output);
+            //--------------------------
+            static torch::Tensor separation_penalty(const torch::Tensor& output, const double& min_distance = 0.1);
+            //--------------------------------------------------------------
             static void Aligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance);
             //--------------------------
             static bool Aligned(const torch::Tensor& points, const double& tolerance);
@@ -66,7 +78,17 @@ namespace Utils{
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
-            static void arePointsAligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance); 
+            static torch::Tensor compute_distance_reward(const torch::Tensor& input, const torch::Tensor& output);
+            //--------------------------
+            static torch::Tensor compute_diversity_reward(const torch::Tensor& output, const torch::Tensor& input);
+            //--------------------------
+            static torch::Tensor compute_consistency_reward(const torch::Tensor& output);
+            //--------------------------------------------------------------
+            static torch::Tensor compute_distance_penalty(const torch::Tensor& input, const torch::Tensor& output);
+            //--------------------------
+            static torch::Tensor compute_point_separation_penalty(const torch::Tensor& output, const double& min_distance);
+            //--------------------------------------------------------------
+            static void arePointsAligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance);
             //--------------------------
             /*static torch::Tensor arePointsAligned(const torch::Tensor& points, const double& tolerance);*/
             //--------------------------

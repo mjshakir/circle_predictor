@@ -15,6 +15,36 @@
 //--------------------------------------------------------------
 // public 
 //--------------------------
+torch::Tensor Utils::CircleEquation::distance_reward(const torch::Tensor& input, const torch::Tensor& output){
+    //--------------------------
+    return compute_distance_reward(input, output);
+    //--------------------------
+}// end torch::Tensor Utils::CircleEquation::distance_reward(const torch::Tensor& input, const torch::Tensor& output)
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::diversity_reward(const torch::Tensor& output, const torch::Tensor& input){
+    //--------------------------
+    return compute_diversity_reward(input, output);
+    //--------------------------
+}// end torch::Tensor Utils::CircleEquation::diversity_reward(const torch::Tensor& output, const torch::Tensor& input)
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::consistency_reward(const torch::Tensor& output){
+    //--------------------------
+    return compute_consistency_reward(output);
+    //--------------------------
+}// end torch::Tensor Utils::CircleEquation::consistency_reward(const torch::Tensor& output)
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::distance_penalty(const torch::Tensor& input, const torch::Tensor& output){
+    //--------------------------
+    return compute_distance_penalty(input, output);
+    //--------------------------
+}// end torch::Tensor Utils::CircleEquation::distance_penalty(const torch::Tensor& input, const torch::Tensor& output)
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::separation_penalty(const torch::Tensor& output, const double& min_distance){
+    //--------------------------
+    return compute_point_separation_penalty(output, min_distance);
+    //--------------------------
+}// end torch::Tensor Utils::CircleEquation::separation_penalty(const torch::Tensor& output, const double& min_distance)
+//--------------------------------------------------------------
 void Utils::CircleEquation::Aligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     arePointsAligned(reward, points, tolerance);
@@ -155,6 +185,89 @@ void Utils::CircleEquation::Distinct(double& reward, const torch::Tensor& point1
 //--------------------------------------------------------------
 // protected
 //--------------------------
+torch::Tensor Utils::CircleEquation::compute_distance_reward(const torch::Tensor& input, const torch::Tensor& output){
+    
+    torch::Tensor distances_squared;
+    // Ensuring dimensions are compatible
+    auto input_dims = input.dim();
+    auto output_dims = output.dim();
+
+    if (input_dims != 2 || input.size(1) < 3) {
+        throw std::runtime_error("Expected input size: [batch_size, 3], found: " + std::to_string(input_dims));
+    }
+    
+    if (output_dims == 2) {
+        // Adjusting for the case where output is [batch_size, 2]
+        torch::Tensor x_diff = output.select(1, 0) - input.select(1, 0);
+        torch::Tensor y_diff = output.select(1, 1) - input.select(1, 1);
+        distances_squared = x_diff.square() + y_diff.square();
+    } else if (output_dims == 3) {
+        // Adjusting for the case where output is [batch_size, points_size, 2]
+        torch::Tensor x_diff = output.slice(2, 0, 1).squeeze() - input.select(1, 0).unsqueeze(-1);
+        torch::Tensor y_diff = output.slice(2, 1, 2).squeeze() - input.select(1, 1).unsqueeze(-1);
+        distances_squared = x_diff.square() + y_diff.square();
+    } else {
+        throw std::runtime_error("Unexpected output dimensions: " + std::to_string(output_dims));
+    }
+    
+    torch::Tensor r_diffs = distances_squared - input.select(1, 2).unsqueeze(-1);
+    torch::Tensor abs_errors = r_diffs.abs();
+    return abs_errors.mean(-1);
+}// end torch::Tensor Utils::CircleEquation::computeDistanceReward(const torch::Tensor& input, const torch::Tensor& output)
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::compute_diversity_reward(const torch::Tensor& output, const torch::Tensor& input) {
+    torch::Tensor y_diff = output.slice(-1, 1, 2).squeeze() - input.slice(1, 1, 2).unsqueeze(-1);
+    torch::Tensor x_diff = output.slice(-1, 0, 1).squeeze() - input.slice(1, 0, 1).unsqueeze(-1);
+    torch::Tensor angles = torch::atan2(y_diff, x_diff);
+    // Placeholder. Adjust based on your specific diversity metric.
+    return torch::ones({angles.size(0)});
+}
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::compute_consistency_reward(const torch::Tensor& output) {
+    torch::Tensor x_diff_subsequent = output.slice(-1, 0, 1).squeeze() - torch::roll(output.slice(-1, 0, 1).squeeze(), 1, 1);
+    torch::Tensor y_diff_subsequent = output.slice(-1, 1, 2).squeeze() - torch::roll(output.slice(-1, 1, 2).squeeze(), 1, 1);
+    torch::Tensor subsequent_distances = torch::sqrt(x_diff_subsequent.square() + y_diff_subsequent.square());
+    // Placeholder. Adjust based on your specific consistency metric.
+    return torch::ones({subsequent_distances.size(0)});
+}
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::compute_distance_penalty(const torch::Tensor& input, const torch::Tensor& output){
+    // Compute squared distances between points and circle center
+    torch::Tensor circle_center = input.slice(1, 0, 2);  // Extract (X,Y) center
+    torch::Tensor distances_squared = torch::sum((output - circle_center.unsqueeze(1)).square(), -1);
+    
+    // Compute penalty as the squared distance minus radius squared
+    torch::Tensor penalty = torch::relu(distances_squared - input.select(1, 2).unsqueeze(-1));
+    
+    // Apply a ReLU to ensure penalties are non-negative
+    // penalty = torch::clamp_min(penalty, 0.0);
+    // penalty = torch::relu(penalty);
+
+
+    // Compute the mean penalty over all points
+    return penalty.mean(-1);
+}// end torch::Tensor Utils::CircleEquation::compute_distance_penalty(const torch::Tensor& input, const torch::Tensor& output)
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::compute_point_separation_penalty(const torch::Tensor& output, const double& min_distance){
+    // Compute pairwise distances between points
+    torch::Tensor diff = output.unsqueeze(1) - output.unsqueeze(2);
+    torch::Tensor distances_squared = torch::sum(diff.square(), -1);
+
+    // Create a mask to ignore comparisons between the same points
+    torch::Tensor same_point_mask = torch::eye(output.size(1)).unsqueeze(0).expand_as(distances_squared);
+    distances_squared.masked_fill_(same_point_mask, 1.0);  // Replace diagonal with 1.0 to avoid division by zero
+
+    // Compute point separation penalty as the reciprocal of the minimum pairwise distance
+    torch::Tensor min_distances;
+    std::tie(min_distances, std::ignore) = torch::min(distances_squared, -1);
+    min_distances = torch::sqrt(min_distances);
+    // torch::Tensor penalty = torch::clamp_min(min_distance / min_distances, 0.0);
+    torch::Tensor penalty = torch::relu(min_distance / min_distances);
+
+    // Compute the mean penalty over all points
+    return penalty.mean(-1);
+}
+//--------------------------------------------------------------
 void Utils::CircleEquation::arePointsAligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
     if (points.size(0) < 2){

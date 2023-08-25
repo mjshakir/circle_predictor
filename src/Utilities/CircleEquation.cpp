@@ -260,6 +260,7 @@ torch::Tensor Utils::CircleEquation::compute_point_separation_penalty(const torc
     // Compute point separation penalty as the reciprocal of the minimum pairwise distance
     torch::Tensor min_distances;
     std::tie(min_distances, std::ignore) = torch::min(distances_squared, -1);
+    min_distances = torch::clamp_min(min_distances, 1e-6); // Adjust the threshold as needed
     min_distances = torch::sqrt(min_distances);
     // torch::Tensor penalty = torch::clamp_min(min_distance / min_distances, 0.0);
     torch::Tensor penalty = torch::relu(min_distance / min_distances);

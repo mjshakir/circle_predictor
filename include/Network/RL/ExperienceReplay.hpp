@@ -64,6 +64,12 @@ class ExperienceReplay{
             //--------------------------
         }// end std::tuple<Args...> sample(const size_t& position)
         //--------------------------
+        std::vector<std::tuple<Args...>> samples(void) {
+            //--------------------------
+            return samples_data();
+            //--------------------------
+        }// end  std::tuple<Args...> sample(const size_t& key)
+        //--------------------------
         std::vector<std::tuple<Args...>> samples(const size_t& samples) {
             //--------------------------
             return samples_data(samples);
@@ -113,6 +119,20 @@ class ExperienceReplay{
             return m_memory.at(position);
             //--------------------------
         }// end std::tuple<Args...> sample_data(const size_t& key)
+        //--------------------------------------------------------------
+        std::vector<std::tuple<Args...>> samples_data(void){
+            //--------------------------
+            std::vector<std::tuple<Args...>> _data;
+            _data.reserve(m_memory.size());
+            //--------------------------
+            thread_local std::random_device dev;
+            thread_local std::mt19937 rng(dev());
+            //--------------------------
+            std::sample(m_memory.begin(), m_memory.end(), std::back_inserter(_data), m_memory.size(). rng);
+            //--------------------------
+            return _data;
+            //--------------------------
+        }// end std::vector<std::tuple<Args...>> samples_data(void)
         //--------------------------------------------------------------
         std::vector<std::tuple<Args...>> samples_data(const size_t& samples){
             //--------------------------

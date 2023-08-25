@@ -122,9 +122,17 @@ namespace RL {
                         //--------------------------
                         if(m_memory_activation(m_gen)){
                             //--------------------------
-                            auto [_memory_input, _memory_next_input, _memory_reward, _done] = m_memory.sample();
+                            // auto [_memory_input, _memory_next_input, _memory_reward, _done] = m_memory.sample();
+                            // //--------------------------
+                            // m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
                             //--------------------------
-                            m_handler.agent(_memory_input, _memory_next_input, optimizer, _memory_reward, _done);
+                            auto experiences = m_memory.samples();
+                            //--------------------------
+                            for (const auto& [memory_state, memory_next_state, memory_reward, memory_done] : experiences) {
+                                //--------------------------
+                                m_handler.agent(memory_state, memory_next_state, optimizer, memory_reward, memory_done);
+                                //--------------------------
+                            }// end for (const auto& [state, next_state, reward, done] : experiences)
                             //--------------------------
                         }//end if(m_memory_activation(m_gen))
                         else{

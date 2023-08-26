@@ -855,19 +855,27 @@ int main(int argc, char const *argv[]){
         torch::Tensor _input = RL::RLNormalize::unnormalization(input, local_min, local_max), _output = RL::RLNormalize::unnormalization(output, local_min, local_max);        
 
         // Get individual rewards
-        torch::Tensor R_distance    = Utils::CircleEquation::distance_reward(_input, _output);
-        torch::Tensor R_diversity   = Utils::CircleEquation::diversity_reward(_output, _input);
-        torch::Tensor R_consistency = Utils::CircleEquation::consistency_reward(_output);
+        torch::Tensor R_distance_reward    = Utils::CircleEquation::distance_reward(_input, _output);
+        torch::Tensor R_diversity_reward   = Utils::CircleEquation::diversity_reward(_output, _input);
+        torch::Tensor R_consistency_reward = Utils::CircleEquation::consistency_reward(_output);
 
         // Add penalties for points outside the circle
         torch::Tensor R_distance_penalty = Utils::CircleEquation::distance_penalty(_input, _output);
         
         // Add penalties for points too close to each other
-        torch::Tensor R_point_separation_penalty = Utils::CircleEquation::separation_penalty(_output, 1E-2);
+         torch::Tensor R_distance_penalty = Utils::CircleEquation::distance_penalty(_input, _output);
 
-        // Final Reward
-        constexpr double w1 = 1., w2 = 1., w3 = 1., w_penalty = 1.; // Weights can be adjusted
-        torch::Tensor total_rewards = w1 * R_distance + w2 * R_diversity + w3 * R_consistency - w_penalty * (R_distance_penalty + R_point_separation_penalty);
+        // Compute separation penalty
+        constexpr double min_distance = 1E-1;  // You can adjust this value as needed
+        torch::Tensor R_separation_penalty = Utils::CircleEquation::separation_penalty(_output, min_distance);
+
+        // Compute max point limiter penalty
+        torch::Tensor R_max_point_limiter = Utils::CircleEquation::PointLimiter(_input, _output);
+
+        // Combine rewards and penalties
+        constexpr double w1 = 1.0, w2 = 1.0, w3 = 1.0, w4 = -1.0, w5 = -1.0, w6 = 1.0; // Weights can be adjusted
+        torch::Tensor total_rewards = w1 * R_distance_reward + w2 * R_diversity_reward + w3 * R_consistency_reward +
+                                        w4 * R_distance_penalty + w5 * R_separation_penalty + w6 * R_max_point_limiter;
 
         // std::cout   << "R_distance: " << R_distance.mean().item().toDouble() 
         //             << " R_diversity: " << R_diversity.mean().item().toDouble() 

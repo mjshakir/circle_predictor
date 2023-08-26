@@ -862,9 +862,6 @@ int main(int argc, char const *argv[]){
         // Add penalties for points outside the circle
         torch::Tensor R_distance_penalty = Utils::CircleEquation::distance_penalty(_input, _output);
         
-        // Add penalties for points too close to each other
-         torch::Tensor R_distance_penalty = Utils::CircleEquation::distance_penalty(_input, _output);
-
         // Compute separation penalty
         constexpr double min_distance = 1E-1;  // You can adjust this value as needed
         torch::Tensor R_separation_penalty = Utils::CircleEquation::separation_penalty(_output, min_distance);
@@ -873,15 +870,16 @@ int main(int argc, char const *argv[]){
         torch::Tensor R_max_point_limiter = Utils::CircleEquation::PointLimiter(_input, _output);
 
         // Combine rewards and penalties
-        constexpr double w1 = 1.0, w2 = 1.0, w3 = 1.0, w4 = -1.0, w5 = -1.0, w6 = 1.0; // Weights can be adjusted
+        constexpr double w1 = 1.0, w2 = 1.0, w3 = 1.0, w4 = -1.0, w5 = -1.0, w6 = 100.0; // Weights can be adjusted
         torch::Tensor total_rewards = w1 * R_distance_reward + w2 * R_diversity_reward + w3 * R_consistency_reward +
-                                        w4 * R_distance_penalty + w5 * R_separation_penalty + w6 * R_max_point_limiter;
+                                        w4 * R_distance_penalty + w5 * R_separation_penalty; + w6 * R_max_point_limiter;
 
-        // std::cout   << "R_distance: " << R_distance.mean().item().toDouble() 
-        //             << " R_diversity: " << R_diversity.mean().item().toDouble() 
-        //             << " R_consistency: " << R_consistency.mean().item().toDouble()
+        // std::cout   << "R_distance: " << R_distance_reward.mean().item().toDouble() 
+        //             << " R_diversity: " << R_diversity_reward.mean().item().toDouble() 
+        //             << " R_consistency: " << R_consistency_reward.mean().item().toDouble()
         //             << " R_distance_penalty: " << R_distance_penalty.mean().item().toDouble()
-        //             << " R_point_separation_penalty: " << R_point_separation_penalty.mean().item().toDouble() << std::endl;
+        //             << " R_point_separation_penalty: " << R_separation_penalty.mean().item().toDouble() //<< std::endl;
+        //             << " R_max_point_limiter: " << R_max_point_limiter.mean().item().toDouble() << std::endl;
         
         // std::cout   << "reward_results: " << total_rewards.mean().item().toDouble() << std::endl;
 

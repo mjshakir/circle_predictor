@@ -40,17 +40,17 @@ namespace RL {
                  * @param egreedy_decay [in] : The egreedy exponential (e^x) decay factor                     @default: 500.
                  * @param batch         [in] : The batch number (needs to be less then half of the data size) @default: 1ul   
                  */
-                explicit RLEnvironmentShuffleLoader(std::vector<T>&& data, 
+                explicit RLEnvironmentShuffleLoader(const std::span<T>& data, 
                                                     std::function<COST_OUTPUT(const Args&...)>&& costFunction,
-                                                    const size_t& batch = 2ul,
+                                                    const size_t& batch = 2UL,
                                                     const double& egreedy = 0.9,
                                                     const double& egreedy_final = 0.02,
-                                                    const double& egreedy_decay = 500.) :   RLEnvironment<T, COST_OUTPUT, Args...>( std::move(data), 
+                                                    const double& egreedy_decay = 500.) :   RLEnvironment<T, COST_OUTPUT, Args...>( data, 
                                                                                                                                     std::move(costFunction), 
                                                                                                                                     egreedy, 
                                                                                                                                     egreedy_final, 
                                                                                                                                     egreedy_decay),
-                                                                                            RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(  std::move(data),
+                                                                                            RLEnvironmentShuffle<T, COST_OUTPUT, Args...>(  data,
                                                                                                                                             std::move(costFunction), 
                                                                                                                                             egreedy, 
                                                                                                                                             egreedy_final, 

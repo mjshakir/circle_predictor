@@ -16,8 +16,8 @@ namespace RL {
                 //--------------------------------------------------------------
                 RLEnvironmentTestLoader(void) = delete;
                 //--------------------------------------------------------------
-                RLEnvironmentTestLoader(std::vector<T>&& data, const size_t& batch = 2UL) : RLEnvironmentTest<T>(std::move(data)),
-                                                                                            m_batch(batch){
+                RLEnvironmentTestLoader(const std::span<T>& data, const size_t& batch = 2UL) :  RLEnvironmentTest<T>(data),
+                                                                                                m_batch(batch){
                     //----------------------------
                     if(batch >= this->get_data().size()/2){
                         //--------------------------
@@ -25,7 +25,7 @@ namespace RL {
                         //--------------------------
                     }// end if(batch > this->get_data().size()/2)
                     //----------------------------
-                }// end RLEnvironmentTestLoader(std::vector<T>&& data, const size_t& batch = 1)
+                }// end RLEnvironmentTestLoader(std::span<T>&& data, const size_t& batch = 1)
                 //--------------------------------------------------------------
                 RLEnvironmentTestLoader(const RLEnvironmentTestLoader&)            = default;
                 RLEnvironmentTestLoader& operator=(const RLEnvironmentTestLoader&) = default;

@@ -83,7 +83,8 @@
         "io_context": "cpp",
         "netfwd": "cpp",
         "socket": "cpp",
-        "timer": "cpp"
+        "timer": "cpp",
+        "span": "cpp"
     },
     // "C_Cpp.errorSquiggles": "Disabled",
     "cmake.configureOnOpen": true,

@@ -949,7 +949,7 @@ int main(int argc, char const *argv[]){
     //     //--------------------------
     // };
     //--------------------------------------------------------------
-    RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), std::move(_circle_reward), batch_size, 0.9, 0.02, 500.);
+    RL::Environment::RLEnvironmentLoader<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(input, std::move(_circle_reward), batch_size, 0.9, 0.02, 500.);
     //--------------------------
     // RL::Environment::RLEnvironmentLoaderAtomic<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> _environment(std::move(input), std::move(_circle_reward), batch_size, 0.9, 0.02, 500.);
     //--------------------------
@@ -1241,7 +1241,7 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // RL::Environment::EnvironmentTestLoader<torch::Tensor> _environment_test(std::move(input_test), batch_size);
     //--------------------------
-    RL::Environment::RLEnvironmentTest<torch::Tensor> _environment_test(std::move(input_test));
+    RL::Environment::RLEnvironmentTest<torch::Tensor> _environment_test(input_test);
     //--------------------------
     TimeIT _test_timer;
     //--------------------------

@@ -1471,22 +1471,23 @@ void Utils::CircleEquation::getMaxPointLimiter(double& reward, const torch::Tens
 //--------------------------------------------------------------
 torch::Tensor Utils::CircleEquation::getMaxPointLimiter(const torch::Tensor& input, const torch::Tensor& output) {
     // Constants for weighting and punishment
-    constexpr double weight_inside = 1.0;  // Example value
-    constexpr double punishment_outside = -0.5;  // Example value
+    constexpr double weight_inside = 1.;  // Example value
+    constexpr double punishment_outside = -1.;  // Example value
 
     // Extract center and radius squared from the input tensor
     torch::Tensor center = input.slice(1, 0, 2);
     torch::Tensor radius_squared = input.select(1, 2);
 
-    // Compute distance squared from the point to the circle's center
-    torch::Tensor dist_squared = torch::sum((output - center).pow(2), -1);
+    // Compute distance squared from each point to the circle's center
+    torch::Tensor dist_squared = torch::sum((output - center.unsqueeze(1)).pow(2), -1);
 
     // Check if the points lie inside or on the circle
-    torch::Tensor rewards = torch::where(dist_squared <= radius_squared, torch::tensor(weight_inside), torch::tensor(punishment_outside));
+    torch::Tensor rewards = torch::where(dist_squared <= radius_squared.unsqueeze(1), torch::tensor(weight_inside), torch::tensor(punishment_outside));
 
     // Compute the mean reward over all points
     return rewards.mean(-1);
-}
+
+}// end torch::Tensor Utils::CircleEquation::getMaxPointLimiter(const torch::Tensor& input, const torch::Tensor& output)
 //--------------------------------------------------------------
 bool Utils::CircleEquation::PointsDistinct(const torch::Tensor& point1, const torch::Tensor& point2) {
     //--------------------------

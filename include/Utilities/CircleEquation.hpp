@@ -150,7 +150,7 @@ namespace Utils{
             //--------------------------
             static void getMaxPointLimiter(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
             //--------------------------
-            static torch::Tensor max_point_limiter(const torch::Tensor& input, const torch::Tensor& output);
+            static torch::Tensor getMaxPointLimiter(const torch::Tensor& input, const torch::Tensor& output);
             //--------------------------
             static bool PointsDistinct(const torch::Tensor& point1, const torch::Tensor& point2);
             //--------------------------

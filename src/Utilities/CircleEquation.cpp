@@ -171,6 +171,12 @@ void Utils::CircleEquation::PointLimiter(double& reward, const torch::Tensor& po
     //--------------------------
 }// end torch::Tensor Utils::CircleEquation::PointLimiter(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius)
 //--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::PointLimiter(const torch::Tensor& input, const torch::Tensor& output){
+    //--------------------------
+    return getMaxPointLimiter(input, output);
+    //--------------------------
+}// end  torch::Tensor Utils::CircleEquation::PointLimiter(const torch::Tensor& input, const torch::Tensor& output)
+//--------------------------------------------------------------
 bool Utils::CircleEquation::Distinct(const torch::Tensor& point1, const torch::Tensor& point2){
     //--------------------------
     return PointsDistinct(point1, point2);
@@ -1461,6 +1467,25 @@ void Utils::CircleEquation::getMaxPointLimiter(double& reward, const torch::Tens
     
     // Update the reward based on the point's position
     reward += (reward>0) ? is_inside ? weight_inside : -reward : 0; // or another appropriate value for outside points
+}
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::getMaxPointLimiter(const torch::Tensor& input, const torch::Tensor& output) {
+    // Constants for weighting and punishment
+    constexpr double weight_inside = 1.0;  // Example value
+    constexpr double punishment_outside = -0.5;  // Example value
+
+    // Extract center and radius squared from the input tensor
+    torch::Tensor center = input.slice(1, 0, 2);
+    torch::Tensor radius_squared = input.select(1, 2);
+
+    // Compute distance squared from the point to the circle's center
+    torch::Tensor dist_squared = torch::sum((output - center).pow(2), -1);
+
+    // Check if the points lie inside or on the circle
+    torch::Tensor rewards = torch::where(dist_squared <= radius_squared, torch::tensor(weight_inside), torch::tensor(punishment_outside));
+
+    // Compute the mean reward over all points
+    return rewards.mean(-1);
 }
 //--------------------------------------------------------------
 bool Utils::CircleEquation::PointsDistinct(const torch::Tensor& point1, const torch::Tensor& point2) {

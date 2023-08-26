@@ -28,7 +28,7 @@ namespace Utils{
             //--------------------------------------------------------------
             static torch::Tensor distance_penalty(const torch::Tensor& input, const torch::Tensor& output);
             //--------------------------
-            static torch::Tensor separation_penalty(const torch::Tensor& output, const double& min_distance = 0.1);
+            static torch::Tensor separation_penalty(const torch::Tensor& output, const double& min_distance = 1E-1);
             //--------------------------------------------------------------
             static void Aligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance);
             //--------------------------
@@ -71,6 +71,8 @@ namespace Utils{
             static torch::Tensor PointLimiter(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
             //--------------------------
             static void PointLimiter(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
+            //--------------------------
+            static torch::Tensor PointLimiter(const torch::Tensor& input, const torch::Tensor& output);
             //--------------------------------------------------------------
             static bool Distinct(const torch::Tensor& point1, const torch::Tensor& point2);
             //--------------------------
@@ -147,6 +149,8 @@ namespace Utils{
             static torch::Tensor getMaxPointLimiter(const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
             //--------------------------
             static void getMaxPointLimiter(double& reward, const torch::Tensor& points, const torch::Tensor& center, const torch::Tensor& radius);
+            //--------------------------
+            static torch::Tensor max_point_limiter(const torch::Tensor& input, const torch::Tensor& output);
             //--------------------------
             static bool PointsDistinct(const torch::Tensor& point1, const torch::Tensor& point2);
             //--------------------------

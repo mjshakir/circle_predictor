@@ -46,17 +46,17 @@ namespace RL {
                 *  @throws std::out_of_range If the specified batch size is greater than or equal to half the size of the data vector.
                 *          The exception message provides details about the expected range for the batch size.
                 */
-                explicit RLEnvironmentShuffleAtomicLoader(std::vector<T>&& data, 
+                explicit RLEnvironmentShuffleAtomicLoader(const std::span<T>& data, 
                                                           std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                                           const size_t& batch = 2UL,
                                                           const double& egreedy = 0.9,
                                                           const double& egreedy_final = 0.02,
-                                                          const double& egreedy_decay = 500.) : RLEnvironment<T, COST_OUTPUT, Args...>( std::move(data), 
+                                                          const double& egreedy_decay = 500.) : RLEnvironment<T, COST_OUTPUT, Args...>( data, 
                                                                                                                                         std::move(costFunction), 
                                                                                                                                         egreedy, 
                                                                                                                                         egreedy_final, 
                                                                                                                                         egreedy_decay),
-                                                                                                RLEnvironmentShuffleAtomic<T, COST_OUTPUT, Args...>(std::move(data),
+                                                                                                RLEnvironmentShuffleAtomic<T, COST_OUTPUT, Args...>(data,
                                                                                                                                                     std::move(costFunction),
                                                                                                                                                     egreedy,
                                                                                                                                                     egreedy_final,

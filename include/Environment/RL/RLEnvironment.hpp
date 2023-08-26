@@ -8,6 +8,10 @@
 //--------------------------------------------------------------
 #include <torch/torch.h>
 //--------------------------------------------------------------
+// Standard library
+//--------------------------------------------------------------
+#include <span>
+//--------------------------------------------------------------
 // User definition
 //--------------------------------------------------------------
 #define OUT
@@ -30,7 +34,7 @@ namespace RL {
                  * @brief Construct to create a training environment for reinforcement learning 
                  * 
                  * @param data          [in] : Data Vector of the template type T                             
-                 *                          @example: RLEnvironment<torch::Tensor,..., ...> foo(data, ...) this will results in std::vector<torch::Tensor>
+                 *                          @example: RLEnvironment<torch::Tensor,..., ...> foo(data, ...) this will results in std::span<torch::Tensor>
                  * @param costFunction  [in] : Cost function that return the reward. needs to define the function return and parameters 
                  *                          @example: RLEnvironment<..., torch::Tensor,double, int> foo(..., [](double x, int y){return torch::tensor(x*y);})
                  * @param egreedy       [in] : The starting egreedy                        @default: 0.9
@@ -39,11 +43,11 @@ namespace RL {
                  * 
                  * @throws std::runtime_error
                  */
-                explicit RLEnvironment( std::vector<T>&& data, 
+                explicit RLEnvironment( const std::span<T>& data, 
                                         std::function<COST_OUTPUT(const Args&...)>&& costFunction,
                                         const double& egreedy = 0.9,
                                         const double& egreedy_final = 0.02,
-                                        const double& egreedy_decay = 500.) :   m_data(std::move(data)),
+                                        const double& egreedy_decay = 500.) :   m_data(data),
                                                                                 m_data_iter(m_data.begin()), 
                                                                                 m_CostFunction(std::move(costFunction)),
                                                                                 m_egreedy(egreedy),
@@ -260,17 +264,17 @@ namespace RL {
                     //--------------------------
                 }// end double calculate_epsilon()
                 //--------------------------------------------------------------
-                inline double calculate_epsilon(const typename std::vector<T>::iterator& data_iter) {
+                inline double calculate_epsilon(const typename std::span<T>::iterator& data_iter) {
                     //--------------------------
                     return m_egreedy_final + (m_egreedy - m_egreedy_final) * std::exp(-1. * static_cast<double>(std::distance(this->get_data().begin(), data_iter)) / m_egreedy_decay);
                     //--------------------------
-                }// end constexpr double calculate_epsilon(typename std::vector<T>::iterator data_iter)
+                }// end constexpr double calculate_epsilon(typename std::span<T>::iterator data_iter)
                 //--------------------------------------------------------------
-                std::vector<T>& get_data(void){
+                std::span<T>& get_data(void){
                     //--------------------------
                     return m_data;
                     //--------------------------
-                }// end std::vector<T>& get_data(void)
+                }// end std::span<T>& get_data(void)
                 //--------------------------------------------------------------
                 std::function<COST_OUTPUT(const Args&...)>& get_cost_function(void){
                     //--------------------------
@@ -284,22 +288,22 @@ namespace RL {
                     //--------------------------
                 }// end COST_OUTPUT cost_function(const Args&... args)
                 //--------------------------------------------------------------
-                typename std::vector<T>::iterator& get_iterator(void){
+                typename std::span<T>::iterator& get_iterator(void){
                     //--------------------------
                     return m_data_iter;
                     //--------------------------
-                }// end typename std::vector<T>::iterator& get_iterator(void)
+                }// end typename std::span<T>::iterator& get_iterator(void)
                 //--------------------------------------------------------------
                 constexpr size_t vector_size(void) const{
                     //--------------------------
                     return m_data.size();
                     //--------------------------
-                }// end typename std::vector<T>::iterator& get_iterator(void)
+                }// end typename std::span<T>::iterator& get_iterator(void)
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::vector<T> m_data;
-                typename std::vector<T>::iterator m_data_iter;
+                std::span<T> m_data;
+                typename std::span<T>::iterator m_data_iter;
                 //--------------------------
                 std::function<COST_OUTPUT(const Args&...)> m_CostFunction;
                 //--------------------------

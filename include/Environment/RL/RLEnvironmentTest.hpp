@@ -16,10 +16,10 @@ namespace RL {
                 //--------------------------------------------------------------
                 RLEnvironmentTest(void) = delete;
                 //--------------------------------------------------------------
-                RLEnvironmentTest(std::vector<T>&& data) :  m_data(std::move(data)),
-                                                            m_data_iter (m_data.begin()){
+                RLEnvironmentTest(const std::span<T>& data) :   m_data(data),
+                                                                m_data_iter (m_data.begin()){
                     //----------------------------
-                }// end RLEnvironmentTest(std::vector<T>&& data, const size_t& batch = 1)
+                }// end RLEnvironmentTest(std::span<T>&& data, const size_t& batch = 1)
                 //--------------------------------------------------------------
                 RLEnvironmentTest(const RLEnvironmentTest&)            = default;
                 RLEnvironmentTest& operator=(const RLEnvironmentTest&) = default;
@@ -132,28 +132,28 @@ namespace RL {
                     //--------------------------
                 }// end void rest_iterator(void)
                 //--------------------------------------------------------------
-                std::vector<T>& get_data(void){
+                std::span<T>& get_data(void){
                     //--------------------------
                     return m_data;
                     //--------------------------
-                }// end std::vector<T>& get_data(void)
+                }// end std::span<T>& get_data(void)
                 //--------------------------------------------------------------
-                typename std::vector<T>::iterator& get_iterator(void){
+                typename std::span<T>::iterator& get_iterator(void){
                     //--------------------------
                     return m_data_iter;
                     //--------------------------
-                }// end typename std::vector<T>::iterator& get_iterator(void)
+                }// end typename std::span<T>::iterator& get_iterator(void)
                 //--------------------------------------------------------------
                 constexpr size_t vector_size(void) const{
                     //--------------------------
                     return m_data.size();
                     //--------------------------
-                }// end typename std::vector<T>::iterator& get_iterator(void)
+                }// end typename std::span<T>::iterator& get_iterator(void)
                 //--------------------------------------------------------------
             private:
                 //--------------------------------------------------------------
-                std::vector<T> m_data;
-                typename std::vector<T>::iterator m_data_iter;
+                std::span<T> m_data;
+                typename std::span<T>::iterator m_data_iter;
             //--------------------------------------------------------------
         };// end class RLEnvironmentTest
         //--------------------------------------------------------------

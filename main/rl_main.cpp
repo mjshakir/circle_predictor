@@ -3,6 +3,8 @@
 //--------------------------------------------------------------
 #include <random>
 #include <fstream>
+#include <future>
+#include <algorithm>
 //--------------------------------------------------------------
 // Boost library
 //--------------------------------------------------------------
@@ -880,6 +882,33 @@ int main(int argc, char const *argv[]){
         torch::Tensor total_rewards = w1 * R_distance_reward + w2 * R_diversity_reward + w3 * R_consistency_reward +
                                         w4 * R_distance_penalty + w5 * R_separation_penalty; + w6 * R_max_point_limiter + 
                                         w7 * R_boundary_punishment + w8 * R_exploration_incentive_reward;
+
+        // // Get individual rewards
+        // auto R_distance_reward      = std::async(std::launch::async, &Utils::CircleEquation::distance_reward, _input, _output);
+        // auto R_diversity_reward     = std::async(std::launch::async, &Utils::CircleEquation::diversity_reward, _input, _output);
+        // auto R_consistency_reward   = std::async(std::launch::async, &Utils::CircleEquation::consistency_reward, _output);
+         
+        // constexpr double exploration_reward = 10.;  // You can adjust this value as needed
+        // auto R_exploration_incentive_reward   = std::async(std::launch::async, &Utils::CircleEquation::exploration_incentive, _output, exploration_reward);
+
+        // // Add penalties for points outside the circle
+        // auto R_distance_penalty  = std::async(std::launch::async, &Utils::CircleEquation::distance_penalty, _input, _output);
+        
+        // // Compute separation penalty
+        // constexpr double min_distance = 1E-1;  // You can adjust this value as needed
+        // auto R_separation_penalty  = std::async(std::launch::async, &Utils::CircleEquation::separation_penalty, _output, min_distance);
+
+        // // Compute max point limiter penalty
+        // auto R_max_point_limiter  = std::async(std::launch::async, [&_input, &_output](){return Utils::CircleEquation::PointLimiter(_input, _output);});
+
+        // // Compute boundary punishment based on how close points are to the circle's boundary
+        // auto R_boundary_punishment  = std::async(std::launch::async, &Utils::CircleEquation::boundary, _input, _output);
+
+        // // Combine rewards and penalties
+        // constexpr double w1 = 1., w2 = 1.0, w3 = 1., w4 = -1., w5 = -1., w6 = 100., w7 = -0.1, w8 = 1.; // Weights can be adjusted
+        // torch::Tensor total_rewards = w1 * R_distance_reward.get() + w2 * R_diversity_reward.get() + w3 * R_consistency_reward.get() +
+        //                                 w4 * R_distance_penalty.get() + w5 * R_separation_penalty.get() + w6 * R_max_point_limiter.get() + 
+        //                                 w7 * R_boundary_punishment.get() + w8 * R_exploration_incentive_reward.get();
 
         // std::cout   << "R_distance: " << R_distance_reward.mean().item().toDouble() 
         //             << " R_diversity: " << R_diversity_reward.mean().item().toDouble() 

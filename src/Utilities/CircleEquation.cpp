@@ -33,6 +33,12 @@ torch::Tensor Utils::CircleEquation::consistency_reward(const torch::Tensor& out
     //--------------------------
 }// end torch::Tensor Utils::CircleEquation::consistency_reward(const torch::Tensor& output)
 //--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::exploration_incentive(const torch::Tensor& output, const double& exploration_factor){
+    //--------------------------
+    return exploration_incentive_reward(output, exploration_factor);
+    //--------------------------
+}//end torch::Tensor Utils::CircleEquation::exploration_incentive_reward(const torch::Tensor& output, const double& exploration_factor)
+//--------------------------------------------------------------
 torch::Tensor Utils::CircleEquation::distance_penalty(const torch::Tensor& input, const torch::Tensor& output){
     //--------------------------
     return compute_distance_penalty(input, output);
@@ -44,6 +50,12 @@ torch::Tensor Utils::CircleEquation::separation_penalty(const torch::Tensor& out
     return compute_point_separation_penalty(output, min_distance);
     //--------------------------
 }// end torch::Tensor Utils::CircleEquation::separation_penalty(const torch::Tensor& output, const double& min_distance)
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::boundary(const torch::Tensor& input, const torch::Tensor& output){
+    //--------------------------
+    return boundary_punishment(input, output);
+    //--------------------------
+}// end torch::Tensor Utils::CircleEquation::boundary(const torch::Tensor& input, const torch::Tensor& output)
 //--------------------------------------------------------------
 void Utils::CircleEquation::Aligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){
     //--------------------------
@@ -237,6 +249,18 @@ torch::Tensor Utils::CircleEquation::compute_consistency_reward(const torch::Ten
     return torch::ones({subsequent_distances.size(0)});
 }
 //--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::exploration_incentive_reward(const torch::Tensor& output, const double& exploration_factor){
+    //--------------------------
+    // Calculate entropy of the action distribution
+    torch::Tensor entropy = -torch::sum(output * torch::log(output), -1);
+    
+    // Scale the entropy to create an exploration incentive
+    torch::Tensor scaled_entropy = exploration_factor * entropy;
+    
+    return scaled_entropy;
+    //--------------------------
+}//end torch::Tensor Utils::CircleEquation::exploration_incentive_reward(const int64_t& batch_size, const double& exploration_reward)
+//--------------------------------------------------------------
 torch::Tensor Utils::CircleEquation::compute_distance_penalty(const torch::Tensor& input, const torch::Tensor& output){
     // Compute squared distances between points and circle center
     torch::Tensor circle_center = input.slice(1, 0, 2);  // Extract (X,Y) center
@@ -273,6 +297,21 @@ torch::Tensor Utils::CircleEquation::compute_point_separation_penalty(const torc
 
     // Compute the mean penalty over all points
     return penalty.mean(-1);
+}
+//--------------------------------------------------------------
+torch::Tensor Utils::CircleEquation::boundary_punishment(const torch::Tensor& input, const torch::Tensor& output) {
+    // Extract center and radius from the input tensor
+    torch::Tensor center = input.slice(1, 0, 2);
+    torch::Tensor radius = input.select(1, 2);
+
+    // Calculate the squared distances of each predicted point from the circle's boundary
+    torch::Tensor distances_squared = torch::sum((output - center).pow(2), -1) - radius;
+
+    // Compute boundary punishment as a function of the squared distances
+    torch::Tensor boundary_punishment = torch::exp(-distances_squared); // You can adjust this function as needed
+
+    // Compute the mean boundary punishment over all points
+    return boundary_punishment.mean(-1);
 }
 //--------------------------------------------------------------
 void Utils::CircleEquation::arePointsAligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance){

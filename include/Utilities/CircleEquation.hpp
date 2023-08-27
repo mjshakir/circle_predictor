@@ -25,10 +25,14 @@ namespace Utils{
             static torch::Tensor diversity_reward(const torch::Tensor& output, const torch::Tensor& input);
             //--------------------------
             static torch::Tensor consistency_reward(const torch::Tensor& output);
+            //--------------------------
+            static torch::Tensor exploration_incentive(const torch::Tensor& output, const double& exploration_factor);
             //--------------------------------------------------------------
             static torch::Tensor distance_penalty(const torch::Tensor& input, const torch::Tensor& output);
             //--------------------------
             static torch::Tensor separation_penalty(const torch::Tensor& output, const double& min_distance = 1E-1);
+            //--------------------------
+            static torch::Tensor boundary(const torch::Tensor& input, const torch::Tensor& output);
             //--------------------------------------------------------------
             static void Aligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance);
             //--------------------------
@@ -85,10 +89,14 @@ namespace Utils{
             static torch::Tensor compute_diversity_reward(const torch::Tensor& output, const torch::Tensor& input);
             //--------------------------
             static torch::Tensor compute_consistency_reward(const torch::Tensor& output);
+            //--------------------------
+            static torch::Tensor exploration_incentive_reward(const torch::Tensor& output, const double& exploration_factor);
             //--------------------------------------------------------------
             static torch::Tensor compute_distance_penalty(const torch::Tensor& input, const torch::Tensor& output);
             //--------------------------
             static torch::Tensor compute_point_separation_penalty(const torch::Tensor& output, const double& min_distance);
+            //--------------------------
+            static torch::Tensor boundary_punishment(const torch::Tensor& input, const torch::Tensor& output);
             //--------------------------------------------------------------
             static void arePointsAligned(torch::Tensor& reward, const torch::Tensor& points, const double& tolerance);
             //--------------------------
@@ -164,7 +172,7 @@ namespace Utils{
             static bool isSymmetricCounterpartInSet(const m_point& reflected, 
                                                     const boost::geometry::index::rtree<m_point, boost::geometry::index::quadratic<16>>& rtree);
         //--------------------------------------------------------------
-    };// end class CircleEquation
+    }; // end class CircleEquation
     //--------------------------------------------------------------
 }//end namespace CircleEquation
 //--------------------------------------------------------------

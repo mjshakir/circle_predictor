@@ -22,6 +22,12 @@ namespace Utils{
             //--------------------------
             explicit ThreadPool(const size_t& numThreads);
             //--------------------------
+            ThreadPool(const ThreadPool&)            = delete;
+            ThreadPool& operator=(const ThreadPool&) = delete;
+            //----------------------------
+            ThreadPool(ThreadPool&&)                 = delete;
+            ThreadPool& operator=(ThreadPool&&)      = delete;
+            //--------------------------
             ~ThreadPool(void);
             //--------------------------
             template <class F, class... Args>

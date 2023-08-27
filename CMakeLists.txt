@@ -158,6 +158,7 @@ add_library(${PROJECT_NAME}_utilities SHARED
   src/Utilities/CircleEquation.cpp
   src/Utilities/StaticCheck.cpp
   src/Utilities/ProgressBar.cpp
+  src/Utilities/ThreadPool.cpp
 )
 #------------------------------------------------------------------------------------------
 if(USE_TTB)

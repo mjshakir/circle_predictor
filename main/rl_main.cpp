@@ -858,6 +858,9 @@ int main(int argc, char const *argv[]){
         torch::Tensor R_distance_reward    = Utils::CircleEquation::distance_reward(_input, _output);
         torch::Tensor R_diversity_reward   = Utils::CircleEquation::diversity_reward(_output, _input);
         torch::Tensor R_consistency_reward = Utils::CircleEquation::consistency_reward(_output);
+         
+        constexpr double exploration_reward = 10.;  // You can adjust this value as needed
+        torch::Tensor R_exploration_incentive_reward = Utils::CircleEquation::exploration_incentive(_output, exploration_reward);
 
         // Add penalties for points outside the circle
         torch::Tensor R_distance_penalty = Utils::CircleEquation::distance_penalty(_input, _output);
@@ -869,10 +872,14 @@ int main(int argc, char const *argv[]){
         // Compute max point limiter penalty
         torch::Tensor R_max_point_limiter = Utils::CircleEquation::PointLimiter(_input, _output);
 
+        // Compute boundary punishment based on how close points are to the circle's boundary
+        torch::Tensor R_boundary_punishment = Utils::CircleEquation::boundary(_input, _output);
+
         // Combine rewards and penalties
-        constexpr double w1 = 1.0, w2 = 1.0, w3 = 1.0, w4 = -1.0, w5 = -1.0, w6 = 100.0; // Weights can be adjusted
+        constexpr double w1 = 1., w2 = 1.0, w3 = 1., w4 = -1., w5 = -1., w6 = 100., w7 = -0.1, w8 = 1.; // Weights can be adjusted
         torch::Tensor total_rewards = w1 * R_distance_reward + w2 * R_diversity_reward + w3 * R_consistency_reward +
-                                        w4 * R_distance_penalty + w5 * R_separation_penalty; + w6 * R_max_point_limiter;
+                                        w4 * R_distance_penalty + w5 * R_separation_penalty; + w6 * R_max_point_limiter + 
+                                        w7 * R_boundary_punishment + w8 * R_exploration_incentive_reward;
 
         // std::cout   << "R_distance: " << R_distance_reward.mean().item().toDouble() 
         //             << " R_diversity: " << R_diversity_reward.mean().item().toDouble() 

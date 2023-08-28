@@ -31,12 +31,12 @@ namespace Utils{
             ~ThreadPool(void);
             //--------------------------
             template <class F, class... Args>
-            auto enqueue(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>>;
+            auto queue(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>>;
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
             template <class F, class... Args>
-            auto enqueue_local(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>>;
+            auto enqueue(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>>;
             //--------------------------
             void create_task(const size_t& numThreads);
             //--------------------------

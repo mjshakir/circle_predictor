@@ -55,28 +55,35 @@ auto Utils::ThreadPool::enqueue_local(F&& f, Args&&... args) -> std::optional<st
     //--------------------------
     auto task = std::make_shared<std::packaged_task<return_type()>>(
         //--------------------------
-        std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+        [func = std::forward<F>(f), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
+            //--------------------------
+            std::apply(std::move(func), std::move(args));
+            //--------------------------
+        }
         //--------------------------
     );
     //--------------------------
     std::future<return_type> res = task->get_future();
     //--------------------------
-    { // begin appending tasks 
+    { // begin append tasks 
         //--------------------------
         std::unique_lock<std::mutex> lock(m_queueMutex);
+        //--------------------------
         if (m_stop) {
+            //--------------------------
             return std::nullopt;
-        }
+            //--------------------------
+        }// end if (m_stop)
         //--------------------------
         m_tasks.emplace_back([task]() { (*task)(); });
         //--------------------------
-    } // end appending tasks 
+    } // end append tasks 
     //--------------------------
     m_condition.notify_one();
     //--------------------------
     return res;
     //--------------------------
-}// end auto Utils::ThreadPool::enqueue_local(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
+}// end auto Utils::ThreadPool::enqueue_local(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>>
 //--------------------------------------------------------------
 void Utils::ThreadPool::create_task(const size_t& numThreads){
     //--------------------------

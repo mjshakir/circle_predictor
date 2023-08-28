@@ -8,6 +8,7 @@
 #include <future>       
 #include <type_traits>
 #include <memory>
+#include <algorithm>
 //--------------------------------------------------------------
 Utils::ThreadPool::ThreadPool(void) : m_stop(false){
     //--------------------------
@@ -17,7 +18,7 @@ Utils::ThreadPool::ThreadPool(void) : m_stop(false){
 //--------------------------------------------------------------
 Utils::ThreadPool::ThreadPool(const size_t& numThreads) : m_stop(false) {
     //--------------------------
-    create_task(numThreads);
+    create_task(std::min(numThreads, static_cast<size_t>(std::thread::hardware_concurrency())));
     //--------------------------
 }// end Utils::ThreadPool::ThreadPool(const size_t& numThreads)
 //--------------------------------------------------------------
@@ -42,14 +43,14 @@ Utils::ThreadPool::~ThreadPool(void) {
 }// end Utils::ThreadPool::~ThreadPool(void) 
 //--------------------------------------------------------------
 template <class F, class... Args>
-auto Utils::ThreadPool::enqueue(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
+auto Utils::ThreadPool::queue(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
     //--------------------------
-    return enqueue_local(std::forward<F>(f), std::forward<Args>(args)...);
+    return enqueue(std::forward<F>(f), std::forward<Args>(args)...);
     //--------------------------
 }// end auto Utils::ThreadPool::enqueue(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
 //--------------------------------------------------------------
 template <class F, class... Args>
-auto Utils::ThreadPool::enqueue_local(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
+auto Utils::ThreadPool::enqueue(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
     //--------------------------
     using return_type = std::invoke_result_t<F, Args...>;
     //--------------------------

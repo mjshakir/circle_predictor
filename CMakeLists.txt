@@ -159,6 +159,7 @@ add_library(${PROJECT_NAME}_utilities SHARED
   src/Utilities/StaticCheck.cpp
   src/Utilities/ProgressBar.cpp
   src/Utilities/ThreadPool.cpp
+  src/Utilities/PriorityQueue.cpp
 )
 #------------------------------------------------------------------------------------------
 if(USE_TTB)

@@ -13,6 +13,8 @@
 #include <optional>
 #include <atomic>
 #include <tuple>
+#include <future>
+#include <variant>
 //--------------------------------------------------------------
 namespace Utils{
     //--------------------------------------------------------------
@@ -28,7 +30,6 @@ namespace Utils{
                 MEDIUM_LOW,
                 MEDIUM,
                 HIGH_MEDIUM,
-                LOW_HIGH,
                 MEDIUM_HIGH,
                 HIGH,
                 CRITICAL
@@ -98,8 +99,49 @@ namespace Utils{
             const size_t m_lowerThreshold, m_upperThreshold;  // Example value
             bool m_adjustmentFlag;
             //--------------------------
-            struct Comparator;
-            struct Task;
+            struct Comparator{
+                //--------------------------
+                template <typename T, typename U>
+                bool operator()(T, U) const {
+                    return false; // Different types, so no meaningful comparison
+                }
+                //--------------------------
+                bool operator()(Priority lhs, Priority rhs) const {
+                    return rhs < lhs;
+                }
+                //--------------------------
+                bool operator()(uint8_t lhs, uint8_t rhs) const {
+                    return rhs < lhs;
+                }
+                //--------------------------
+            };// end struct Comparator
+            //--------------------------
+            struct Task{
+                //--------------------------
+                public:
+                    //--------------------------
+                    Task(void)                   = default;
+                    //--------------------------
+                    Task(std::unique_ptr<std::packaged_task<void()>> t, std::variant<Priority, uint8_t> p, uint8_t r)
+                    : task(std::move(t)), priority(p), retries(r) {}
+                    //--------------------------
+                    std::unique_ptr<std::packaged_task<void()>> task;
+                    uint8_t retries;
+                    // Priority Priority;
+                    std::variant<Priority, uint8_t> priority;
+                    //--------------------------
+                    // Comparison for priority
+                    //--------------------------
+                    bool operator<(const Task& other) const {
+                        //--------------------------
+                        if (priority != other.priority) {
+                            return std::visit(Comparator{}, other.priority, priority);
+                        }
+                        return other.retries < retries;
+                        //--------------------------
+                    }// end bool operator<(const Task& other) const
+                    //--------------------------
+            };
             //--------------------------
             std::vector<std::jthread> m_workers;
             //--------------------------
@@ -107,7 +149,7 @@ namespace Utils{
             //--------------------------
             std::jthread m_adjustmentThread;
             //--------------------------
-            std::mutex m_mutex;
+            mutable std::mutex m_mutex;
             //--------------------------
             std::condition_variable m_taskAvailableCondition;            
         //--------------------------------------------------------------

@@ -4,13 +4,11 @@
 #include "Utilities/ThreadPool.hpp"
 //--------------------------------------------------------------
 // Standard library
-//--------------------------------------------------------------
-#include <future>       
+//--------------------------------------------------------------      
 #include <type_traits>
 #include <memory>
 #include <algorithm>
 #include <chrono>
-#include <variant>
 //--------------------------------------------------------------
 // Definitions
 //--------------------------
@@ -120,7 +118,11 @@ void Utils::ThreadPool::create_task(const size_t& numThreads){
     //--------------------------
     for (size_t i = 0; i < numThreads; ++i) {
         //--------------------------
-        m_workers.emplace_back(&ThreadPool::workerFunction, this);
+        // m_workers.emplace_back(&ThreadPool::workerFunction, this);
+        //--------------------------
+        m_workers.emplace_back([this](std::stop_token stoken) {
+            this->workerFunction(stoken);
+        });
         //--------------------------
     }// end  for (size_t i = 0; i < numThreads; ++i)
     //--------------------------
@@ -316,54 +318,4 @@ void Utils::ThreadPool::status_display_internal(void){
                 << "Completed Tasks: " << completedTasksCount << std::endl;
     //--------------------------
 }// end void Utils::ThreadPool::status_display_internal(void)
-//--------------------------------------------------------------
-struct Utils::ThreadPool::Comparator {
-    //--------------------------
-    template <typename T, typename U>
-    bool operator()(T, U) const {
-        return false; // Different types, so no meaningful comparison
-    }
-    //--------------------------
-    bool operator()(Priority lhs, Priority rhs) const {
-        return rhs < lhs;
-    }
-    //--------------------------
-    bool operator()(uint8_t lhs, uint8_t rhs) const {
-        return rhs < lhs;
-    }
-    //--------------------------
-};// end struct Utils::ThreadPool::Comparator
-//--------------------------------------------------------------
-struct Utils::ThreadPool::Task {
-    //--------------------------
-    public:
-        //--------------------------
-        Task(void)                   = default;
-        //--------------------------
-        Task(std::unique_ptr<std::packaged_task<void()>> t, std::variant<Priority, uint8_t> p, uint8_t r)
-        : task(std::move(t)), priority(p), retries(r) {}
-        //--------------------------
-        Task(const Task&)            = default;
-        Task& operator=(const Task&) = default;
-        //----------------------------
-        Task(Task&&)                 = default;
-        Task& operator=(Task&&)      = default;
-        //--------------------------
-        std::unique_ptr<std::packaged_task<void()>> task;
-        uint8_t retries;
-        // Priority Priority;
-        std::variant<Priority, uint8_t> priority;
-        //--------------------------
-        // Comparison for priority
-        //--------------------------
-        bool operator<(const Task& other) const {
-            //--------------------------
-            if (priority != other.priority) {
-                return std::visit(Comparator{}, other.priority, priority);
-            }
-            return other.retries < retries;
-            //--------------------------
-        }// end bool operator<(const Task& other) const
-        //--------------------------
-}; // end struct Task
 //--------------------------------------------------------------

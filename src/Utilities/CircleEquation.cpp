@@ -305,7 +305,7 @@ torch::Tensor Utils::CircleEquation::boundary_punishment(const torch::Tensor& in
     torch::Tensor radius = input.select(1, 2);
 
     // Calculate the squared distances of each predicted point from the circle's boundary
-    torch::Tensor distances_squared = torch::sum((output - center).pow(2), -1) - radius;
+    torch::Tensor distances_squared = torch::sum((output - center.unsqueeze(1)).pow(2), -1) - radius.view({-1, 1});
 
     // Compute boundary punishment as a function of the squared distances
     torch::Tensor boundary_punishment = torch::exp(-distances_squared); // You can adjust this function as needed

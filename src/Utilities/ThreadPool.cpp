@@ -10,22 +10,26 @@
 #include <memory>
 #include <algorithm>
 #include <chrono>
+#include <variant>
 //--------------------------------------------------------------
 // Definitions
 //--------------------------
-constexpr size_t SOME_MAX_LIMIT = 100; // Example
-constexpr size_t SOME_MIN_LIMIT = 1;   // Example
+constexpr size_t MAX_LIMIT      = 100UL; // Example
+constexpr size_t MIN_LIMIT      = 1UL;   // Example
 constexpr auto CHECK_INTERVAL   = std::chrono::milliseconds(10);  // For example, check every 10 seconds
 //--------------------------------------------------------------
 Utils::ThreadPool::ThreadPool(const size_t& numThreads) :   m_stop(false), 
                                                             m_failedTasksCount(0),
                                                             m_retriedTasksCount(0),
                                                             m_completedTasksCount(0),
-                                                            m_lowerThreshold(1UL),
+                                                            m_lowerThreshold(MIN_LIMIT),
                                                             m_upperThreshold(static_cast<size_t>(std::thread::hardware_concurrency())){
     //--------------------------
     auto _threads_number = std::min(numThreads, m_upperThreshold);
     create_task((_threads_number > 0) ? _threads_number : m_lowerThreshold);
+    //--------------------------
+    // create the adjustment thread
+    m_adjustmentThread = std::jthread(&ThreadPool::adjustmentThreadFunction, this, m_adjustmentThread.get_stop_token());
     //--------------------------
 }// end Utils::ThreadPool::ThreadPool(const size_t& numThreads)
 //--------------------------------------------------------------
@@ -35,27 +39,46 @@ Utils::ThreadPool::~ThreadPool(void) {
     //--------------------------
 }// end Utils::ThreadPool::~ThreadPool(void) 
 //--------------------------------------------------------------
-size_t Utils::ThreadPool::active_workers_size() const{
+size_t Utils::ThreadPool::active_workers_size(void) const{
     //--------------------------
     return activeWorkers();
     //--------------------------
 }// end size_t Utils::ThreadPool::active_workers_size() const
 //--------------------------------------------------------------
-size_t Utils::ThreadPool::queued_size() const{
+size_t Utils::ThreadPool::queued_size(void) const{
     //--------------------------
     return queuedTasks();
     //--------------------------
 }// end size_t Utils::ThreadPool::queued_size() const
+//--------------------------------------------------------------
+std::tuple<size_t, size_t, size_t> Utils::ThreadPool::status(void){
+    //--------------------------
+    return get_status();
+    //--------------------------
+}// end std::tuple<size_t, size_t, size_t> Utils::ThreadPool::get_status(void)
+//--------------------------------------------------------------
+void Utils::ThreadPool::status_disply(void){
+    //--------------------------
+    status_display_internal();
+    //--------------------------
+}// end void Utils::ThreadPool::status_disply(void)
 //--------------------------------------------------------------
 template <class F, class... Args>
 auto Utils::ThreadPool::queue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
     //--------------------------
     return enqueue(std::forward<F>(f), std::forward<Args>(args)..., priority, retries);
     //--------------------------
-}// end auto Utils::ThreadPool::enqueue(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
+}// end auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::future<std::invoke_result_t<F, Args...>>
 //--------------------------------------------------------------
 template <class F, class... Args>
-auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
+auto Utils::ThreadPool::queue(F&& f, Args&&... args, const uint8_t& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
+    //--------------------------
+    return enqueue(std::forward<F>(f), std::forward<Args>(args)..., priority, retries);
+    //--------------------------
+}// end auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::future<std::invoke_result_t<F, Args...>>
+//--------------------------------------------------------------
+template <class F, class... Args>
+auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const std::variant<Priority, uint8_t>& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
     //--------------------------
    using return_type = std::invoke_result_t<F, Args...>;
     //--------------------------
@@ -63,7 +86,7 @@ auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority,
         //--------------------------
         [func = std::forward<F>(f), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
             //--------------------------
-            return std::apply(std::move(func), std::move(args));
+            return std::invoke(func, std::apply(std::make_tuple, std::move(args)));
             //--------------------------
         }
         //--------------------------
@@ -89,7 +112,7 @@ auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority,
     //--------------------------
     return res;
     //--------------------------
-}// end auto Utils::ThreadPool::enqueue_local(F&& f, Args&&... args) -> std::optional<std::future<std::invoke_result_t<F, Args...>>>
+}// end auto auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>>
 //--------------------------------------------------------------
 void Utils::ThreadPool::create_task(const size_t& numThreads){
     //--------------------------
@@ -97,9 +120,7 @@ void Utils::ThreadPool::create_task(const size_t& numThreads){
     //--------------------------
     for (size_t i = 0; i < numThreads; ++i) {
         //--------------------------
-        // m_workers.emplace_back(&ThreadPool::workerFunction, this);
-        //--------------------------
-        m_workers.emplace_back(&ThreadPool::adjustmentThreadFunction, this);
+        m_workers.emplace_back(&ThreadPool::workerFunction, this);
         //--------------------------
     }// end  for (size_t i = 0; i < numThreads; ++i)
     //--------------------------
@@ -125,9 +146,9 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
             //--------------------------
         try {
             //--------------------------
-            if (task.task) {
+            if (task->task) {
                 //--------------------------
-                (*task.task)();
+                (*task->task)();
                 //--------------------------
                 ++m_completedTasksCount;
                 //--------------------------
@@ -136,11 +157,11 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
         } // end try
         catch (const std::exception& e) {
             //--------------------------
-            if (task.retries > 0) {
+            if (task->retries > 0) {
                 //--------------------------
                 std::scoped_lock lock(m_mutex);
                 //--------------------------
-                --task.retries;
+                --task->retries;
                 //--------------------------
                 m_tasks.push(task); // Put the modified copy of the task back in the queue
                 //--------------------------
@@ -176,13 +197,15 @@ void Utils::ThreadPool::stop(void){
         //--------------------------
     }// end set
     //--------------------------
+    m_taskAvailableCondition.notify_all();
+    //--------------------------
+    m_adjustmentThread.request_stop();
+    //--------------------------
     for (auto &worker : m_workers) {
         //--------------------------
         worker.request_stop();
         //--------------------------
     }// end for (auto &worker : m_workers)
-    //--------------------------
-    m_taskAvailableCondition.notify_all();
     //--------------------------
 }//end void Utils::ThreadPool::stop(void)
 //--------------------------------------------------------------
@@ -190,24 +213,22 @@ void Utils::ThreadPool::adjustWorkers(void) {
     //--------------------------
     std::scoped_lock lock(m_mutex);
     //--------------------------
-    auto taskCount      = queuedTasks();
-    auto workerCount    = activeWorkers();
+    auto taskCount = queuedTasks();
+    auto workerCount = activeWorkers();
     //--------------------------
-    if (taskCount > m_upperThreshold and workerCount < SOME_MAX_LIMIT) {
+    if (taskCount > m_upperThreshold and workerCount < MAX_LIMIT) {
         //--------------------------
-        // Determine the number of threads to create based on the tasks and the remaining available slots
+        auto threadsToCreate = std::min(std::max(static_cast<size_t>(0), taskCount - m_upperThreshold),
+                                        MAX_LIMIT - workerCount);
         //--------------------------
-       auto threadsToCreate = std::min(std::max(static_cast<size_t>(0), taskCount - m_upperThreshold),
-                                        SOME_MAX_LIMIT - workerCount);
-
-        threadsToCreate = std::min(threadsToCreate, 
-                            std::max(static_cast<size_t>(0), std::thread::hardware_concurrency() - workerCount));
+        threadsToCreate = std::min(threadsToCreate,
+                                   std::max(static_cast<size_t>(0), std::thread::hardware_concurrency() - workerCount));
         //--------------------------
         create_task(threadsToCreate);
         //--------------------------
-    }// end  if (taskCount > m_upperThreshold and workerCount < SOME_MAX_LIMIT)
+    }// end if (taskCount > m_upperThreshold and workerCount < MAX_LIMIT)
     //--------------------------
-    if (taskCount < m_lowerThreshold and workerCount > SOME_MIN_LIMIT) {
+    if (taskCount < m_lowerThreshold and workerCount > MIN_LIMIT) {
         //--------------------------
         if (workerCount > 1) {
             //--------------------------
@@ -215,41 +236,134 @@ void Utils::ThreadPool::adjustWorkers(void) {
             m_workers.pop_back();
             //--------------------------
         }// end if (workerCount > 1)
-    }// end if (taskCount < m_lowerThreshold && workerCount > SOME_MIN_LIMIT)
+        //--------------------------
+    }// end if (taskCount < m_lowerThreshold and workerCount > MIN_LIMIT)
     //--------------------------
 }// end void Utils::ThreadPool::adjustWorkers(void)
 //--------------------------------------------------------------
-void Utils::ThreadPool::adjustmentThreadFunction(void) {
+// void Utils::ThreadPool::adjustmentThreadFunction(void) {
+//     //--------------------------
+//     while (!m_stop.load()) {
+//         //--------------------------
+//         std::unique_lock<std::mutex> lock(m_mutex);
+//         //--------------------------
+//         m_taskAvailableCondition.wait_for(lock, CHECK_INTERVAL, [this] { return m_stop.load(); });
+//         //--------------------------
+//         if (m_stop.load()){
+//             //--------------------------
+//             return;
+//             //--------------------------
+//         }// end if (m_stop.load())
+//         //--------------------------
+//         adjustWorkers();
+//         //--------------------------
+//     }// end while (!m_stop.load())
+//     //--------------------------
+// }// end void Utils::ThreadPool::adjustmentThreadFunction(void)
+//--------------------------------------------------------------
+// void Utils::ThreadPool::adjustmentThreadFunction(void) {
+//     //--------------------------
+//     while (!m_stop.load()) {
+//         //--------------------------
+//         std::this_thread::sleep_for(CHECK_INTERVAL);
+//         //--------------------------
+//         if (m_stop.load()){
+//             return;
+//         }// end  if (m_stop.load())
+//         //--------------------------
+//         adjustWorkers();
+//         //--------------------------
+//     }// end while (!m_stop.load())
+// }// end void Utils::ThreadPool::adjustmentThreadFunction(void)
+//--------------------------------------------------------------
+void Utils::ThreadPool::adjustmentThreadFunction(const std::stop_token& stoken) {
     //--------------------------
-    while (!m_stop.load()) {
-        //--------------------------
-        std::unique_lock<std::mutex> lock(m_mutex);
-        //--------------------------
-        m_taskAvailableCondition.wait_for(lock, CHECK_INTERVAL, [this] { return m_stop.load(); });
-        //--------------------------
-        if (m_stop.load()){
-            //--------------------------
-            return;
-            //--------------------------
-        }// end if (m_stop.load())
+    while (!stoken.stop_requested()) {
         //--------------------------
         adjustWorkers();
+        std::this_thread::sleep_for(CHECK_INTERVAL);
         //--------------------------
-    }// end while (!m_stop.load())
+    }// end while (!stoken.stop_requested())
     //--------------------------
-}// end void Utils::ThreadPool::adjustmentThreadFunction(void)
+}// end void Utils::ThreadPool::adjustmentThreadFunction(const std::stop_token& stoken)
 //--------------------------------------------------------------
-size_t Utils::ThreadPool::activeWorkers() const{
+size_t Utils::ThreadPool::activeWorkers(void) const{
     //--------------------------
     return m_workers.size();
     //--------------------------
 }// end size_t Utils::ThreadPool::activeWorkers() const
 //--------------------------------------------------------------
-size_t Utils::ThreadPool::queuedTasks() const{
+size_t Utils::ThreadPool::queuedTasks(void) const{
     //--------------------------
     std::unique_lock lock(m_mutex);
     //--------------------------
     return m_tasks.size();
     //--------------------------
 }// end size_t Utils::ThreadPool::queuedTasks() const
+//--------------------------------------------------------------
+std::tuple<size_t, size_t, size_t> Utils::ThreadPool::get_status(void){
+    //--------------------------
+    return {m_failedTasksCount.load(), m_retriedTasksCount.load(), m_completedTasksCount.load()};
+    //--------------------------
+}// end std::tuple<size_t, size_t, size_t> Utils::ThreadPool::get_status(void)
+//--------------------------------------------------------------
+void Utils::ThreadPool::status_display_internal(void){
+    //--------------------------
+    auto [failedTasksCount, retriedTasksCount, completedTasksCount] = get_status();
+    //--------------------------
+    std::cout   << "Failed Tasks:    " << failedTasksCount  << "\n"
+                << "Retried Tasks:   " << retriedTasksCount << "\n"
+                << "Completed Tasks: " << completedTasksCount << std::endl;
+    //--------------------------
+}// end void Utils::ThreadPool::status_display_internal(void)
+//--------------------------------------------------------------
+struct Utils::ThreadPool::Comparator {
+    //--------------------------
+    template <typename T, typename U>
+    bool operator()(T, U) const {
+        return false; // Different types, so no meaningful comparison
+    }
+    //--------------------------
+    bool operator()(Priority lhs, Priority rhs) const {
+        return rhs < lhs;
+    }
+    //--------------------------
+    bool operator()(uint8_t lhs, uint8_t rhs) const {
+        return rhs < lhs;
+    }
+    //--------------------------
+};// end struct Utils::ThreadPool::Comparator
+//--------------------------------------------------------------
+struct Utils::ThreadPool::Task {
+    //--------------------------
+    public:
+        //--------------------------
+        Task(void)                   = default;
+        //--------------------------
+        Task(std::unique_ptr<std::packaged_task<void()>> t, std::variant<Priority, uint8_t> p, uint8_t r)
+        : task(std::move(t)), priority(p), retries(r) {}
+        //--------------------------
+        Task(const Task&)            = default;
+        Task& operator=(const Task&) = default;
+        //----------------------------
+        Task(Task&&)                 = default;
+        Task& operator=(Task&&)      = default;
+        //--------------------------
+        std::unique_ptr<std::packaged_task<void()>> task;
+        uint8_t retries;
+        // Priority Priority;
+        std::variant<Priority, uint8_t> priority;
+        //--------------------------
+        // Comparison for priority
+        //--------------------------
+        bool operator<(const Task& other) const {
+            //--------------------------
+            if (priority != other.priority) {
+                return std::visit(Comparator{}, other.priority, priority);
+            }
+            return other.retries < retries;
+            //--------------------------
+        }// end bool operator<(const Task& other) const
+        //--------------------------
+}; // end struct Task
 //--------------------------------------------------------------

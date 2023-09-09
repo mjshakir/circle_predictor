@@ -126,9 +126,9 @@ namespace Utils{
                     : task(std::move(t)), priority(p), retries(r) {}
                     //--------------------------
                     std::unique_ptr<std::packaged_task<void()>> task;
-                    uint8_t retries;
                     // Priority Priority;
                     std::variant<Priority, uint8_t> priority;
+                    uint8_t retries;
                     //--------------------------
                     // Comparison for priority
                     //--------------------------

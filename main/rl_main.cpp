@@ -914,27 +914,27 @@ int main(int argc, char const *argv[]){
 
         Utils::ThreadPool threadPool(7);
         // Get individual rewards
-        auto R_distance_reward = threadPool.enqueue(&Utils::CircleEquation::distance_reward, _input, _output);
-        auto R_diversity_reward = threadPool.enqueue(&Utils::CircleEquation::diversity_reward, _output, _input);
-        auto R_consistency_reward = threadPool.enqueue(&Utils::CircleEquation::consistency_reward, _output);
+        auto R_distance_reward = threadPool.queue(&Utils::CircleEquation::distance_reward, Utils::ThreadPool::Priority::MEDIUM, 1, _input, _output);
+        auto R_diversity_reward = threadPool.queue(&Utils::CircleEquation::diversity_reward, Utils::ThreadPool::Priority::MEDIUM, 1, _output, _input);
+        auto R_consistency_reward = threadPool.queue(&Utils::CircleEquation::consistency_reward, Utils::ThreadPool::Priority::MEDIUM, 1,_output);
          
         // Add penalties for points outside the circle
-        auto R_distance_penalty = threadPool.enqueue(&Utils::CircleEquation::distance_penalty, _input, _output);
+        auto R_distance_penalty = threadPool.queue(&Utils::CircleEquation::distance_penalty, Utils::ThreadPool::Priority::MEDIUM, 1, _input, _output);
         
         // Compute separation penalty
         constexpr double min_distance = 1E-1;  // You can adjust this value as needed
-        auto R_separation_penalty = threadPool.enqueue(&Utils::CircleEquation::separation_penalty, _output, min_distance);
+        auto R_separation_penalty = threadPool.queue(&Utils::CircleEquation::separation_penalty, Utils::ThreadPool::Priority::MEDIUM, 1, _output, min_distance);
 
         // Compute max point limiter penalty
-        torch::Tensor R_max_point_limiter = threadPool.enqueue([&_input, &_output](){return Utils::CircleEquation::PointLimiter(_input, _output);});
+        // auto R_max_point_limiter = threadPool.queue([&_input, &_output](){return Utils::CircleEquation::PointLimiter(_input, _output);});
 
         // Compute boundary punishment based on how close points are to the circle's boundary
-        torch::Tensor R_boundary_punishment = threadPool.enqueue(&Utils::CircleEquation::boundary, _input, _output);
+        auto R_boundary_punishment = threadPool.queue(&Utils::CircleEquation::boundary, Utils::ThreadPool::Priority::MEDIUM, 1, _input, _output);
 
         // Combine rewards and penalties
         constexpr double w1 = 1., w2 = 1.0, w3 = 1., w4 = -1., w5 = -1., w6 = 100., w7 = -0.1; // Weights can be adjusted
         torch::Tensor total_rewards = w1 * R_distance_reward->get() + w2 * R_diversity_reward->get() + w3 * R_consistency_reward->get() +
-                                        w4 * R_distance_penalty->get() + w5 * R_separation_penalty->get() + w6 * R_max_point_limiter->get() + 
+                                        w4 * R_distance_penalty->get() + w5 * R_separation_penalty->get() + /*w6 * R_max_point_limiter->get() + */
                                         w7 * R_boundary_punishment->get();
 
         // std::cout   << "R_distance: " << R_distance_reward.mean().item().toDouble() 

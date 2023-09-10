@@ -62,53 +62,17 @@ void Utils::ThreadPool::status_disply(void){
 }// end void Utils::ThreadPool::status_disply(void)
 //--------------------------------------------------------------
 template <class F, class... Args>
-auto Utils::ThreadPool::queue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
+TaskBuilder Utils::ThreadPool::queue(F&& f, Args&&... args){
     //--------------------------
-    return enqueue(std::forward<F>(f), std::forward<Args>(args)..., priority, retries);
-    //--------------------------
-}// end auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::future<std::invoke_result_t<F, Args...>>
-//--------------------------------------------------------------
-template <class F, class... Args>
-auto Utils::ThreadPool::queue(F&& f, Args&&... args, const uint8_t& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
-    //--------------------------
-    return enqueue(std::forward<F>(f), std::forward<Args>(args)..., priority, retries);
+    return enqueue(std::forward<F>(f), std::forward<Args>(args)...);
     //--------------------------
 }// end auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::future<std::invoke_result_t<F, Args...>>
 //--------------------------------------------------------------
 template <class F, class... Args>
-auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const std::variant<Priority, uint8_t>& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>> {
+TaskBuilder Utils::ThreadPool::enqueue(F&& f, Args&&... args){
     //--------------------------
-   using return_type = std::invoke_result_t<F, Args...>;
-    //--------------------------
-    auto task = std::make_unique<std::packaged_task<return_type()>>(
-        //--------------------------
-        [func = std::forward<F>(f), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
-            //--------------------------
-            return std::invoke(func, std::apply(std::make_tuple, std::move(args)));
-            //--------------------------
-        }
-        //--------------------------
-    );
-    //--------------------------
-    std::future<return_type> res = task->get_future();
-    //--------------------------
-    { // Begin append tasks
-        //--------------------------
-        std::scoped_lock lock(m_mutex);
-        //--------------------------
-        if (m_stop.load()) {
-            //--------------------------
-            return std::nullopt;
-            //--------------------------
-        }// end if (m_stop.load())
-        //--------------------------
-        m_tasks.emplace(Task{std::move(task), priority, retries});
-        //--------------------------
-    } // End append tasks
-    //--------------------------
-    m_taskAvailableCondition.notify_one();
-    //--------------------------
-    return res;
+    auto task = [f = std::forward<F>(f), args = std::forward<Args>(args)...]() { f(args...); };
+    return TaskBuilder(*this, [task = std::move(task)](){ task(); });
     //--------------------------
 }// end auto auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>>
 //--------------------------------------------------------------
@@ -132,6 +96,9 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
     //--------------------------
     while (!stoken.stop_requested()) {
         //--------------------------
+        std::shared_ptr<Task> task;
+        {// being Append tasks 
+            //--------------------------
             std::unique_lock lock(m_mutex);
             //--------------------------
             m_taskAvailableCondition.wait(lock, [this, &stoken] {return stoken.stop_requested() or !m_tasks.empty();});
@@ -140,21 +107,17 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
                 //--------------------------
                 return;
                 //--------------------------
-            }// end if (stoken.stop_requested() && m_tasks.empty())
+            }// end if (stoken.stop_requested() && m_tasks.empty() && m_stop.load())
             //--------------------------
-            auto task = m_tasks.top(); // Make a copy of the task
-            //--------------------------
+            task = m_tasks.top();
             m_tasks.pop();
             //--------------------------
+        }// end // being Append tasks
         try {
             //--------------------------
-            if (task->task) {
-                //--------------------------
-                (*task->task)();
-                //--------------------------
-                ++m_completedTasksCount;
-                //--------------------------
-            }// end if (task.task)
+            task->task();
+            //--------------------------
+            ++m_completedTasksCount;
             //--------------------------
         } // end try
         catch (const std::exception& e) {
@@ -288,6 +251,20 @@ void Utils::ThreadPool::adjustmentThreadFunction(const std::stop_token& stoken) 
     }// end while (!stoken.stop_requested())
     //--------------------------
 }// end void Utils::ThreadPool::adjustmentThreadFunction(const std::stop_token& stoken)
+//--------------------------------------------------------------
+void Utils::ThreadPool::addTask(Task&& task) {
+    //--------------------------
+    if (m_stop.load()) {
+        throw std::runtime_error("ThreadPool is stopping, cannot add more tasks");
+    }// end if (m_stop.load())
+    //--------------------------
+    std::scoped_lock lock(m_mutex);
+    //--------------------------
+    m_tasks.emplace(std::make_shared<Task>(std::move(task)));
+    //--------------------------
+    m_taskAvailableCondition.notify_one();
+    //--------------------------
+}// end void Utils::ThreadPool::addTask(Task&& task)
 //--------------------------------------------------------------
 size_t Utils::ThreadPool::activeWorkers(void) const{
     //--------------------------

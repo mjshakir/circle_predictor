@@ -57,19 +57,50 @@ namespace Utils{
             void status_disply(void);
             //--------------------------
             template <class F, class... Args>
-            auto queue(F&& f, Args&&... args, const Priority& priority = Priority::MEDIUM, const uint8_t& retries = 0) 
-                            -> std::optional<std::future<std::invoke_result_t<F, Args...>>>;
-            //--------------------------
-             template <class F, class... Args>
-            auto queue(F&& f, Args&&... args, const uint8_t& priority = 100U, const uint8_t& retries = 0) 
-                            -> std::optional<std::future<std::invoke_result_t<F, Args...>>>;            
+            TaskBuilder queue(F&& f, Args&&... args);         
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
             template <class F, class... Args>
-            auto enqueue(F&& f, Args&&... args, const std::variant<Priority, uint8_t>& priority, const uint8_t& retries) 
-                            -> std::optional<std::future<std::invoke_result_t<F, Args...>>>;
+            TaskBuilder enqueue(F&& f, Args&&... args);
             //--------------------------
+            class TaskBuilder {
+                public:
+                    TaskBuilder(ThreadPool& threadPool, std::function<void()> task)
+                        : m_threadPool(threadPool), m_task(std::move(task)), m_priority(0), m_retries(0) {}
+                    //--------------------------
+                    ~TaskBuilder(void) { 
+                        m_threadPool.addTask(std::move(build())); 
+                    }
+                    //--------------------------
+                    TaskBuilder& set_priority(const Priority& p) { 
+                        m_priority = p; 
+                        return *this;
+                    }
+                    //--------------------------
+                    TaskBuilder& set_priority(const uint8_t& p) { 
+                        m_priority = p; 
+                        return *this; 
+                    }
+                    //--------------------------
+                    TaskBuilder& set_retries(const uint8_t& r) { 
+                        m_retries = r; 
+                        return *this; 
+                    }
+                    //--------------------------
+                    Task build() const { 
+                        return Task(std::move(m_task), m_priority, m_retries); 
+                    }
+                    //--------------------------------------------------------------
+                private:
+                    //--------------------------
+                    ThreadPool& m_threadPool;
+                    std::function<void()> m_task;
+                    std::variant<Priority, uint8_t> m_priority;
+                    uint8_t m_retries;
+                //--------------------------------------------------------------
+            };// end class TaskBuilder
+            //--------------------------------------------------------------
             void create_task(const size_t& numThreads);
             //--------------------------
             void workerFunction(const std::stop_token& stoken);
@@ -81,6 +112,8 @@ namespace Utils{
             // void adjustmentThreadFunction(void);
             //--------------------------
             void adjustmentThreadFunction(const std::stop_token& stoken);
+            //--------------------------
+            void addTask(Task&& task);
             //--------------------------
             size_t activeWorkers(void) const;
             //--------------------------
@@ -97,7 +130,6 @@ namespace Utils{
             std::atomic<size_t> m_failedTasksCount, m_retriedTasksCount, m_completedTasksCount;
             //--------------------------
             const size_t m_lowerThreshold, m_upperThreshold;  // Example value
-            bool m_adjustmentFlag;
             //--------------------------
             struct Comparator{
                 //--------------------------
@@ -122,10 +154,10 @@ namespace Utils{
                     //--------------------------
                     Task(void)                   = default;
                     //--------------------------
-                    Task(std::unique_ptr<std::packaged_task<void()>> t, std::variant<Priority, uint8_t> p, uint8_t r)
-                    : task(std::move(t)), priority(p), retries(r) {}
+                    Task(std::function<void()> t, std::variant<Priority, uint8_t> p, uint8_t r)
+                        : task(std::move(t)), priority(p), retries(r) {}
                     //--------------------------
-                    std::unique_ptr<std::packaged_task<void()>> task;
+                    std::function<void()> task;
                     // Priority Priority;
                     std::variant<Priority, uint8_t> priority;
                     uint8_t retries;

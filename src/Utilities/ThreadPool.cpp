@@ -12,16 +12,16 @@
 //--------------------------------------------------------------
 // Definitions
 //--------------------------
-constexpr size_t MAX_LIMIT      = 100UL; // Example
-constexpr size_t MIN_LIMIT      = 1UL;   // Example
-constexpr auto CHECK_INTERVAL   = std::chrono::milliseconds(10);  // For example, check every 10 seconds
+constexpr auto CHECK_INTERVAL   = std::chrono::milliseconds(100);  // For example, check every 10 seconds
 //--------------------------------------------------------------
-Utils::ThreadPool::ThreadPool(const size_t& numThreads) :   m_stop(false), 
+Utils::ThreadPool::ThreadPool(  const size_t& numThreads,
+                                const size_t& minLimit,
+                                const size_t& maxLimit) :   m_stop(false), 
                                                             m_failedTasksCount(0),
                                                             m_retriedTasksCount(0),
                                                             m_completedTasksCount(0),
-                                                            m_lowerThreshold(MIN_LIMIT),
-                                                            m_upperThreshold(static_cast<size_t>(std::thread::hardware_concurrency())){
+                                                            m_lowerThreshold(minLimit),
+                                                            m_upperThreshold(maxLimit){
     //--------------------------
     auto _threads_number = std::min(numThreads, m_upperThreshold);
     create_task((_threads_number > 0) ? _threads_number : m_lowerThreshold);
@@ -61,21 +61,6 @@ void Utils::ThreadPool::status_disply(void){
     //--------------------------
 }// end void Utils::ThreadPool::status_disply(void)
 //--------------------------------------------------------------
-template <class F, class... Args>
-TaskBuilder Utils::ThreadPool::queue(F&& f, Args&&... args){
-    //--------------------------
-    return enqueue(std::forward<F>(f), std::forward<Args>(args)...);
-    //--------------------------
-}// end auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::future<std::invoke_result_t<F, Args...>>
-//--------------------------------------------------------------
-template <class F, class... Args>
-TaskBuilder Utils::ThreadPool::enqueue(F&& f, Args&&... args){
-    //--------------------------
-    auto task = [f = std::forward<F>(f), args = std::forward<Args>(args)...]() { f(args...); };
-    return TaskBuilder(*this, [task = std::move(task)](){ task(); });
-    //--------------------------
-}// end auto auto Utils::ThreadPool::enqueue(F&& f, Args&&... args, const Priority& priority, const uint8_t& retries) -> std::optional<std::future<std::invoke_result_t<F, Args...>>>
-//--------------------------------------------------------------
 void Utils::ThreadPool::create_task(const size_t& numThreads){
     //--------------------------
     m_workers.reserve(numThreads);
@@ -112,7 +97,8 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
             task = m_tasks.top();
             m_tasks.pop();
             //--------------------------
-        }// end // being Append tasks
+        }// end Append tasks
+        //--------------------------
         try {
             //--------------------------
             task->task();
@@ -143,9 +129,23 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
         } // end catch (const std::exception& e)
         catch (...) {
             //--------------------------
-            ++m_failedTasksCount;
-            //--------------------------
-            std::cerr << "Unknown error occurred in task." << std::endl;
+            if (task->retries > 0) {
+                //--------------------------
+                std::scoped_lock lock(m_mutex);
+                //--------------------------
+                --task->retries;
+                //--------------------------
+                m_tasks.push(task); // Put the modified copy of the task back in the queue
+                //--------------------------
+                ++m_retriedTasksCount;
+                //--------------------------
+            } else {
+                //--------------------------
+                ++m_failedTasksCount;
+                //--------------------------
+                std::cerr << "Unknown error occurred in task." << std::endl;
+                //--------------------------
+            }// end else
             //--------------------------
         }// end catch (...)
         //--------------------------
@@ -181,10 +181,10 @@ void Utils::ThreadPool::adjustWorkers(void) {
     auto taskCount = queuedTasks();
     auto workerCount = activeWorkers();
     //--------------------------
-    if (taskCount > m_upperThreshold and workerCount < MAX_LIMIT) {
+    if (taskCount > m_upperThreshold and workerCount < m_upperThreshold) {
         //--------------------------
         auto threadsToCreate = std::min(std::max(static_cast<size_t>(0), taskCount - m_upperThreshold),
-                                        MAX_LIMIT - workerCount);
+                                        m_upperThreshold - workerCount);
         //--------------------------
         threadsToCreate = std::min(threadsToCreate,
                                    std::max(static_cast<size_t>(0), std::thread::hardware_concurrency() - workerCount));
@@ -193,7 +193,7 @@ void Utils::ThreadPool::adjustWorkers(void) {
         //--------------------------
     }// end if (taskCount > m_upperThreshold and workerCount < MAX_LIMIT)
     //--------------------------
-    if (taskCount < m_lowerThreshold and workerCount > MIN_LIMIT) {
+    if (taskCount < m_lowerThreshold and workerCount > m_lowerThreshold) {
         //--------------------------
         if (workerCount > 1) {
             //--------------------------

@@ -12,7 +12,7 @@
 //--------------------------------------------------------------
 // Definitions
 //--------------------------
-constexpr auto CHECK_INTERVAL   = std::chrono::milliseconds(100);  // For example, check every 10 seconds
+constexpr auto CHECK_INTERVAL = std::chrono::milliseconds(100);  // For example, check every 10 seconds
 //--------------------------------------------------------------
 Utils::ThreadPool::ThreadPool(  const size_t& numThreads,
                                 const size_t& minLimit,
@@ -23,8 +23,10 @@ Utils::ThreadPool::ThreadPool(  const size_t& numThreads,
                                                             m_lowerThreshold(minLimit),
                                                             m_upperThreshold(maxLimit){
     //--------------------------
-    auto _threads_number = std::min(numThreads, m_upperThreshold);
-    create_task((_threads_number > 0) ? _threads_number : m_lowerThreshold);
+    auto _threads_number = (numThreads > 0) ? numThreads : maxLimit;
+    create_task(_threads_number);
+    //--------------------------
+    m_tasks.reserve(_threads_number);
     //--------------------------
     // create the adjustment thread
     m_adjustmentThread = std::jthread(&ThreadPool::adjustmentThreadFunction, this, m_adjustmentThread.get_stop_token());
@@ -81,7 +83,8 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
     //--------------------------
     while (!stoken.stop_requested()) {
         //--------------------------
-        std::shared_ptr<Task> task;
+        std::unique_ptr<Utils::ThreadTask> task;
+        //--------------------------
         {// being Append tasks 
             //--------------------------
             std::unique_lock lock(m_mutex);
@@ -94,27 +97,26 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
                 //--------------------------
             }// end if (stoken.stop_requested() && m_tasks.empty() && m_stop.load())
             //--------------------------
-            task = m_tasks.top();
-            m_tasks.pop();
+            task = std::make_unique<decltype(task)::element_type>(m_tasks.pop_top());
             //--------------------------
         }// end Append tasks
         //--------------------------
         try {
             //--------------------------
-            task->task();
+            bool _success = task->try_execute();
             //--------------------------
-            ++m_completedTasksCount;
+            if(_success){
+                ++m_completedTasksCount;
+            }// end if(_success)
             //--------------------------
         } // end try
         catch (const std::exception& e) {
             //--------------------------
-            if (task->retries > 0) {
+            if (task->get_retries() > 0) {
                 //--------------------------
                 std::scoped_lock lock(m_mutex);
                 //--------------------------
-                --task->retries;
-                //--------------------------
-                m_tasks.push(task); // Put the modified copy of the task back in the queue
+                m_tasks.push(*task); // Put the modified copy of the task back in the queue
                 //--------------------------
                 ++m_retriedTasksCount;
                 //--------------------------
@@ -129,13 +131,11 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
         } // end catch (const std::exception& e)
         catch (...) {
             //--------------------------
-            if (task->retries > 0) {
+            if (task->get_retries() > 0) {
                 //--------------------------
                 std::scoped_lock lock(m_mutex);
                 //--------------------------
-                --task->retries;
-                //--------------------------
-                m_tasks.push(task); // Put the modified copy of the task back in the queue
+                m_tasks.push(*task); // Put the modified copy of the task back in the queue
                 //--------------------------
                 ++m_retriedTasksCount;
                 //--------------------------
@@ -177,6 +177,8 @@ void Utils::ThreadPool::stop(void){
 void Utils::ThreadPool::adjustWorkers(void) {
     //--------------------------
     std::scoped_lock lock(m_mutex);
+    //--------------------------
+    m_tasks.remove();
     //--------------------------
     auto taskCount = queuedTasks();
     auto workerCount = activeWorkers();
@@ -245,14 +247,14 @@ void Utils::ThreadPool::adjustmentThreadFunction(const std::stop_token& stoken) 
     //--------------------------
     while (!stoken.stop_requested()) {
         //--------------------------
-        adjustWorkers();
         std::this_thread::sleep_for(CHECK_INTERVAL);
+        adjustWorkers();
         //--------------------------
     }// end while (!stoken.stop_requested())
     //--------------------------
 }// end void Utils::ThreadPool::adjustmentThreadFunction(const std::stop_token& stoken)
 //--------------------------------------------------------------
-void Utils::ThreadPool::addTask(Task&& task) {
+void Utils::ThreadPool::addTask(Utils::ThreadTask&& task) {
     //--------------------------
     if (m_stop.load()) {
         throw std::runtime_error("ThreadPool is stopping, cannot add more tasks");
@@ -260,7 +262,7 @@ void Utils::ThreadPool::addTask(Task&& task) {
     //--------------------------
     std::scoped_lock lock(m_mutex);
     //--------------------------
-    m_tasks.emplace(std::make_shared<Task>(std::move(task)));
+    m_tasks.push(std::move(task));
     //--------------------------
     m_taskAvailableCondition.notify_one();
     //--------------------------
@@ -270,7 +272,7 @@ size_t Utils::ThreadPool::activeWorkers(void) const{
     //--------------------------
     return m_workers.size();
     //--------------------------
-}// end size_t Utils::ThreadPool::activeWorkers() const
+}// end constexpr size_t Utils::ThreadPool::activeWorkers(void) const
 //--------------------------------------------------------------
 size_t Utils::ThreadPool::queuedTasks(void) const{
     //--------------------------
@@ -278,7 +280,7 @@ size_t Utils::ThreadPool::queuedTasks(void) const{
     //--------------------------
     return m_tasks.size();
     //--------------------------
-}// end size_t Utils::ThreadPool::queuedTasks() const
+}// end constexpr size_t Utils::ThreadPool::queuedTasks(void) const
 //--------------------------------------------------------------
 std::tuple<size_t, size_t, size_t> Utils::ThreadPool::get_status(void){
     //--------------------------

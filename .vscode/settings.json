@@ -84,7 +84,8 @@
         "netfwd": "cpp",
         "socket": "cpp",
         "timer": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "any": "cpp"
     },
     // "C_Cpp.errorSquiggles": "Disabled",
     "cmake.configureOnOpen": true,

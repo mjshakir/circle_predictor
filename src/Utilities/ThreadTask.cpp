@@ -115,6 +115,7 @@ bool Utils::ThreadTask::try_execute_local(void){
         //--------------------------
         m_result = m_function();
         m_done = true;
+        m_condition.notify_all();
         return m_done;
         //--------------------------
     } // end try
@@ -129,13 +130,11 @@ bool Utils::ThreadTask::try_execute_local(void){
 //--------------------------------------------------------------
 std::any Utils::ThreadTask::get_result_local(void) const{
     //--------------------------
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::unique_lock lock(m_mutex);
     //--------------------------
-    if(m_done){
-        return m_result;
-    }// end if(m_done)
+    m_condition.wait(lock, [this]{ return m_done; });
     //--------------------------
-    return;
+    return m_result;
     //--------------------------
 }// end std::any Utils::ThreadTask::get_result_local(void) const
 //--------------------------------------------------------------

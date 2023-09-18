@@ -6,6 +6,7 @@
 #include <functional>
 #include <mutex>
 #include <any>
+#include <condition_variable>
 //--------------------------------------------------------------
 namespace Utils {
     //--------------------------------------------------------------
@@ -117,6 +118,7 @@ namespace Utils {
             bool m_done;
             std::optional<decltype(m_function())> m_result;
             mutable std::mutex m_mutex;
+            mutable std::condition_variable m_condition;
         //--------------------------------------------------------------
     };// end class ThreadTask
     //--------------------------------------------------------------

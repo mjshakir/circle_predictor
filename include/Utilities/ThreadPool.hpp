@@ -15,6 +15,7 @@
 #include <tuple>
 #include <future>
 #include <variant>
+#include <any>
 //--------------------------------------------------------------
 namespace Utils{
     //--------------------------------------------------------------
@@ -56,10 +57,10 @@ namespace Utils{
                         //--------------------------
                         Task(void)                   = default;
                         //--------------------------
-                        Task(std::function<void()> t, std::variant<Priority, uint8_t> p, uint8_t r)
+                        Task(std::function<std::any()> t, std::variant<Priority, uint8_t> p, uint8_t r)
                             : task(std::move(t)), priority(p), retries(r) {}
                         //--------------------------
-                        std::function<void()> task;
+                        std::function<std::any()> task;
                         // Priority Priority;
                         std::variant<Priority, uint8_t> priority;
                         uint8_t retries;
@@ -79,14 +80,13 @@ namespace Utils{
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
+            template <typename R>
             class TaskBuilder {
                 public:
-                    TaskBuilder(ThreadPool& threadPool, std::function<void()> task)
+                    TaskBuilder(ThreadPool& threadPool, std::function<R()> task)
                         : m_threadPool(threadPool), m_task(std::move(task)), m_priority(Priority::LOW), m_retries(0){}
                     //--------------------------
-                    ~TaskBuilder(void) { 
-                        m_threadPool.addTask(submit()); 
-                    }
+                    // ~TaskBuilder(void) { submit();}
                     //--------------------------
                     TaskBuilder& set_priority(const Priority& p) { 
                         m_priority = p; 
@@ -103,14 +103,17 @@ namespace Utils{
                         return *this; 
                     }
                     //--------------------------
-                    Task submit() const { 
-                        return Task(std::move(m_task), m_priority, m_retries); 
+                    std::future<R> submit() const {
+                        auto task = std::make_shared<std::packaged_task<R()>>(std::move(m_task));
+                        auto future = task->get_future();
+                        m_threadPool.addTask(Task{ [task] { (*task)(); }, m_priority, m_retries });
+                        return future;
                     }
                     //--------------------------------------------------------------
                 private:
                     //--------------------------
                     ThreadPool& m_threadPool;
-                    std::function<void()> m_task;
+                    std::function<R()> m_task;
                     std::variant<Priority, uint8_t> m_priority;
                     uint8_t m_retries;
                 //--------------------------------------------------------------
@@ -141,7 +144,7 @@ namespace Utils{
             void status_disply(void);
             //--------------------------
             template <class F, class... Args>
-            TaskBuilder queue(F&& f, Args&&... args){
+            auto queue(F&& f, Args&&... args){
                 //--------------------------
                 return enqueue(std::forward<F>(f), std::forward<Args>(args)...);
                 //--------------------------
@@ -150,10 +153,11 @@ namespace Utils{
         protected:
             //--------------------------------------------------------------
             template <class F, class... Args>
-            TaskBuilder enqueue(F&& f, Args&&... args){
+            auto enqueue(F&& f, Args&&... args){
                 //--------------------------
+                using return_type = std::invoke_result_t<F, Args...>;
                 auto task = [f = std::forward<F>(f), ...args = std::forward<Args>(args)]() mutable { return f(args...); };
-                return TaskBuilder(*this, [task = std::move(task)](){ task(); });
+                return TaskBuilder<return_type>(*this, std::move(task));
                 //--------------------------
             }// end TaskBuilder enqueue(F&& f, Args&&... args)
             //--------------------------

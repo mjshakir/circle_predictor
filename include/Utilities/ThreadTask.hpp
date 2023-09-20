@@ -7,6 +7,7 @@
 #include <mutex>
 #include <any>
 #include <condition_variable>
+#include <future>
 //--------------------------------------------------------------
 namespace Utils {
     //--------------------------------------------------------------
@@ -23,7 +24,7 @@ namespace Utils {
                             }),
                             m_priority(priority),
                             m_retries(retries),
-                            m_done(false) {
+                            m_state(TaskState::PENDING){
                 //--------------------------
             }// end ThreadTask(Func&& func, Args&&... args, uint8_t priority = 0u, uint8_t retries = 0u)
             //--------------------------
@@ -50,7 +51,7 @@ namespace Utils {
             //--------------------------
             bool try_execute(void);
             //--------------------------
-            std::any get_result(void) const;
+            std::future<std::any> get_future(void) const;
             //--------------------------
             bool is_done(void) const;
             //--------------------------
@@ -73,6 +74,8 @@ namespace Utils {
             void increase_priority(void);
             //--------------------------
             void decrease_priority(void);
+            //--------------------------
+            uint8_t get_status(void) const;
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
@@ -80,7 +83,7 @@ namespace Utils {
             //--------------------------
             bool try_execute_local(void);
             //--------------------------
-            std::any get_result_local(void) const;
+            std::future<std::any> get_future_local(void) const;
             //--------------------------
             bool is_done_local(void) const;
             //--------------------------
@@ -96,11 +99,16 @@ namespace Utils {
             //--------------------------
             void decrease_priority_local(const uint8_t& amount);
             //--------------------------
+            template<typename Func>
+            constexpr bool is_void_function(void) {
+                return std::is_same_v<std::invoke_result_t<Func>, void>;
+            }// end constexpr bool is_void_function(void)
+            //--------------------------
             struct Comparator {
                 //--------------------------------------------------------------
                 bool operator()(const ThreadTask& lhs, const ThreadTask& rhs) const {
                     //--------------------------
-                    std::lock_guard<std::mutex> lock(lhs.m_mutex);
+                    std::scoped_lock lock(lhs.m_mutex, rhs.m_mutex);
                     //--------------------------
                     if (lhs.m_priority != rhs.m_priority) {
                         return lhs.m_priority < rhs.m_priority;
@@ -113,12 +121,20 @@ namespace Utils {
             };// end struct Comparator
             //--------------------------------------------------------------
         private:
+            //--------------------------------------------------------------
             std::function<std::any()> m_function;
             uint8_t m_priority, m_retries;
-            bool m_done;
-            std::optional<decltype(m_function())> m_result;
+            //--------------------------
+            enum class TaskState : uint8_t {
+                PENDING = 0,
+                COMPLETED,
+                RETRIEVED
+            };
+            //--------------------------
+            TaskState m_state;
+            //--------------------------
+            std::promise<std::any> m_promise;
             mutable std::mutex m_mutex;
-            mutable std::condition_variable m_condition;
         //--------------------------------------------------------------
     };// end class ThreadTask
     //--------------------------------------------------------------

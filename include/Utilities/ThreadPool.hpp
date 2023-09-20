@@ -37,7 +37,7 @@ namespace Utils{
                     }// end TaskBuilder(ThreadPool& threadPool, F&& f, Args&&... args)
                     //--------------------------
                     ~TaskBuilder(void) {
-                        m_threadPool.addTask(std::move(m_task), m_priority, m_retries);
+                        m_threadPool.addTask(m_task, m_priority, m_retries);
                     }// end  ~TaskBuilder(void)
                     //--------------------------
                     TaskBuilder& set_priority(const uint8_t& p) {
@@ -100,9 +100,7 @@ namespace Utils{
                 //--------------------------
                 return TaskBuilder(*this, std::forward<F>(f), std::forward<Args>(args)...);
                 //--------------------------
-            }// end TaskBuilder enqueue(F&& f, Args&&... args)
-            //--------------------------
-            
+            }// end TaskBuilder enqueue(F&& f, Args&&... args)            
             //--------------------------------------------------------------
             void create_task(const size_t& numThreads);
             //--------------------------
@@ -118,6 +116,17 @@ namespace Utils{
             //--------------------------
             void addTask(Utils::ThreadTask&& task);
             //--------------------------
+            template<typename... Args>
+            void addTask(Args&&... args){
+                //--------------------------
+                std::scoped_lock lock(m_mutex);
+                //--------------------------
+                m_tasks.emplace(std::forward<Args>(args)...);
+                //--------------------------
+                m_taskAvailableCondition.notify_one();
+                //--------------------------
+            }// end void addTask(Args&&... args)
+            //--------------------------
             size_t activeWorkers(void) const;
             //--------------------------
             size_t queuedTasks(void) const;
@@ -132,7 +141,7 @@ namespace Utils{
             //--------------------------
             std::atomic<size_t> m_failedTasksCount, m_retriedTasksCount, m_completedTasksCount;
             //--------------------------
-            const size_t m_lowerThreshold, m_upperThreshold;  // Example value
+            const size_t m_lowerThreshold, m_upperThreshold;
             //--------------------------
             std::vector<std::jthread> m_workers;
             //--------------------------

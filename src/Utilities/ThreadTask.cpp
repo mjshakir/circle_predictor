@@ -17,11 +17,11 @@ void Utils::ThreadTask::execute(void){
 //--------------------------------------------------------------
 bool Utils::ThreadTask::try_execute(void){
     //--------------------------
-    try_execute_local();
+    return try_execute_local();
     //--------------------------
 }// end bool Utils::ThreadTask::try_execute(void)
 //--------------------------------------------------------------
-std::future<std::any> Utils::ThreadTask::get_future(void) const {
+std::future<std::any> Utils::ThreadTask::get_future(void) {
     //--------------------------
     return get_future_local();
     //--------------------------
@@ -107,7 +107,7 @@ void Utils::ThreadTask::execute_local(void){
             break;
         }// end if (try_execute())
         //--------------------------
-    } while (m_retries > 0)
+    } while (m_retries > 0);
     //--------------------------
 }// end void Utils::ThreadTask::execute_local(void)
 //--------------------------------------------------------------
@@ -116,7 +116,7 @@ bool Utils::ThreadTask::try_execute_local(void){
     std::any result;
     //--------------------------
     try {
-        result = m_function()
+        result = m_function();
     } // end try
     catch (...) {
         //--------------------------
@@ -134,17 +134,17 @@ bool Utils::ThreadTask::try_execute_local(void){
     //--------------------------
 }// end bool Utils::ThreadTask::try_execute_local(void)
 //--------------------------------------------------------------
-std::future<std::any> Utils::ThreadTask::get_future_local(void) const{
+std::future<std::any> Utils::ThreadTask::get_future_local(void){
     //--------------------------
     std::lock_guard<std::mutex> lock(m_mutex);
     //--------------------------
-    if (m_state == TaskState::Retrieved) {
+    if (m_state ==  Utils::ThreadTask::TaskState::RETRIEVED) {
         throw std::logic_error("Future already retrieved!");
-    }// end if (m_state == TaskState::Retrieved)
+    }// end if (m_state ==  Utils::ThreadTask::TaskState::Retrieved)
     //--------------------------
-    if (m_state == TaskState::NotStarted) {
+    if (m_state ==  Utils::ThreadTask::TaskState::PENDING) {
         throw std::logic_error("Task not yet executed!");
-    }// end if (m_state == TaskState::Retrieved)
+    }// end if (m_state ==  Utils::ThreadTask::TaskState::Retrieved)
     //--------------------------
     m_state = Utils::ThreadTask::TaskState::RETRIEVED;
     //--------------------------
@@ -156,7 +156,7 @@ bool Utils::ThreadTask::is_done_local(void) const{
     //--------------------------
     std::lock_guard<std::mutex> lock(m_mutex);
     //--------------------------
-    if (constexpr (is_void_function<decltype(m_function)>()) and (m_state == Utils::ThreadTask::TaskState::COMPLETED)) {
+    if (Utils::ThreadTask::is_void_function<decltype(m_function)>() and (m_state == Utils::ThreadTask::TaskState::COMPLETED)) {
         //--------------------------
         return true;
         //--------------------------

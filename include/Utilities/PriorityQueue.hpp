@@ -29,7 +29,7 @@ namespace Utils{
             }// end bool empty(void) const
             //--------------------------
             void reserve(const size_t& size) {
-                reserve_m_data(size)
+                reserve_m_data(size);
             }// endvoid reserve(const size_t& size)
             //--------------------------
             void push(const T& value){

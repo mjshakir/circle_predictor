@@ -18,21 +18,21 @@ namespace Utils {
             ThreadTask(void)                          = default;
             //--------------------------
             template <typename Func, typename... Args>
-            ThreadTask(Func&& func, Args&&... args, uint8_t priority = 0u, uint8_t retries = 0u)
-                            : m_function([func = std::forward<Func>(func), args...]() mutable -> std::any {
-                                return std::invoke(func, args...);
-                            }),
-                            m_priority(priority),
-                            m_retries(retries),
-                            m_state(TaskState::PENDING){
+            ThreadTask(Func&& func, Args&&... args, uint8_t priority = 0U, uint8_t retries = 0U)
+                            :   m_function([func = std::forward<Func>(func), args = std::make_tuple(std::forward<Args>(args)...)]() mutable -> std::any {
+                                    return std::apply(func, args);
+                                }),
+                                m_priority(priority),
+                                m_retries(retries),
+                                m_state(TaskState::PENDING){
                 //--------------------------
             }// end ThreadTask(Func&& func, Args&&... args, uint8_t priority = 0u, uint8_t retries = 0u)
             //--------------------------
-            ThreadTask(const ThreadTask&)            = default;
-            ThreadTask& operator=(const ThreadTask&) = default;
-            //----------------------------
-            ThreadTask(ThreadTask&&)                 = default;
-            ThreadTask& operator=(ThreadTask&&)      = default;
+            // ThreadTask(const ThreadTask&)            = default;
+            // ThreadTask& operator=(const ThreadTask&) = default;
+            // //----------------------------
+            // ThreadTask(ThreadTask&&)                 = default;
+            // ThreadTask& operator=(ThreadTask&&)      = default;
             //--------------------------
             bool operator==(const ThreadTask& other) const {
                 std::lock_guard<std::mutex> lock(m_mutex);
@@ -51,7 +51,7 @@ namespace Utils {
             //--------------------------
             bool try_execute(void);
             //--------------------------
-            std::future<std::any> get_future(void) const;
+            std::future<std::any> get_future(void);
             //--------------------------
             bool is_done(void) const;
             //--------------------------
@@ -83,7 +83,7 @@ namespace Utils {
             //--------------------------
             bool try_execute_local(void);
             //--------------------------
-            std::future<std::any> get_future_local(void) const;
+            std::future<std::any> get_future_local(void);
             //--------------------------
             bool is_done_local(void) const;
             //--------------------------
@@ -100,7 +100,7 @@ namespace Utils {
             void decrease_priority_local(const uint8_t& amount);
             //--------------------------
             template<typename Func>
-            constexpr bool is_void_function(void) {
+            static constexpr bool is_void_function(void) {
                 return std::is_same_v<std::invoke_result_t<Func>, void>;
             }// end constexpr bool is_void_function(void)
             //--------------------------

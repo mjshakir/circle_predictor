@@ -9,6 +9,34 @@
 //--------------------------------------------------------------
 // public
 //--------------------------
+Utils::ThreadTask::ThreadTask(ThreadTask&& other) noexcept :    m_function(std::move(other.m_function)),
+                                                                m_priority(other.m_priority),
+                                                                m_retries(other.m_retries),
+                                                                m_state(other.m_state),
+                                                                m_promise(std::move(other.m_promise)) {
+    //--------------------------
+    std::scoped_lock lock(m_mutex, other.m_mutex); // Lock both mutexes
+    //--------------------------
+}// end Utils::ThreadTask::ThreadTask(ThreadTask&&) noexcept     
+//--------------------------------------------------------------
+Utils::ThreadTask& Utils::ThreadTask::operator=(ThreadTask&& other) noexcept  {
+    //--------------------------
+    if (this != &other) {
+        //--------------------------
+        std::scoped_lock lock(m_mutex, other.m_mutex); // Lock both mutexes
+        //--------------------------
+        m_function  = std::move(other.m_function);
+        m_priority  = other.m_priority;
+        m_retries   = other.m_retries;
+        m_state     = other.m_state;
+        m_promise   = std::move(other.m_promise);
+        //--------------------------
+    }// end if (this != &other)
+    //--------------------------
+    return *this;
+    //--------------------------
+}// end Utils::ThreadTask& Utils::ThreadTask::operator=(ThreadTask&& other) noexcept
+//--------------------------------------------------------------
 void Utils::ThreadTask::execute(void){
     //--------------------------
     execute_local();
@@ -23,7 +51,7 @@ bool Utils::ThreadTask::try_execute(void){
 //--------------------------------------------------------------
 std::future<std::any> Utils::ThreadTask::get_future(void) {
     //--------------------------
-    return get_future_local();
+    return get_future_local<decltype(m_function)>();
     //--------------------------
 }// end std::any Utils::ThreadTask::get_result(void) const
 //--------------------------------------------------------------
@@ -116,41 +144,44 @@ bool Utils::ThreadTask::try_execute_local(void){
     std::any result;
     //--------------------------
     try {
-        result = m_function();
+         if constexpr (is_void_function<decltype(m_function)>()) {
+            m_function();
+        } else {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_promise.set_value(m_function());
+        }
     } // end try
     catch (...) {
         //--------------------------
-        decrease_retries();
         return false;
         //--------------------------
     }// end catch (...)
     //--------------------------
     std::lock_guard<std::mutex> lock(m_mutex);
     //--------------------------
-    m_promise.set_value(result);
     m_state = Utils::ThreadTask::TaskState::COMPLETED;
     //--------------------------
     return true;
     //--------------------------
 }// end bool Utils::ThreadTask::try_execute_local(void)
 //--------------------------------------------------------------
-std::future<std::any> Utils::ThreadTask::get_future_local(void){
-    //--------------------------
-    std::lock_guard<std::mutex> lock(m_mutex);
-    //--------------------------
-    if (m_state ==  Utils::ThreadTask::TaskState::RETRIEVED) {
-        throw std::logic_error("Future already retrieved!");
-    }// end if (m_state ==  Utils::ThreadTask::TaskState::Retrieved)
-    //--------------------------
-    if (m_state ==  Utils::ThreadTask::TaskState::PENDING) {
-        throw std::logic_error("Task not yet executed!");
-    }// end if (m_state ==  Utils::ThreadTask::TaskState::Retrieved)
-    //--------------------------
-    m_state = Utils::ThreadTask::TaskState::RETRIEVED;
-    //--------------------------
-    return m_promise.get_future();
-    //--------------------------
-}// end std::any Utils::ThreadTask::get_result_local(void) const
+// std::future<std::any> Utils::ThreadTask::get_future_local(void){
+//     //--------------------------
+//     std::lock_guard<std::mutex> lock(m_mutex);
+//     //--------------------------
+//     if (m_state ==  Utils::ThreadTask::TaskState::RETRIEVED) {
+//         throw std::logic_error("Future already retrieved!");
+//     }// end if (m_state ==  Utils::ThreadTask::TaskState::Retrieved)
+//     //--------------------------
+//     if (m_state ==  Utils::ThreadTask::TaskState::PENDING) {
+//         throw std::logic_error("Task not yet executed!");
+//     }// end if (m_state ==  Utils::ThreadTask::TaskState::Retrieved)
+//     //--------------------------
+//     m_state = Utils::ThreadTask::TaskState::RETRIEVED;
+//     //--------------------------
+//     return m_promise.get_future();
+//     //--------------------------
+// }// end std::any Utils::ThreadTask::get_result_local(void) const
 //--------------------------------------------------------------
 bool Utils::ThreadTask::is_done_local(void) const{
     //--------------------------

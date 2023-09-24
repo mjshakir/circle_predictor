@@ -8,6 +8,7 @@
 #include <any>
 #include <condition_variable>
 #include <future>
+#include <tuple>
 //--------------------------------------------------------------
 namespace Utils {
     //--------------------------------------------------------------
@@ -19,21 +20,31 @@ namespace Utils {
             //--------------------------
             template <typename Func, typename... Args>
             ThreadTask(Func&& func, Args&&... args, uint8_t priority = 0U, uint8_t retries = 0U)
-                            :   m_function([func = std::forward<Func>(func), args = std::make_tuple(std::forward<Args>(args)...)]() mutable -> std::any {
-                                    return std::apply(func, args);
-                                }),
-                                m_priority(priority),
+                            :   m_priority(priority),
                                 m_retries(retries),
                                 m_state(TaskState::PENDING){
-                //--------------------------
+                
+                auto shared_func = std::make_shared<Func>(std::move(func));
+
+                m_function = [shared_func, ...capturedArgs = std::forward<Args>(args)]() mutable -> std::any {
+                    if constexpr (is_void_function<Func>()) {
+                        std::invoke(*shared_func, std::forward<decltype(capturedArgs)>(capturedArgs)...);
+                        return std::any{};
+                    } else {
+                        return std::invoke(*shared_func, std::forward<decltype(capturedArgs)>(capturedArgs)...);
+                    }
+                };
+
+
             }// end ThreadTask(Func&& func, Args&&... args, uint8_t priority = 0u, uint8_t retries = 0u)
             //--------------------------
             // ThreadTask(const ThreadTask&)            = default;
             // ThreadTask& operator=(const ThreadTask&) = default;
-            // //----------------------------
-            // ThreadTask(ThreadTask&&)                 = default;
-            // ThreadTask& operator=(ThreadTask&&)      = default;
+            //--------------------------------------------------------------
+            ThreadTask(ThreadTask&& other) noexcept;         
             //--------------------------
+            ThreadTask& operator=(ThreadTask&& other) noexcept;
+            //--------------------------------------------------------------
             bool operator==(const ThreadTask& other) const {
                 std::lock_guard<std::mutex> lock(m_mutex);
                 return this == &other;
@@ -76,6 +87,12 @@ namespace Utils {
             void decrease_priority(void);
             //--------------------------
             uint8_t get_status(void) const;
+            //--------------------------
+            template<typename Func>
+            static constexpr bool is_void_function(void) {
+                return std::is_same_v<std::invoke_result_t<Func>, void>;
+            }// end constexpr bool is_void_function(void)
+            //--------------------------
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
@@ -83,7 +100,30 @@ namespace Utils {
             //--------------------------
             bool try_execute_local(void);
             //--------------------------
-            std::future<std::any> get_future_local(void);
+            template<typename Func>
+            std::enable_if_t<!is_void_function<Func>(), std::future<std::any>>
+            get_future_local() {
+                std::lock_guard<std::mutex> lock(m_mutex);
+
+                static_assert(!is_void_function<Func>(), "Cannot get future from a void function!");
+
+                if (m_state == TaskState::RETRIEVED) {
+                    throw std::logic_error("Future already retrieved!");
+                }
+                
+                if (m_state == TaskState::PENDING) {
+                    throw std::logic_error("Task not yet executed!");
+                }
+                
+                m_state = TaskState::RETRIEVED;
+                return m_promise.get_future();
+            }
+            //--------------------------
+            template<typename Func>
+            std::enable_if_t<std::is_void_v<Func>>
+            get_future_local() {
+                static_assert(is_void_function<Func>(), "Cannot get future from a void function!");
+            }
             //--------------------------
             bool is_done_local(void) const;
             //--------------------------
@@ -98,11 +138,6 @@ namespace Utils {
             void increase_priority_local(const uint8_t& amount);
             //--------------------------
             void decrease_priority_local(const uint8_t& amount);
-            //--------------------------
-            template<typename Func>
-            static constexpr bool is_void_function(void) {
-                return std::is_same_v<std::invoke_result_t<Func>, void>;
-            }// end constexpr bool is_void_function(void)
             //--------------------------
             struct Comparator {
                 //--------------------------------------------------------------

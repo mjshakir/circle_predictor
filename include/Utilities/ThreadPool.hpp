@@ -24,41 +24,81 @@ namespace Utils{
             //--------------------------------------------------------------
             template <typename F, typename... Args>
             class TaskBuilder {
-                public:
+                //--------------------------------------------------------------
+                private:
+                    using ReturnType = std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>;
+                    //--------------------------
+                    // Dummy struct for void-returning functions
+                    struct VoidType {};
                     //--------------------------------------------------------------
+                public:
                     TaskBuilder(ThreadPool& threadPool, F&& f, Args&&... args)
                         :   m_threadPool(threadPool),
-                            m_task([f = std::forward<F>(f), ...args = std::forward<Args>(args)]() mutable {
-                                return f(args...);
-                            }),
                             m_priority(0),
-                            m_retries(0) {
-                            m_future = m_task.get_future();
-                    }// end TaskBuilder(ThreadPool& threadPool, F&& f, Args&&... args)
-                    //--------------------------
-                    ~TaskBuilder(void) {
-                        m_threadPool.addTask(m_task, m_priority, m_retries);
-                    }// end  ~TaskBuilder(void)
+                            m_retries(0),
+                            m_submitted(false),
+                            m_task(createTask(std::forward<F>(f), std::forward<Args>(args)...)) {
+
+                        if constexpr (!std::is_void_v<ReturnType>) {
+                            m_future.emplace(m_task.get_future());
+                        }
+                    }
                     //--------------------------
                     TaskBuilder& set_priority(const uint8_t& p) {
                         m_priority = p;
                         return *this;
-                    }// end TaskBuilder& set_priority(const uint8_t& p)
+                    }
                     //--------------------------
                     TaskBuilder& set_retries(const uint8_t& r) {
                         m_retries = r;
                         return *this;
-                    }// end TaskBuilder& set_retries(const uint8_t& r)
+                    }
                     //--------------------------
-                    template <typename T>
-                    operator std::future<T>() { return std::move(m_future); }
+                    void submit(void) {
+                        if (!m_submitted) {
+                            m_threadPool.addTask(std::move(m_task), m_priority, m_retries);
+                            m_submitted = true;
+                        }
+                    }
+                    //--------------------------
+                    // Specialization for non-void tasks
+                    template <typename T = ReturnType>
+                    std::enable_if_t<!std::is_void_v<T>, T> get(void) {
+                        auto res = m_future->get();
+                        m_future.reset();  // Prevent future gets
+                        return res;
+                    }// end std::enable_if_t<!std::is_void_v<T>, T> get(void)
+                    //--------------------------
+                    // Specialization for void tasks
+                    template <typename T = ReturnType>
+                    std::enable_if_t<std::is_void_v<T>> get(void) {
+                        static_assert(std::is_void_v<T>, "This get() should only be instantiated for void tasks.");
+                    }// end std::enable_if_t<std::is_void_v<T>> get(void) 
                     //--------------------------------------------------------------
                 private:
+                    template <typename Func, typename... CArgs>
+                    auto createTask(Func&& func, CArgs&&... capturedArgs) {
+                        if constexpr (!std::is_void_v<ReturnType>) {
+                            return std::packaged_task<ReturnType()>(
+                                [f = std::forward<Func>(func), ...args = std::forward<CArgs>(capturedArgs)]() mutable {
+                                    return std::invoke(f, std::forward<CArgs>(args)...);
+                                }
+                            );
+                        } else {
+                            return std::packaged_task<VoidType()>(
+                                [f = std::forward<Func>(func), ...args = std::forward<CArgs>(capturedArgs)]() mutable {
+                                    std::invoke(f, std::forward<CArgs>(args)...);
+                                    return VoidType{};
+                                }
+                            );
+                        }
+                    }// end auto createTask(Func&& func, CArgs&&... capturedArgs)
                     //--------------------------------------------------------------
                     ThreadPool& m_threadPool;
-                    std::packaged_task<std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>()> m_task;
-                    std::future<std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>> m_future;
                     uint8_t m_priority, m_retries;
+                    bool m_submitted;   // Track if task has been submitted
+                    std::packaged_task<std::conditional_t<std::is_void_v<ReturnType>, VoidType, ReturnType>()> m_task;
+                    std::optional<std::future<ReturnType>> m_future;
                 //--------------------------------------------------------------
             };// end class TaskBuilder
             //--------------------------------------------------------------
@@ -66,9 +106,7 @@ namespace Utils{
             //--------------------------------------------------------------
             ThreadPool(void) = delete;
             //--------------------------
-            explicit ThreadPool(const size_t& numThreads = static_cast<size_t>(std::thread::hardware_concurrency()),
-                                const size_t& minLimit = 1,
-                                const size_t& maxLimit = static_cast<size_t>(std::thread::hardware_concurrency()));
+            explicit ThreadPool(const size_t& numThreads = static_cast<size_t>(std::thread::hardware_concurrency()));
             //--------------------------
             ThreadPool(const ThreadPool&)            = delete;
             ThreadPool& operator=(const ThreadPool&) = delete;
@@ -89,16 +127,16 @@ namespace Utils{
             template <class F, class... Args>
             auto queue(F&& f, Args&&... args){
                 //--------------------------
-                return enqueue(std::forward<F>(f), std::forward<Args>(args)...);
+                return enqueue<F, Args...>(std::forward<F>(f), std::forward<Args>(args)...);
                 //--------------------------
             }// end TaskBuilder queue(F&& f, Args&&... args)         
             //--------------------------------------------------------------
         protected:
             //--------------------------------------------------------------
             template <class F, class... Args>
-            auto enqueue(F&& f, Args&&... args){
+            auto enqueue(F&& f, Args&&... args) {
                 //--------------------------
-                return TaskBuilder(*this, std::forward<F>(f), std::forward<Args>(args)...);
+                return TaskBuilder<F, Args...>(*this, std::forward<F>(f), std::forward<Args>(args)...);
                 //--------------------------
             }// end TaskBuilder enqueue(F&& f, Args&&... args)            
             //--------------------------------------------------------------

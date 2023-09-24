@@ -14,19 +14,17 @@
 //--------------------------
 constexpr auto CHECK_INTERVAL = std::chrono::milliseconds(100);  // For example, check every 10 seconds
 //--------------------------------------------------------------
-Utils::ThreadPool::ThreadPool(  const size_t& numThreads,
-                                const size_t& minLimit,
-                                const size_t& maxLimit) :   m_stop(false), 
+Utils::ThreadPool::ThreadPool(const size_t& numThreads) :   m_stop(false), 
                                                             m_failedTasksCount(0),
                                                             m_retriedTasksCount(0),
                                                             m_completedTasksCount(0),
-                                                            m_lowerThreshold(minLimit),
-                                                            m_upperThreshold(maxLimit){
+                                                            m_lowerThreshold(1UL),
+                                                            m_upperThreshold(static_cast<size_t>(std::thread::hardware_concurrency())){
     //--------------------------
-    auto _threads_number = (numThreads > 0) ? numThreads : maxLimit;
+    auto _threads_number = std::max(std::min(m_upperThreshold, numThreads), m_lowerThreshold);
     create_task(_threads_number);
     //--------------------------
-    m_tasks.reserve(_threads_number);
+    m_tasks.reserve(numThreads);
     //--------------------------
     // create the adjustment thread
     m_adjustmentThread = std::jthread(&ThreadPool::adjustmentThreadFunction, this, m_adjustmentThread.get_stop_token());
@@ -83,7 +81,7 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
     //--------------------------
     while (!stoken.stop_requested()) {
         //--------------------------
-        std::unique_ptr<Utils::ThreadTask> task;
+        Utils::ThreadTask task;
         //--------------------------
         {// being Append tasks 
             //--------------------------
@@ -95,15 +93,19 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
                 //--------------------------
                 return;
                 //--------------------------
-            }// end if (stoken.stop_requested() && m_tasks.empty() && m_stop.load())
+            }// end if (stoken.stop_requested() and m_tasks.empty() and m_stop.load())
             //--------------------------
-            task = std::make_unique<decltype(task)::element_type>(m_tasks.pop_top());
+            if (auto opt_task = m_tasks.pop_top(); opt_task.has_value()) {
+                //--------------------------
+                task = std::move(opt_task.value());
+                //--------------------------
+            }// end if (auto opt_task = m_tasks.pop_top(); opt_task.has_value())
             //--------------------------
         }// end Append tasks
         //--------------------------
         try {
             //--------------------------
-            bool _success = task->try_execute();
+            bool _success = task.try_execute();
             //--------------------------
             if(_success){
                 ++m_completedTasksCount;
@@ -112,11 +114,12 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
         } // end try
         catch (const std::exception& e) {
             //--------------------------
-            if (task->get_retries() > 0) {
+            if (task.get_retries() > 0) {
                 //--------------------------
                 std::scoped_lock lock(m_mutex);
                 //--------------------------
-                m_tasks.push(*task); // Put the modified copy of the task back in the queue
+                task.decrease_retries();
+                m_tasks.push(std::move(task)); // Put the modified copy of the task back in the queue
                 //--------------------------
                 ++m_retriedTasksCount;
                 //--------------------------
@@ -131,11 +134,12 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
         } // end catch (const std::exception& e)
         catch (...) {
             //--------------------------
-            if (task->get_retries() > 0) {
+            if (task.get_retries() > 0) {
                 //--------------------------
                 std::scoped_lock lock(m_mutex);
                 //--------------------------
-                m_tasks.push(*task); // Put the modified copy of the task back in the queue
+                task.decrease_retries();
+                m_tasks.push(std::move(task)); // Put the modified copy of the task back in the queue
                 //--------------------------
                 ++m_retriedTasksCount;
                 //--------------------------
@@ -155,14 +159,16 @@ void Utils::ThreadPool::workerFunction(const std::stop_token& stoken) {
 //--------------------------------------------------------------
 void Utils::ThreadPool::stop(void){
     //--------------------------
-     { // set m_stop to true
-        //--------------------------
-        std::scoped_lock lock(m_mutex);
-        m_stop.store(true);
-        //--------------------------
-    }// end set
+    //  { // set m_stop to true
+    //     //--------------------------
+    //     std::scoped_lock lock(m_mutex);
+    //     m_stop.store(true);
+    //     //--------------------------
+    // }// end set
+    // //--------------------------
+    // m_taskAvailableCondition.notify_all();
     //--------------------------
-    m_taskAvailableCondition.notify_all();
+    m_stop.store(true);
     //--------------------------
     m_adjustmentThread.request_stop();
     //--------------------------
@@ -174,26 +180,58 @@ void Utils::ThreadPool::stop(void){
     //--------------------------
 }//end void Utils::ThreadPool::stop(void)
 //--------------------------------------------------------------
+// void Utils::ThreadPool::adjustWorkers(void) {
+//     //--------------------------
+//     m_tasks.remove();
+//     //--------------------------
+//     size_t taskCount, workerCount;
+//     //--------------------------
+//     {
+//         //--------------------------
+//         std::scoped_lock lock(m_mutex);
+//         taskCount = queuedTasks();
+//         workerCount = activeWorkers();
+//         //--------------------------
+//     }
+//     //--------------------------
+//     if (taskCount > m_upperThreshold and workerCount < m_upperThreshold) {
+//         //--------------------------
+//         auto threadsToCreate = std::min(std::max(static_cast<size_t>(0), taskCount - m_upperThreshold),
+//                                         m_upperThreshold - workerCount);
+//         //--------------------------
+//         threadsToCreate = std::min(threadsToCreate,
+//                                    std::max(static_cast<size_t>(0), m_upperThreshold - workerCount));
+//         //--------------------------
+//         create_task((threadsToCreate > 0) ? threadsToCreate : m_lowerThreshold);
+//         //--------------------------
+//     }// end if (taskCount > m_upperThreshold and workerCount < MAX_LIMIT)
+//     //--------------------------
+//     if (taskCount < m_lowerThreshold and workerCount > m_lowerThreshold) {
+//         //--------------------------
+//         if (workerCount > 1) {
+//             //--------------------------
+//             m_workers.back().request_stop();
+//             m_workers.pop_back();
+//             //--------------------------
+//         }// end if (workerCount > 1)
+//         //--------------------------
+//     }// end if (taskCount < m_lowerThreshold and workerCount > MIN_LIMIT)
+//     //--------------------------
+// }// end void Utils::ThreadPool::adjustWorkers(void)
+//--------------------------------------------------------------
 void Utils::ThreadPool::adjustWorkers(void) {
-    //--------------------------
-    std::scoped_lock lock(m_mutex);
     //--------------------------
     m_tasks.remove();
     //--------------------------
-    auto taskCount = queuedTasks();
-    auto workerCount = activeWorkers();
+    size_t taskCount, workerCount;
     //--------------------------
-    if (taskCount > m_upperThreshold and workerCount < m_upperThreshold) {
+    {
         //--------------------------
-        auto threadsToCreate = std::min(std::max(static_cast<size_t>(0), taskCount - m_upperThreshold),
-                                        m_upperThreshold - workerCount);
+        std::scoped_lock lock(m_mutex);
+        taskCount = queuedTasks();
+        workerCount = activeWorkers();
         //--------------------------
-        threadsToCreate = std::min(threadsToCreate,
-                                   std::max(static_cast<size_t>(0), std::thread::hardware_concurrency() - workerCount));
-        //--------------------------
-        create_task(threadsToCreate);
-        //--------------------------
-    }// end if (taskCount > m_upperThreshold and workerCount < MAX_LIMIT)
+    }
     //--------------------------
     if (taskCount < m_lowerThreshold and workerCount > m_lowerThreshold) {
         //--------------------------
@@ -204,44 +242,58 @@ void Utils::ThreadPool::adjustWorkers(void) {
             //--------------------------
         }// end if (workerCount > 1)
         //--------------------------
-    }// end if (taskCount < m_lowerThreshold and workerCount > MIN_LIMIT)
+        if (taskCount > 0U) {
+        //--------------------------
+            m_workers.clear();
+        //--------------------------
+        }// end if (taskCount > 0U)
+    //--------------------------
+    }// end if (taskCount < m_lowerThreshold and workerCount > m_lowerThreshold)
+    //--------------------------
+    if (taskCount < m_upperThreshold and taskCount > m_lowerThreshold) {
+        //--------------------------
+        create_task(taskCount);
+        //--------------------------
+    }// end if (taskCount < m_upperThreshold and taskCount > m_lowerThreshold)
+    //--------------------------
+    if (taskCount > m_upperThreshold) {
+        //--------------------------
+        create_task(m_upperThreshold);
+        //--------------------------
+    }// end if (taskCount > m_upperThreshold)
     //--------------------------
 }// end void Utils::ThreadPool::adjustWorkers(void)
 //--------------------------------------------------------------
-// void Utils::ThreadPool::adjustmentThreadFunction(void) {
-//     //--------------------------
-//     while (!m_stop.load()) {
-//         //--------------------------
-//         std::unique_lock<std::mutex> lock(m_mutex);
-//         //--------------------------
-//         m_taskAvailableCondition.wait_for(lock, CHECK_INTERVAL, [this] { return m_stop.load(); });
-//         //--------------------------
-//         if (m_stop.load()){
-//             //--------------------------
-//             return;
-//             //--------------------------
-//         }// end if (m_stop.load())
-//         //--------------------------
-//         adjustWorkers();
-//         //--------------------------
-//     }// end while (!m_stop.load())
-//     //--------------------------
-// }// end void Utils::ThreadPool::adjustmentThreadFunction(void)
-//--------------------------------------------------------------
-// void Utils::ThreadPool::adjustmentThreadFunction(void) {
-//     //--------------------------
-//     while (!m_stop.load()) {
-//         //--------------------------
-//         std::this_thread::sleep_for(CHECK_INTERVAL);
-//         //--------------------------
-//         if (m_stop.load()){
-//             return;
-//         }// end  if (m_stop.load())
-//         //--------------------------
-//         adjustWorkers();
-//         //--------------------------
-//     }// end while (!m_stop.load())
-// }// end void Utils::ThreadPool::adjustmentThreadFunction(void)
+// void Utils::ThreadPool::adjustWorkers(void) {
+//     // Remove finished tasks
+//     m_tasks.remove();
+    
+//     size_t taskCount, workerCount;
+//     {
+//         std::scoped_lock lock(m_mutex);
+//         taskCount = queuedTasks();
+//         workerCount = activeWorkers();
+//     }
+
+//     // Calculate the difference between current workers and desired number of workers
+//     size_t desiredWorkerCount = (taskCount > m_upperThreshold) ? m_upperThreshold 
+//                           : (taskCount < m_lowerThreshold) ? m_lowerThreshold 
+//                           : workerCount; 
+
+//     if (workerCount < desiredWorkerCount) {
+//         size_t threadsToCreate = desiredWorkerCount - workerCount;
+//         create_task(threadsToCreate);
+//     }
+//     else if (workerCount > desiredWorkerCount) {
+//         size_t threadsToRemove = workerCount - desiredWorkerCount;
+//         for (size_t i = 0; i < threadsToRemove; ++i) {
+//             if (!m_workers.empty()) {
+//                 m_workers.back().request_stop();
+//                 m_workers.pop_back();
+//             }
+//         }
+//     }
+// }
 //--------------------------------------------------------------
 void Utils::ThreadPool::adjustmentThreadFunction(const std::stop_token& stoken) {
     //--------------------------

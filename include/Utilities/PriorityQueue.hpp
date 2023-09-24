@@ -36,6 +36,10 @@ namespace Utils{
                 push_internal(value);
             }// end void push(const T& value)
             //--------------------------
+            void push(T&& value){
+                push_internal(std::move(value));
+            }// end void push(const T& value)
+            //--------------------------
             template<typename... Args>
             void emplace(Args&&... args) {
                 emplace_internal(std::forward<Args>(args)...);
@@ -50,7 +54,7 @@ namespace Utils{
             }// end void pop(void)
             //--------------------------
             std::optional<T> pop_top(void) {
-                pop_top_internal();
+                return pop_top_internal();
             }// end std::optional<T> pop_top(void)
             //--------------------------
             size_t size(void) const {
@@ -83,6 +87,14 @@ namespace Utils{
                 //--------------------------
                 std::lock_guard<std::mutex> lock(m_mutex);
                 m_data.push_back(value);
+                std::push_heap(m_data.begin(), m_data.end(), m_comp);
+                //--------------------------
+            }// end void push_internal(const T& value)
+            //--------------------------
+            void push_internal(T&& value) {
+                //--------------------------
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_data.push_back(std::move(value));
                 std::push_heap(m_data.begin(), m_data.end(), m_comp);
                 //--------------------------
             }// end void push_internal(const T& value)

@@ -47,11 +47,11 @@ cd ~/path/to/circle_predictor/
 ```
 - Build Ninja: 
 ```
-cmake -DFORCE_COLORED_OUTPUT=ON -DCMAKE_BUILD_TYPE=release -B build -G Ninja
+cmake -DFORCE_COLORED_OUTPUT=ON -DCMAKE_BUILD_TYPE=Release -B build -G Ninja
 ```
   - Build Ninja using ```CLang```:
 ```
-cmake -DFORCE_COLORED_OUTPUT=ON -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=release -B build -G Ninja
+cmake -DFORCE_COLORED_OUTPUT=ON -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Release -B build -G Ninja
 ```  
 - Build the project: 
 ```
@@ -60,11 +60,11 @@ cd build/; ninja
 ### TTB issue
 - Build Ninja: 
 ```
-cmake -DFORCE_COLORED_OUTPUT=ON -DUSE_TTB=OFF -DCMAKE_BUILD_TYPE=release -B build -G Ninja
+cmake -DFORCE_COLORED_OUTPUT=ON -DUSE_TTB=OFF -DCMAKE_BUILD_TYPE=Release -B build -G Ninja
 ```
   - Build Ninja using ```CLang```:
 ```
-cmake -DFORCE_COLORED_OUTPUT=ON -DUSE_TTB=OFF -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=release -B build -G Ninja
+cmake -DFORCE_COLORED_OUTPUT=ON -DUSE_TTB=OFF -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Release -B build -G Ninja
 ```  
 - Build the project: 
 ```

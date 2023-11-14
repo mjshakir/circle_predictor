@@ -57,9 +57,13 @@ torch::Tensor Normalize::normalization_vdata(const torch::Tensor& input){
 //--------------------------------------------------------------
 torch::Tensor Normalize::normalization_data(const torch::Tensor& input){
     //--------------------------
-    auto min_ = torch::min(input);
+    auto min_ = torch::min(input), max_ = torch::max(input);
     //--------------------------
-    return ((input-min_)/(torch::max(input)-min_));
+    if((max_ - min_).item<double>() < 1E-9){
+        return (input/max_);
+    }// end if(min_.less_(torch::tensor(1E-9)).item<bool>())
+    //--------------------------
+    return ((input-min_)/(max_-min_));
     //--------------------------
 }// end torch::Tensor Normalize::normalization_data(const torch::Tensor& input)
 //--------------------------------------------------------------

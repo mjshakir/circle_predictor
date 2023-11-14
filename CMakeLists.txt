@@ -54,13 +54,13 @@ link_directories(${CMAKE_SOURCE_DIR}/external_library/libtorch/lib)
 #------------------------------------------------------------------------------------------
 # Disable building tests and examples in libfort project
 set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
-
 add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/libfort)
 #------------------------------------------------------------------------------------------
 set(BUILD_THREADPOOL_SHARED_LIBS ON) # for static library
 add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/ThreadPool)
-# include_directories(${CMAKE_SOURCE_DIR}/external_library/ThreadPool/include)
-# message(STATUS "THREADPOOL_LIBRARIES: ${THREADPOOL_LIBRARIES}")
+#------------------------------------------------------------------------------------------
+# set(BUILD_PROGRESSBAR_SHARED_LIBS ON) # for static library
+add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/ProgressBar)
 #------------------------------------------------------------------------------------------
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -71,11 +71,11 @@ find_package(fmt QUIET)
 #---------------
 if(fmt_FOUND)
     message(STATUS "Found fmt library")
-    set(HAVE_FMT TRUE)
-    add_definitions(-DHAVE_FMT)
+    # set(HAVE_FMT TRUE)
+    # add_definitions(-DHAVE_FMT)
 else()
     message(WARNING "fmt library not found. Some features might not work.")
-    set(HAVE_FMT FALSE)
+    # set(HAVE_FMT FALSE)
 endif()
 #---------------
 find_package(Torch REQUIRED)
@@ -162,7 +162,6 @@ add_library(${PROJECT_NAME}_rl_network SHARED
 add_library(${PROJECT_NAME}_utilities SHARED
   src/Utilities/CircleEquation.cpp
   src/Utilities/StaticCheck.cpp
-  src/Utilities/ProgressBar.cpp
 )
 #------------------------------------------------------------------------------------------
 if(USE_TTB)
@@ -170,23 +169,15 @@ if(USE_TTB)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES} tbb)
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES} tbb)
   target_link_libraries(${PROJECT_NAME}_rl_environment PRIVATE ${TORCH_LIBRARIES} tbb)
-  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} tbb fort)
-  if(HAVE_FMT)
-    target_link_libraries(${PROJECT_NAME}_utilities PRIVATE ${TORCH_LIBRARIES} fmt::fmt tbb)
-  else()
-    target_link_libraries(${PROJECT_NAME}_utilities PRIVATE ${TORCH_LIBRARIES} tbb)
-  endif()
+  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} ${PROGRESSBAR_LIBRARIES} tbb fort )
+  target_link_libraries(${PROJECT_NAME}_utilities PRIVATE ${TORCH_LIBRARIES} tbb)
 else()
   target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_environment PRIVATE ${TORCH_LIBRARIES})
-  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} fort)
-  if(HAVE_FMT)
-    target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${TORCH_LIBRARIES} fmt::fmt)
-  else()
-    target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${TORCH_LIBRARIES})
-  endif()
+  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} ${PROGRESSBAR_LIBRARIES} fort)
+  target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${TORCH_LIBRARIES})
 endif(USE_TTB)
 #------------------------------------------------------------------------------------------
 include_directories(

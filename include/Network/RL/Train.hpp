@@ -7,8 +7,6 @@
 #include "Utilities/StaticCheck.hpp"
 //--------------------------
 #include "Generate/RL/RLNormalize.hpp"
-//--------------------------
-#include "Utilities/ProgressBar.hpp"
 //--------------------------------------------------------------
 // Standard library
 //--------------------------------------------------------------
@@ -25,7 +23,10 @@
 //--------------------------------------------------------------
 #include "fort.hpp"
 //--------------------------------------------------------------
-
+// ThreadPool Library
+//--------------------------------------------------------------
+#include "ProgressBar.hpp" 
+//--------------------------------------------------------------
 //--------------------------------------------------------------
 namespace RL {
     //--------------------------------------------------------------
@@ -232,7 +233,7 @@ namespace RL {
                 //--------------------------
                 // progressbar bar(epoch);
                 //--------------------------
-                Utils::ProgressBar bar(epoch, "Training");
+                ProgressBar::ProgressBar bar(epoch, "Training");
                 //--------------------------
                 for (size_t i = 0; i < epoch; ++i) {
                     //--------------------------
@@ -262,7 +263,7 @@ namespace RL {
                 auto _epoch = static_cast<size_t>(epoch/jobs);
                 //--------------------------
                 // progressbar bar(_epoch);
-                Utils::ProgressBar bar(_epoch, "Training");
+                ProgressBar::ProgressBar bar(_epoch, "Training");
                 //--------------------------
                 for (size_t i = 0; i < _epoch; ++i) {
                     //--------------------------

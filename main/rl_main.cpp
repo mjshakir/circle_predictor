@@ -29,8 +29,6 @@
 //--------------------------
 #include "Utilities/CircleEquation.hpp"
 //--------------------------
-#include "Utilities/ThreadPool.hpp"
-//--------------------------
 #include "Timing/Timing.hpp"
 #include "Timing/TimeIT.hpp"
 //--------------------------------------------------------------
@@ -48,6 +46,10 @@
 // LibFort library (enable table printing)
 //--------------------------------------------------------------
 #include "fort.hpp"
+//--------------------------------------------------------------
+// ThreadPool Library
+//--------------------------------------------------------------
+#include "ThreadPool.hpp"
 //--------------------------------------------------------------
 int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
@@ -882,37 +884,11 @@ int main(int argc, char const *argv[]){
         // // Combine rewards and penalties
         // constexpr double w1 = 1., w2 = 1.0, w3 = 1., w4 = -1., w5 = -1., w6 = 100., w7 = -0.1; // Weights can be adjusted
         // torch::Tensor total_rewards = w1 * R_distance_reward + w2 * R_diversity_reward + w3 * R_consistency_reward +
-        //                                 w4 * R_distance_penalty + w5 * R_separation_penalty; + w6 * R_max_point_limiter + 
+        //                                 w4 * R_distance_penalty + w5 * R_separation_penalty; + w6 * R_max_point_limiter; + 
         //                                 w7 * R_boundary_punishment;
 
-        // // Get individual rewards
-        // auto R_distance_reward      = std::async(std::launch::async, &Utils::CircleEquation::distance_reward, _input, _output);
-        // auto R_diversity_reward     = std::async(std::launch::async, &Utils::CircleEquation::diversity_reward, _input, _output);
-        // auto R_consistency_reward   = std::async(std::launch::async, &Utils::CircleEquation::consistency_reward, _output);
-         
-        // // constexpr double exploration_reward = 10.;  // You can adjust this value as needed
-        // // auto R_exploration_incentive_reward   = std::async(std::launch::async, &Utils::CircleEquation::exploration_incentive, _output, exploration_reward);
 
-        // // Add penalties for points outside the circle
-        // auto R_distance_penalty  = std::async(std::launch::async, &Utils::CircleEquation::distance_penalty, _input, _output);
-        
-        // // Compute separation penalty
-        // constexpr double min_distance = 1E-1;  // You can adjust this value as needed
-        // auto R_separation_penalty  = std::async(std::launch::async, &Utils::CircleEquation::separation_penalty, _output, min_distance);
-
-        // // Compute max point limiter penalty
-        // auto R_max_point_limiter  = std::async(std::launch::async, [&_input, &_output](){return Utils::CircleEquation::PointLimiter(_input, _output);});
-
-        // // Compute boundary punishment based on how close points are to the circle's boundary
-        // auto R_boundary_punishment  = std::async(std::launch::async, &Utils::CircleEquation::boundary, _input, _output);
-
-        // // Combine rewards and penalties
-        // constexpr double w1 = 1., w2 = 1.0, w3 = 1., w4 = -1., w5 = -1., w6 = 100., w7 = -0.1; //, w8 = 1.; // Weights can be adjusted
-        // torch::Tensor total_rewards = w1 * R_distance_reward.get() + w2 * R_diversity_reward.get() + w3 * R_consistency_reward.get() +
-        //                                 w4 * R_distance_penalty.get() + w5 * R_separation_penalty.get() + w6 * R_max_point_limiter.get() + 
-        //                                 w7 * R_boundary_punishment.get(); // + w8 * R_exploration_incentive_reward.get();
-
-        Utils::ThreadPool threadPool(7);
+        ThreadPool::ThreadPool threadPool(6);
         // Get individual rewards
         auto R_distance_reward = threadPool.queue(&Utils::CircleEquation::distance_reward, _input, _output);
         auto R_diversity_reward = threadPool.queue(&Utils::CircleEquation::diversity_reward, _output, _input);
@@ -929,22 +905,24 @@ int main(int argc, char const *argv[]){
         auto R_max_point_limiter = threadPool.queue([&_input, &_output](){return Utils::CircleEquation::PointLimiter(_input, _output);});
 
         // Compute boundary punishment based on how close points are to the circle's boundary
-        auto R_boundary_punishment = threadPool.queue(&Utils::CircleEquation::boundary, _input, _output);
+        // auto R_boundary_punishment = threadPool.queue(&Utils::CircleEquation::boundary, _input, _output);
 
-        // Combine rewards and penalties
-        constexpr double w1 = 1., w2 = 1.0, w3 = 1., w4 = -1., w5 = -1., w6 = 100., w7 = -0.1; // Weights can be adjusted
-        torch::Tensor total_rewards = w1 * R_distance_reward->get() + w2 * R_diversity_reward->get() + w3 * R_consistency_reward->get() +
-                                        w4 * R_distance_penalty->get() + w5 * R_separation_penalty->get() + w6 * R_max_point_limiter->get() +
-                                        w7 * R_boundary_punishment->get();
+        constexpr double w1 = 1., w2 = 1.0, w3 = 1., w4 = -1., w5 = -1., w6 = 100.; //, w7 = -0.1; // Weights can be adjusted
+        torch::Tensor total_rewards = w1 * R_distance_reward.get() + w2 * R_diversity_reward.get() + w3 * R_consistency_reward.get() +
+                                        w4 * R_distance_penalty.get() + w5 * R_separation_penalty.get() + w6 * R_max_point_limiter.get();// +
+                                        //w7 * R_boundary_punishment.get();
 
-        // std::cout   << "R_distance: " << R_distance_reward.mean().item().toDouble() 
-        //             << " R_diversity: " << R_diversity_reward.mean().item().toDouble() 
-        //             << " R_consistency: " << R_consistency_reward.mean().item().toDouble()
-        //             << " R_distance_penalty: " << R_distance_penalty.mean().item().toDouble()
-        //             << " R_point_separation_penalty: " << R_separation_penalty.mean().item().toDouble() //<< std::endl;
-        //             << " R_max_point_limiter: " << R_max_point_limiter.mean().item().toDouble() << std::endl;
+        // std::cout   << "reward_results: " << total_rewards.mean().item().toDouble() << std::endl;
+
+        auto _temp = total_rewards.mean().item().toDouble();
+
+        if(_temp > 0) {
+           std::cout   << "reward_results: " << _temp << std::endl; 
+        }
         
-        std::cout   << "reward_results: " << total_rewards.mean().item().toDouble() << std::endl;
+
+        // std::cout   << " worker size: " << threadPool.active_workers_size() 
+        //             << " queue size: " << threadPool.queued_size() << std::endl;
 
         return Normalize::normalization(total_rewards);
     };

@@ -57,6 +57,11 @@ set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/libfort)
 #------------------------------------------------------------------------------------------
+set(BUILD_THREADPOOL_SHARED_LIBS ON) # for static library
+add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/ThreadPool)
+# include_directories(${CMAKE_SOURCE_DIR}/external_library/ThreadPool/include)
+# message(STATUS "THREADPOOL_LIBRARIES: ${THREADPOOL_LIBRARIES}")
+#------------------------------------------------------------------------------------------
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
@@ -158,9 +163,6 @@ add_library(${PROJECT_NAME}_utilities SHARED
   src/Utilities/CircleEquation.cpp
   src/Utilities/StaticCheck.cpp
   src/Utilities/ProgressBar.cpp
-  src/Utilities/ThreadPool.cpp
-  src/Utilities/PriorityQueue.cpp
-  src/Utilities/ThreadTask.cpp
 )
 #------------------------------------------------------------------------------------------
 if(USE_TTB)
@@ -212,6 +214,7 @@ target_link_libraries(${PROJECT_NAME}_rl PRIVATE
   ${PROJECT_NAME}_utilities
   ${TORCH_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${THREADPOOL_LIBRARIES}
   fort
   common_options
   )

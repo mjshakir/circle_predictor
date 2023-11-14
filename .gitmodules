@@ -5,3 +5,9 @@
 [submodule "external_library/libfort"]
 	path = external_library/libfort
 	url = https://github.com/seleznevae/libfort.git
+[submodule "external_library/ThreadPool"]
+	path = external_library/ThreadPool
+	url = https://github.com/mjshakir/ThreadPool.git
+[submodule "external_library/ProgressBar"]
+	path = external_library/ProgressBar
+	url = https://github.com/mjshakir/ProgressBar.git

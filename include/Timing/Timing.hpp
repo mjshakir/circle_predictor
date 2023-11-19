@@ -4,6 +4,7 @@
 //--------------------------------------------------------------
 #include <iostream>
 #include <chrono>
+#include <functional>
 //--------------------------------------------------------------
 class Timing{
     //--------------------------------------------------------------
@@ -27,10 +28,42 @@ class Timing{
         // Destructor
         //--------------------------
         ~Timing();
+        //--------------------------
+        template <typename ReturnType, typename... Args>
+        ReturnType timeFunction(const std::function<ReturnType(Args...)>& function, const Args&... args){
+            //--------------------------
+            return time_function(function, args...);
+            //--------------------------
+        }// end std::tuple<ReturnType, double> timeFunction(const std::function<ReturnType(Args...)>& function, const Args&... args)
+        //--------------------------
+        template <typename ReturnType, typename... Args>
+        ReturnType timeFunction(const std::string& function_name, const std::function<ReturnType(Args...)>& function, const Args&... args){
+            //--------------------------
+            return time_function(function_name, function, args...);
+            //--------------------------
+        }// end ReturnType timeFunction(const std::string& function_name, const std::function<ReturnType(Args...)>& function, const Args&... args)
         //--------------------------------------------------------------
     protected:
         //--------------------------
         void set_function_name(const std::string& function_name);
+        //--------------------------
+        template <typename ReturnType, typename... Args>
+        ReturnType time_function(const std::function<ReturnType(Args...)>& function, const Args&... args) {
+            //--------------------------
+            Timing timer;
+            //--------------------------
+            return function(args...);
+            //--------------------------
+        }// end ReturnType time_function(const std::function<ReturnType(Args...)>& function, const Args&... args)
+        //--------------------------
+        template <typename ReturnType, typename... Args>
+        ReturnType time_function(const std::string& function_name, const std::function<ReturnType(Args...)>& function, const Args&... args) {
+            //--------------------------
+            Timing timer(function_name);
+            //--------------------------
+            return function(args...);
+            //--------------------------
+        }// end ReturnType time_function(const std::string& function_name, const std::function<ReturnType(const Args&...)>& function, const Args&... args)
         //--------------------------------------------------------------
     private:
         //--------------------------

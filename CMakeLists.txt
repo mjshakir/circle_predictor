@@ -56,11 +56,14 @@ link_directories(${CMAKE_SOURCE_DIR}/external_library/libtorch/lib)
 set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
 add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/libfort)
 #------------------------------------------------------------------------------------------
-set(BUILD_THREADPOOL_SHARED_LIBS ON) # for static library
+# set(BUILD_THREADPOOL_SHARED_LIBS ON) # for static library
 add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/ThreadPool)
 #------------------------------------------------------------------------------------------
 # set(BUILD_PROGRESSBAR_SHARED_LIBS ON) # for static library
 add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/ProgressBar)
+#------------------------------------------------------------------------------------------
+# set(BUILD_TIMING_SHARED_LIBS  ON) # for static library
+add_subdirectory(${CMAKE_SOURCE_DIR}/external_library/TimeIt)
 #------------------------------------------------------------------------------------------
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -120,10 +123,10 @@ add_library(${PROJECT_NAME}_data SHARED
   src/Generate/Supervised/Normalize.cpp
 )
 #------------------------------------------------------------------------------------------
-add_library(${PROJECT_NAME}_timing SHARED
-  src/Timing/Timing.cpp
-  src/Timing/TimeIT.cpp
-)
+# add_library(${PROJECT_NAME}_timing SHARED
+#   src/Timing/Timing.cpp
+#   src/Timing/TimeIT.cpp
+# )
 #------------------------------------------------------------------------------------------
 # RL Library
 #----------------------------------
@@ -165,18 +168,18 @@ add_library(${PROJECT_NAME}_utilities SHARED
 )
 #------------------------------------------------------------------------------------------
 if(USE_TTB)
-  target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} tbb fort)
+  target_link_libraries(${PROJECT_NAME}_network ${TIMEIT_LIBRARIES} ${TORCH_LIBRARIES} ${PROGRESSBAR_LIBRARIES} ${THREADPOOL_LIBRARIES} tbb fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES} tbb)
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES} tbb)
   target_link_libraries(${PROJECT_NAME}_rl_environment PRIVATE ${TORCH_LIBRARIES} tbb)
-  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} ${PROGRESSBAR_LIBRARIES} tbb fort )
+  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} ${THREADPOOL_LIBRARIES} ${PROGRESSBAR_LIBRARIES} tbb fort )
   target_link_libraries(${PROJECT_NAME}_utilities PRIVATE ${TORCH_LIBRARIES} tbb)
 else()
-  target_link_libraries(${PROJECT_NAME}_network ${TORCH_LIBRARIES} fort)
+  target_link_libraries(${PROJECT_NAME}_network ${TIMEIT_LIBRARIES} ${TORCH_LIBRARIES} ${PROGRESSBAR_LIBRARIES} ${THREADPOOL_LIBRARIES} fort)
   target_link_libraries(${PROJECT_NAME}_data PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_data PRIVATE ${TORCH_LIBRARIES})
   target_link_libraries(${PROJECT_NAME}_rl_environment PRIVATE ${TORCH_LIBRARIES})
-  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} ${PROGRESSBAR_LIBRARIES} fort)
+  target_link_libraries(${PROJECT_NAME}_rl_network ${TORCH_LIBRARIES} ${THREADPOOL_LIBRARIES} ${PROGRESSBAR_LIBRARIES} fort)
   target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${TORCH_LIBRARIES})
 endif(USE_TTB)
 #------------------------------------------------------------------------------------------
@@ -191,14 +194,14 @@ add_executable(${PROJECT_NAME}_rl main/rl_main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE
   ${PROJECT_NAME}_network 
   ${PROJECT_NAME}_data 
-  ${PROJECT_NAME}_timing
   ${TORCH_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${THREADPOOL_LIBRARIES}
+  ${TIMEIT_LIBRARIES}
   common_options
   )
 #------------------------------------------------------------------------------------------
 target_link_libraries(${PROJECT_NAME}_rl PRIVATE
-  ${PROJECT_NAME}_timing
   ${PROJECT_NAME}_rl_data
   ${PROJECT_NAME}_rl_environment
   ${PROJECT_NAME}_rl_network
@@ -206,6 +209,7 @@ target_link_libraries(${PROJECT_NAME}_rl PRIVATE
   ${TORCH_LIBRARIES}
   ${Boost_LIBRARIES}
   ${THREADPOOL_LIBRARIES}
+  ${TIMEIT_LIBRARIES}
   fort
   common_options
   )

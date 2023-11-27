@@ -11,3 +11,6 @@
 [submodule "external_library/ProgressBar"]
 	path = external_library/ProgressBar
 	url = https://github.com/mjshakir/ProgressBar.git
+[submodule "external_library/TimeIt"]
+	path = external_library/TimeIt
+	url = https://github.com/mjshakir/TimeIt.git

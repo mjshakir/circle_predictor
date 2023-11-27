@@ -13,7 +13,7 @@
 #include "Network/Supervised/Supervised.hpp"
 #include "Generate/Supervised/Generate.hpp"
 #include "Generate/Supervised/Normalize.hpp"
-#include "Timing/Timing.hpp"
+#include "TimeIt.hpp"
 //--------------------------------------------------------------
 
 int main(int argc, char const *argv[]){
@@ -124,7 +124,7 @@ int main(int argc, char const *argv[]){
     //--------------------------------------------------------------
     // Timing main
     //--------------------------
-    Timing _timer(__FUNCTION__);
+    TimeIt::TimeIt _timer(__FUNCTION__);
     //--------------------------------------------------------------
     // Training loop
     //--------------------------
@@ -152,7 +152,7 @@ int main(int argc, char const *argv[]){
         //--------------------------------------------------------------
         // Time the loop
         //--------------------------
-        Timing _loop_timer("Main for loop");
+        TimeIt::TimeIt _loop_timer("Main for loop");
         //--------------------------------------------------------------
         // Train the network
         //--------------------------

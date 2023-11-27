@@ -3,7 +3,6 @@
 //--------------------------------------------------------------
 // Standard cpp library
 //--------------------------------------------------------------
-#include <future>
 #include <algorithm>
 #include <execution>
 //--------------------------------------------------------------
@@ -11,9 +10,9 @@
 //--------------------------------------------------------------
 #include <torch/torch.h>
 //--------------------------------------------------------------
-// User Defined library
+// TimeIT library
 //--------------------------------------------------------------
-#include "Timing/TimeIT.hpp"
+#include "TimeIt.hpp"
 //--------------------------------------------------------------
 // LibFort library (enable table printing)
 //--------------------------------------------------------------
@@ -21,9 +20,12 @@
 //--------------------------------------------------------------
 // Progressbar library
 //--------------------------------------------------------------
-#include "progressbar/include/progressbar.hpp"
+#include "ProgressBar.hpp" 
 //--------------------------------------------------------------
-
+// ThreadPool library
+//--------------------------------------------------------------
+#include "ThreadPool.hpp"
+//--------------------------------------------------------------
 template<typename Network>
 class NetworkHandling{
     public:
@@ -178,13 +180,13 @@ class NetworkHandling{
             //--------------------------
             torch::optim::StepLR _scheduler(optimizer, 30, 1E-2);
             //--------------------------
+            ThreadPool::ThreadPool _threads(data_loader_size*epoch);
+            //--------------------------
             for (size_t i = 0; i < epoch; ++i){
                 //--------------------------
-                progressbar bar(data_loader_size);
+                ProgressBar::ProgressBar bar(data_loader_size, "Training");
                 //--------------------------
-                std::cout << "Training: ";
-                //--------------------------
-                TimeIT _timer;
+                TimeIt::TimeIt _timer;
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
@@ -205,13 +207,14 @@ class NetworkHandling{
                 //--------------------------
                 _scheduler.step();
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&Loss, &data_loader_size, &_timer, this](){
-                                            //--------------------------
-                                            std::vector<float> _loss(data_loader_size);
-                                            std::copy(std::execution::par_unseq, Loss.end()-data_loader_size, Loss.end(), _loss.begin());
-                                            loss_display(_loss, _timer.get_time_seconds());
-                                            //--------------------------
-                                        });
+                _threads.queue([&Loss, &data_loader_size, &_timer, this](){
+                                    //--------------------------
+                                    std::vector<float> _loss(data_loader_size);
+                                    std::copy(std::execution::par, Loss.end()-data_loader_size, Loss.end(), _loss.begin());
+                                    auto [time, unit] = _timer.get_time_unit();
+                                    loss_display(_loss, time, unit);
+                                    //--------------------------
+                                });
                 //--------------------------
             }// end for (size_t i = 0; i < epoch; ++i)
             //--------------------------
@@ -239,11 +242,11 @@ class NetworkHandling{
             //--------------------------
             do{
                 //--------------------------
-                progressbar bar(data_loader_size);
+                ProgressBar::ProgressBar bar(data_loader_size, "Training");
                 //--------------------------
-                std::cout << "Training: ";
+                TimeIt::TimeIt _timer;
                 //--------------------------
-                TimeIT _timer;
+                ThreadPool::ThreadPool _thread(data_loader_size);
                 //--------------------------
                 for (const auto& batch : *data_loader){
                     //--------------------------
@@ -276,16 +279,17 @@ class NetworkHandling{
                 //--------------------------
                 _learning_elements.push_back(_element_sum);
                 //--------------------------
-                auto printing_threads = std::async(std::launch::async, [&validation_loss, &_element_sum, &_timer, this](){
-                                                        loss_display(validation_loss, _element_sum, _timer.get_time_seconds());
-                                                    });
+                _thread.queue([&validation_loss, &_element_sum, &_timer, this](){
+                                    auto [time, unit] = _timer.get_time_unit();
+                                    loss_display(validation_loss, _element_sum, time, unit);
+                                });
                 //--------------------------
                 if (_learning_elements.size() > (_training_limiter-1)){
                     //--------------------------
                     _learning = check_learning(_learning_elements, precision);
                     _learning_elements.clear();
                     //--------------------------
-                    printing_threads = std::async(std::launch::async, [&_learning](){
+                    _thread.queue([&_learning](){
                                     if(_learning){
                                         printf("\n\x1b[32m\033[1m-----------------Learning:[True]-----------------\033[0m\x1b[0m\n");
                                     }// end if(_learning)
@@ -307,12 +311,10 @@ class NetworkHandling{
             //--------------------------
             auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
             //--------------------------
-            progressbar bar(data_loader_size);
-            //--------------------------
             std::vector<float> test_loss;
             test_loss.reserve(data_loader_size);
             //--------------------------
-            std::cout << "\nValidation: ";
+            ProgressBar::ProgressBar bar(data_loader_size, "Validation");
             //--------------------------
             for (const auto& batch : *data_loader){
                 //--------------------------
@@ -331,12 +333,10 @@ class NetworkHandling{
             //--------------------------
             auto data_loader_size = std::distance(data_loader->begin(), data_loader->end());
             //--------------------------
-            progressbar bar(data_loader_size);
-            //--------------------------
             std::vector<std::tuple<torch::Tensor, torch::Tensor, float>> results;
             results.reserve(data_loader_size);
             //--------------------------
-            std::cout << "Test data: ";
+            ProgressBar::ProgressBar bar(data_loader_size, "Test data");
             //--------------------------
             for (const auto& batch : *data_loader){
                 //--------------------------
@@ -358,7 +358,7 @@ class NetworkHandling{
         template <typename T, typename R>
         bool check_learning(const std::vector<T>& elements, const R& tolerance) const{
             //--------------------------
-            long double average = std::reduce(std::execution::par_unseq, elements.begin(), elements.end(), 0.L) / elements.size();
+            long double average = std::reduce(std::execution::par, elements.begin(), elements.end(), 0.L) / elements.size();
             //--------------------------
             if (std::abs(average - elements.front()) <= tolerance){
                 return false;
@@ -371,9 +371,9 @@ class NetworkHandling{
         template <typename T, typename R>
         void loss_display(const std::vector<T>& loss, const R& run_time) const{
             //--------------------------
-            double elements_sum = std::reduce(std::execution::par_unseq, loss.begin(), loss.end(), 0.L);
-            auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
-            auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
+            double elements_sum = std::reduce(std::execution::par, loss.begin(), loss.end(), 0.L);
+            auto _max_element = std::max_element(std::execution::par, loss.begin(), loss.end());
+            auto _min_element = std::min_element(std::execution::par, loss.begin(), loss.end());
             //--------------------------
             fort::char_table table;
             //--------------------------
@@ -401,11 +401,44 @@ class NetworkHandling{
             //--------------------------
         }// end void loss_display(const std::vector<T>& loss, const R& ns_time)
         //--------------------------------------------------------------
+        template <typename T, typename R>
+        void loss_display(const std::vector<T>& loss, const R& run_time, const std::string& unit) const{
+            //--------------------------
+            double elements_sum = std::reduce(std::execution::par, loss.begin(), loss.end(), 0.L);
+            auto _max_element = std::max_element(std::execution::par, loss.begin(), loss.end());
+            auto _min_element = std::min_element(std::execution::par, loss.begin(), loss.end());
+            //--------------------------
+            fort::char_table table;
+            //--------------------------
+            // Change border style
+            //--------------------------
+            table.set_border_style(FT_NICE_STYLE);
+            //--------------------------
+            table   << fort::header
+                    << "Sum Loss" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time ["+ unit +"]" << fort::endr
+                    << elements_sum
+                    << std::distance(loss.begin(), _min_element)
+                    << *_min_element
+                    << std::distance(loss.begin(), _max_element)
+                    << *_max_element 
+                    << run_time << fort::endr;
+            //--------------------------
+            // Set center alignment for the 1st and 3rd columns
+            //--------------------------
+            table.column(1).set_cell_text_align(fort::text_align::center);
+            table.column(3).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_content_fg_color(fort::color::red);
+            //--------------------------
+            std::cout << "\n" << table.to_string() << std::endl;
+            //--------------------------
+        }// end void loss_display(const std::vector<T>& loss, const R& ns_time)
+        //--------------------------------------------------------------
         template <typename T, typename D, typename R>
         void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& run_time) const{
             //--------------------------
-            auto _max_element = std::max_element(std::execution::par_unseq, loss.begin(), loss.end());
-            auto _min_element = std::min_element(std::execution::par_unseq, loss.begin(), loss.end());
+            auto _max_element = std::max_element(std::execution::par, loss.begin(), loss.end());
+            auto _min_element = std::min_element(std::execution::par, loss.begin(), loss.end());
             //--------------------------
             fort::char_table table;
             //--------------------------
@@ -415,6 +448,38 @@ class NetworkHandling{
             //--------------------------
             table   << fort::header
                     << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time [s]" << fort::endr
+                    << elements_sum
+                    << std::distance(loss.begin(), _min_element)
+                    << *_min_element
+                    << std::distance(loss.begin(), _max_element)
+                    << *_max_element 
+                    << run_time << fort::endr;
+            //--------------------------
+            // Set center alignment for the 1st and 3rd columns
+            //--------------------------
+            table.column(1).set_cell_text_align(fort::text_align::center);
+            table.column(3).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_text_align(fort::text_align::center);
+            table.column(5).set_cell_content_fg_color(fort::color::red);
+            //--------------------------
+            std::cout << "\n" << table.to_string() << std::endl;
+            //--------------------------
+        }// end void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& ns_time)
+        //--------------------------------------------------------------
+        template <typename T, typename D, typename R>
+        void loss_display(const std::vector<T>& loss, const D& elements_sum, const R& run_time, const std::string& unit) const{
+            //--------------------------
+            auto _max_element = std::max_element(std::execution::par, loss.begin(), loss.end());
+            auto _min_element = std::min_element(std::execution::par, loss.begin(), loss.end());
+            //--------------------------
+            fort::char_table table;
+            //--------------------------
+            // Change border style
+            //--------------------------
+            table.set_border_style(FT_NICE_STYLE);
+            //--------------------------
+            table   << fort::header
+                    << "Loss Sum" << "Min Position" << "Min loss" << "Max Position" << "Max loss" << "Execution time ["+ unit +"]" << fort::endr
                     << elements_sum
                     << std::distance(loss.begin(), _min_element)
                     << *_min_element
